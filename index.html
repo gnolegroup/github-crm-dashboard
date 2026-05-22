@@ -128,8 +128,6 @@
     .loading { display: flex; align-items: center; justify-content: center; padding: 64px; color: var(--text-muted); gap: 12px; font-size: 13px; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent-light); border-radius: 50%; animation: spin .75s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Login ── */
     .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); padding: 24px; }
     .login-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 48px 40px; width: 100%; max-width: 380px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .login-logo svg { width: 44px; height: 44px; fill: var(--text-primary); }
@@ -138,20 +136,16 @@
     .login-btn { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--text-primary); color: var(--bg-primary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; padding: 11px 24px; width: 100%; cursor: pointer; transition: opacity .15s; }
     .login-btn:hover { opacity: 0.88; }
     .login-note { font-size: 11px; color: var(--text-muted); line-height: 1.6; margin-top: -4px; }
-
-    /* ── User chip & sign-out ── */
     .user-chip { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
     .user-chip img { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); }
     .signout-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 4px 10px; transition: border-color .15s, color .15s; }
     .signout-btn:hover { border-color: var(--red); color: var(--red); }
-
     @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .kanban { grid-template-columns: repeat(3,minmax(190px,1fr)); } }
     @media (max-width: 640px) { main { padding: 14px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
 
-<!-- ── Login screen ── -->
 <div id="login-screen" style="display:none">
   <div class="login-wrap">
     <div class="login-card">
@@ -169,7 +163,6 @@
   </div>
 </div>
 
-<!-- ── Header ── -->
 <header id="app-header" style="display:none">
   <div class="header-logo">
     <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -184,7 +177,6 @@
   </div>
 </header>
 
-<!-- ── Main ── -->
 <main id="app-main" style="display:none">
   <div class="stats-grid" id="stats-grid">
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
@@ -207,10 +199,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let D = {};
 
-/* ── Auth ── */
 async function signInWithGitHub() {
-  const redirectTo = window.location.href.split('?')[0].split('#')[0];
-  const { error } = await db.auth.signInWithOAuth({ provider: 'github', options: { redirectTo } });
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'github',
+    options: { redirectTo: 'https://gnolegroup.github.io/github-crm-dashboard' }
+  });
   if (error) alert('Sign-in error: ' + error.message);
 }
 async function signOut() { await db.auth.signOut(); showLogin(); }
@@ -240,7 +233,6 @@ db.auth.onAuthStateChange((event, session) => {
   else if (event === 'SIGNED_OUT') showLogin();
 });
 
-/* ── Helpers ── */
 const $ = id => document.getElementById(id);
 const fmt$ = v => v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v;
 const fmtN = n => (n||0).toLocaleString();
@@ -256,7 +248,6 @@ function switchTab(name, btn) {
   $('panel-' + name).classList.add('active');
 }
 
-/* ── Load ── */
 async function loadAll() {
   const [{data:contacts},{data:deals},{data:stages},{data:repos},{data:activities}] = await Promise.all([
     db.from('contacts').select('*').order('github_followers',{ascending:false}),
@@ -269,7 +260,6 @@ async function loadAll() {
   renderStats(); renderPipeline(); renderContacts(); renderRepos(); renderActivity();
 }
 
-/* ── Stats ── */
 function renderStats() {
   const {contacts,deals} = D;
   const open = deals.filter(d=>d.status==='open'), won = deals.filter(d=>d.status==='won');
@@ -283,7 +273,6 @@ function renderStats() {
   $('tc-repos').textContent = D.repos.length; $('tc-activity').textContent = D.activities.length;
 }
 
-/* ── Pipeline ── */
 function renderPipeline() {
   const {stages,deals} = D;
   const cols = stages.map(s => {
@@ -302,7 +291,6 @@ function renderPipeline() {
   $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>`;
 }
 
-/* ── Contacts ── */
 function renderContacts() {
   const rows = D.contacts.map(c=>`
     <tr>
@@ -319,7 +307,6 @@ function filterContacts(q) {
   document.querySelectorAll('#contacts-body tr').forEach(r => { r.style.display = r.textContent.toLowerCase().includes(lower) ? '' : 'none'; });
 }
 
-/* ── Repos ── */
 function renderRepos() {
   const cards = D.repos.map(r=>`
     <div class="repo-card">
@@ -330,7 +317,6 @@ function renderRepos() {
   $('panel-repos').innerHTML = `<div class="repos-grid">${cards}</div>`;
 }
 
-/* ── Activity ── */
 const iconMap = {
   pr_merged:{cls:'fi-pr',emoji:'⬡'},pr_opened:{cls:'fi-pr',emoji:'⬢'},
   email:{cls:'fi-email',emoji:'✉'},call:{cls:'fi-call',emoji:'☎'},
