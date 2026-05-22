@@ -642,10 +642,7 @@ let watchingInactivity = false;
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => {
-    db.auth.signOut().then(() => {
-      showLogin();
-      alert('You have been signed out due to 1 minute of inactivity.');
-    });
+    db.auth.signOut().then(() => showLogin());
   }, INACTIVITY_MS);
 }
 
