@@ -22,130 +22,498 @@
       --red: #f85149;
       --radius: 8px;
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; font-size: 14px; }
-    header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; gap: 20px; }
-    .header-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 20px;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+    }
+
     .header-logo svg { width: 22px; height: 22px; fill: var(--text-primary); flex-shrink: 0; }
+
     .header-divider { width: 1px; height: 20px; background: var(--border); }
+
     .header-subtitle { font-size: 13px; color: var(--text-secondary); }
+
     .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-    .badge-live { background: #0d2a0d; color: var(--green); border: 1px solid #1f4a1f; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .badge-live::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+
+    .badge-live {
+      background: #0d2a0d;
+      color: var(--green);
+      border: 1px solid #1f4a1f;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-live::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    /* ── Main ── */
     main { max-width: 1440px; margin: 0 auto; padding: 24px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: flex; align-items: center; gap: 14px; transition: border-color 0.2s; }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+
     .stat-card:hover { border-color: var(--accent-light); }
-    .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; flex-shrink: 0;
+    }
+
     .stat-icon.purple { background: rgba(124,58,237,.15); }
     .stat-icon.blue   { background: rgba(88,166,255,.15); }
     .stat-icon.yellow { background: rgba(210,153,34,.15); }
     .stat-icon.green  { background: rgba(63,185,80,.15); }
-    .stat-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
-    .stat-value { font-size: 26px; font-weight: 700; line-height: 1; }
-    .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-    .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; padding: 10px 16px; margin-bottom: -1px; display: flex; align-items: center; gap: 7px; transition: color .15s, border-color .15s; }
+
+    .stat-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 26px; font-weight: 700; line-height: 1; color: var(--text-primary); }
+    .stat-sub   { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      gap: 0;
+    }
+
+    .tab-btn {
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      padding: 10px 16px; margin-bottom: -1px;
+      display: flex; align-items: center; gap: 7px;
+      transition: color .15s, border-color .15s;
+    }
+
     .tab-btn:hover { color: var(--text-primary); }
-    .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--accent-light); }
-    .tab-count { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 20px; padding: 0 7px; font-size: 11px; min-width: 22px; text-align: center; color: var(--text-secondary); }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-light);
+    }
+
+    .tab-count {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0 7px;
+      font-size: 11px;
+      min-width: 22px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-    .kanban { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-    .kanban-col { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); min-width: 190px; display: flex; flex-direction: column; }
-    .kanban-header { padding: 11px 13px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .stage-label { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 12px; }
-    .stage-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .stage-meta { font-size: 11px; color: var(--text-muted); }
+
+    /* ── Kanban ── */
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .kanban-col {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-width: 190px;
+      display: flex; flex-direction: column;
+    }
+
+    .kanban-header {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .stage-label {
+      display: flex; align-items: center; gap: 7px;
+      font-weight: 600; font-size: 12px;
+    }
+
+    .stage-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .stage-meta { font-size: 11px; color: var(--text-muted); text-align: right; }
+
     .kanban-body { padding: 9px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-    .deal-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 11px 12px; cursor: pointer; transition: border-color .15s; }
-    .deal-card:hover { border-color: var(--accent-light); }
+
+    .deal-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .deal-card:hover {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 1px rgba(167,139,250,.1);
+    }
+
     .deal-title { font-weight: 500; font-size: 12px; line-height: 1.45; margin-bottom: 7px; }
-    .deal-repo { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+
+    .deal-repo { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+
     .deal-footer { display: flex; align-items: center; justify-content: space-between; }
+
     .deal-value { font-weight: 700; font-size: 13px; color: var(--green); }
+
     .deal-contact { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
-    .avatar-xs { width: 20px; height: 20px; border-radius: 50%; background: var(--border); overflow: hidden; }
+
+    .avatar-xs {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--border); overflow: hidden; flex-shrink: 0;
+    }
+
     .avatar-xs img { width: 100%; height: 100%; object-fit: cover; }
+
     .kanban-empty { color: var(--text-muted); font-size: 11px; text-align: center; padding: 16px 8px; }
-    .table-wrap { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .table-toolbar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+
     .table-title { font-weight: 600; font-size: 14px; }
-    .search-box { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 13px; padding: 6px 12px; width: 220px; outline: none; transition: border-color .15s; }
+
+    .search-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+      padding: 6px 12px;
+      width: 220px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
     .search-box:focus { border-color: var(--accent-light); }
     .search-box::placeholder { color: var(--text-muted); }
+
     table { width: 100%; border-collapse: collapse; }
-    thead th { background: var(--bg-tertiary); border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 11px; font-weight: 600; letter-spacing: .06em; padding: 9px 20px; text-align: left; text-transform: uppercase; white-space: nowrap; }
+
+    thead th {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 9px 20px;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
     tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg-tertiary); }
+
     td { padding: 11px 20px; vertical-align: middle; }
+
     .contact-cell { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--bg-tertiary); overflow: hidden; border: 1px solid var(--border); }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%; background: var(--bg-tertiary);
+      overflow: hidden; flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
     .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
     .contact-name { font-weight: 500; font-size: 13px; }
-    .contact-handle { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
-    .status-badge { border-radius: 20px; font-size: 11px; font-weight: 500; padding: 2px 9px; display: inline-flex; align-items: center; gap: 5px; }
+
+    .contact-handle {
+      font-size: 11px; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 4px; margin-top: 1px;
+    }
+
+    .contact-handle svg { flex-shrink: 0; }
+
+    .status-badge {
+      border-radius: 20px; font-size: 11px; font-weight: 500;
+      padding: 2px 9px; display: inline-flex; align-items: center; gap: 5px;
+    }
+
     .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+
     .s-customer { background:rgba(63,185,80,.12); color:var(--green); border:1px solid rgba(63,185,80,.25); }
     .s-customer::before { background:var(--green); }
     .s-prospect { background:rgba(88,166,255,.12); color:var(--blue); border:1px solid rgba(88,166,255,.25); }
     .s-prospect::before { background:var(--blue); }
-    .s-lead { background:rgba(210,153,34,.12); color:var(--yellow); border:1px solid rgba(210,153,34,.25); }
+    .s-lead     { background:rgba(210,153,34,.12); color:var(--yellow); border:1px solid rgba(210,153,34,.25); }
     .s-lead::before { background:var(--yellow); }
-    .s-churned { background:rgba(248,81,73,.12); color:var(--red); border:1px solid rgba(248,81,73,.25); }
+    .s-churned  { background:rgba(248,81,73,.12); color:var(--red); border:1px solid rgba(248,81,73,.25); }
     .s-churned::before { background:var(--red); }
-    .repos-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 14px; }
-    .repo-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .15s; display: flex; flex-direction: column; gap: 10px; }
+
+    .num-cell { font-variant-numeric: tabular-nums; }
+
+    /* ── Repo cards ── */
+    .repos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .repo-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: border-color .15s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
     .repo-card:hover { border-color: var(--accent-light); }
+
     .repo-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-    .repo-name { font-weight: 600; font-size: 14px; color: var(--blue); text-decoration: none; }
+
+    .repo-name {
+      font-weight: 600; font-size: 14px;
+      color: var(--blue); text-decoration: none;
+    }
+
     .repo-name:hover { text-decoration: underline; }
-    .lang-badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+
+    .lang-badge {
+      font-size: 11px; padding: 2px 9px;
+      border-radius: 20px; font-weight: 500;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
     .l-TypeScript { background:rgba(49,120,198,.18); color:#79b8ff; border:1px solid rgba(49,120,198,.3); }
     .l-JavaScript { background:rgba(241,224,90,.15); color:#e3c04e; border:1px solid rgba(241,224,90,.25); }
-    .repo-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+    .repo-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; flex: 1; }
+
     .repo-stats { display: flex; gap: 18px; }
-    .repo-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
-    .feed-wrap { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .feed-item { display: flex; gap: 13px; padding: 13px 20px; border-bottom: 1px solid var(--border); transition: background .1s; }
+
+    .repo-stat {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--text-secondary);
+    }
+
+    /* ── Activity ── */
+    .feed-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .feed-item {
+      display: flex; gap: 13px;
+      padding: 13px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+
     .feed-item:last-child { border-bottom: none; }
     .feed-item:hover { background: var(--bg-tertiary); }
-    .feed-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
-    .fi-pr { background:rgba(124,58,237,.15); }
-    .fi-email { background:rgba(88,166,255,.15); }
-    .fi-call { background:rgba(63,185,80,.15); }
-    .fi-issue { background:rgba(248,81,73,.15); }
-    .fi-star { background:rgba(210,153,34,.15); }
-    .fi-comment { background:rgba(63,185,80,.15); }
+
+    .feed-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .fi-pr     { background:rgba(124,58,237,.15); }
+    .fi-email  { background:rgba(88,166,255,.15); }
+    .fi-call   { background:rgba(63,185,80,.15); }
+    .fi-issue  { background:rgba(248,81,73,.15); }
+    .fi-star   { background:rgba(210,153,34,.15); }
+    .fi-comment{ background:rgba(63,185,80,.15); }
+
     .feed-body { flex: 1; min-width: 0; }
     .feed-title { font-weight: 500; font-size: 13px; margin-bottom: 3px; }
     .feed-desc { font-size: 12px; color: var(--text-secondary); }
+
     .feed-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; padding-top: 2px; white-space: nowrap; }
+
     .gh-link { color: var(--blue); text-decoration: none; font-size: 12px; }
     .gh-link:hover { text-decoration: underline; }
-    .loading { display: flex; align-items: center; justify-content: center; padding: 64px; color: var(--text-muted); gap: 12px; font-size: 13px; }
-    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent-light); border-radius: 50%; animation: spin .75s linear infinite; }
+
+    /* ── Loading / Spinner ── */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 64px; color: var(--text-muted); gap: 12px; font-size: 13px;
+    }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent-light);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+    }
+
     @keyframes spin { to { transform: rotate(360deg); } }
-    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); padding: 24px; }
-    .login-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 48px 40px; width: 100%; max-width: 380px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .login-logo svg { width: 44px; height: 44px; fill: var(--text-primary); }
+
+    /* ── Login ── */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-primary);
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+
+    .login-logo svg {
+      width: 44px; height: 44px;
+      fill: var(--text-primary);
+    }
+
     .login-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+
     .login-sub { font-size: 13px; color: var(--text-secondary); margin-top: -8px; }
-    .login-btn { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--text-primary); color: var(--bg-primary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; padding: 11px 24px; width: 100%; cursor: pointer; transition: opacity .15s; }
+
+    .login-btn {
+      margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      padding: 11px 24px;
+      width: 100%;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
     .login-btn:hover { opacity: 0.88; }
-    .login-note { font-size: 11px; color: var(--text-muted); line-height: 1.6; margin-top: -4px; }
-    .user-chip { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
-    .user-chip img { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); }
-    .signout-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 4px 10px; transition: border-color .15s, color .15s; }
+
+    .login-note {
+      font-size: 11px; color: var(--text-muted);
+      line-height: 1.6; margin-top: -4px;
+    }
+
+    /* ── User chip & sign-out ── */
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-secondary);
+    }
+
+    .user-chip img {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+    }
+
+    .signout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 10px;
+      transition: border-color .15s, color .15s;
+    }
+
     .signout-btn:hover { border-color: var(--red); color: var(--red); }
-    @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .kanban { grid-template-columns: repeat(3,minmax(190px,1fr)); } }
-    @media (max-width: 640px) { main { padding: 14px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .kanban { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      main { padding: 14px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
 
+<!-- ── Login screen ─────────────────────────── -->
 <div id="login-screen" style="display:none">
   <div class="login-wrap">
     <div class="login-card">
@@ -163,6 +531,7 @@
   </div>
 </div>
 
+<!-- ── Header ──────────────────────────────── -->
 <header id="app-header" style="display:none">
   <div class="header-logo">
     <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -177,70 +546,146 @@
   </div>
 </header>
 
+<!-- ── Main ────────────────────────────────── -->
 <main id="app-main" style="display:none">
+
+  <!-- Stats -->
   <div class="stats-grid" id="stats-grid">
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
+
+  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('pipeline',this)">◈ Pipeline <span class="tab-count" id="tc-pipeline">—</span></button>
-    <button class="tab-btn" onclick="switchTab('contacts',this)">◎ Contacts <span class="tab-count" id="tc-contacts">—</span></button>
-    <button class="tab-btn" onclick="switchTab('repos',this)">⬡ Repositories <span class="tab-count" id="tc-repos">—</span></button>
-    <button class="tab-btn" onclick="switchTab('activity',this)">⚡ Activity <span class="tab-count" id="tc-activity">—</span></button>
+    <button class="tab-btn active" onclick="switchTab('pipeline',this)">
+      ◈ Pipeline <span class="tab-count" id="tc-pipeline">—</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('contacts',this)">
+      ◎ Contacts <span class="tab-count" id="tc-contacts">—</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('repos',this)">
+      ⬡ Repositories <span class="tab-count" id="tc-repos">—</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('activity',this)">
+      ⚡ Activity <span class="tab-count" id="tc-activity">—</span>
+    </button>
   </div>
+
   <div class="tab-panel active" id="panel-pipeline"><div class="loading"><div class="spinner"></div>Loading pipeline…</div></div>
-  <div class="tab-panel" id="panel-contacts"><div class="loading"><div class="spinner"></div>Loading contacts…</div></div>
-  <div class="tab-panel" id="panel-repos"><div class="loading"><div class="spinner"></div>Loading repositories…</div></div>
-  <div class="tab-panel" id="panel-activity"><div class="loading"><div class="spinner"></div>Loading activity…</div></div>
+  <div class="tab-panel"        id="panel-contacts"><div class="loading"><div class="spinner"></div>Loading contacts…</div></div>
+  <div class="tab-panel"        id="panel-repos">   <div class="loading"><div class="spinner"></div>Loading repositories…</div></div>
+  <div class="tab-panel"        id="panel-activity"><div class="loading"><div class="spinner"></div>Loading activity…</div></div>
+
 </main>
 
+<!-- ── Script ───────────────────────────────── -->
 <script>
 const SUPABASE_URL = 'https://zpvmqbvwmftkrkfxsblm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwdm1xYnZ3bWZ0a3JrZnhzYmxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTM5NDksImV4cCI6MjA5NDk4OTk0OX0.X1yirvyOZJrxRHNwRqPQxc7zZZsR8ww-QLaGXoByooc';
+
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let D = {};
 
+/* ── Auth ── */
 async function signInWithGitHub() {
+  const redirectTo = 'https://gnolegroup.github.io/github-crm-dashboard';
   const { error } = await db.auth.signInWithOAuth({
     provider: 'github',
-    options: { redirectTo: 'https://gnolegroup.github.io/github-crm-dashboard' }
+    options: { redirectTo }
   });
   if (error) alert('Sign-in error: ' + error.message);
 }
-async function signOut() { await db.auth.signOut(); showLogin(); }
+
+async function signOut() {
+  clearInactivityTimer();
+  await db.auth.signOut();
+  showLogin();
+}
+
+/* ── Inactivity auto-logout (2 min) ── */
+const INACTIVITY_MS = 2 * 60 * 1000;
+let inactivityTimer = null;
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(async () => {
+    await db.auth.signOut();
+    showLogin();
+    alert('You have been signed out due to 2 minutes of inactivity.');
+  }, INACTIVITY_MS);
+}
+
+function clearInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+}
+
+function startInactivityWatch() {
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
+  resetInactivityTimer();
+}
+
+function stopInactivityWatch() {
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
+    document.removeEventListener(evt, resetInactivityTimer);
+  });
+  clearInactivityTimer();
+}
 
 function showLogin() {
+  stopInactivityWatch();
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('app-header').style.display = 'none';
   document.getElementById('app-main').style.display = 'none';
 }
+
 function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-header').style.display = 'flex';
   document.getElementById('app-main').style.display = 'block';
+  startInactivityWatch();
   const chip = document.getElementById('user-chip');
   const avatar = user.user_metadata?.avatar_url;
-  const name = user.user_metadata?.user_name || user.email;
-  chip.innerHTML = avatar ? `<img src="${avatar}" alt="${name}"> ${name}` : name;
+  const name   = user.user_metadata?.user_name || user.email;
+  chip.innerHTML = avatar
+    ? `<img src="${avatar}" alt="${name}"> ${name}`
+    : name;
 }
 
+/* ── Bootstrap ── */
 async function init() {
   const { data: { session } } = await db.auth.getSession();
-  if (session?.user) { showApp(session.user); loadAll(); }
-  else showLogin();
+  if (session?.user) {
+    showApp(session.user);
+    loadAll();
+  } else {
+    showLogin();
+  }
 }
+
 db.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) { showApp(session.user); if (!Object.keys(D).length) loadAll(); }
-  else if (event === 'SIGNED_OUT') showLogin();
+  if (event === 'SIGNED_IN' && session?.user) {
+    showApp(session.user);
+    if (!Object.keys(D).length) loadAll();
+  } else if (event === 'SIGNED_OUT') {
+    showLogin();
+  }
 });
 
+/* ── Helpers ── */
 const $ = id => document.getElementById(id);
 const fmt$ = v => v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v;
-const fmtN = n => (n||0).toLocaleString();
+const fmtN = n => (n || 0).toLocaleString();
 function relTime(ts) {
   const h = Math.floor((Date.now() - new Date(ts)) / 3600000);
-  if (h < 1) return 'just now'; if (h < 24) return h + 'h ago';
-  const d = Math.floor(h/24); return d < 30 ? d + 'd ago' : Math.floor(d/30) + 'mo ago';
+  if (h < 1) return 'just now';
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d < 30 ? d + 'd ago' : Math.floor(d/30) + 'mo ago';
 }
+
+/* ── Tabs ── */
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -248,89 +693,239 @@ function switchTab(name, btn) {
   $('panel-' + name).classList.add('active');
 }
 
+/* ── Load ── */
 async function loadAll() {
-  const [{data:contacts},{data:deals},{data:stages},{data:repos},{data:activities}] = await Promise.all([
-    db.from('contacts').select('*').order('github_followers',{ascending:false}),
-    db.from('deals').select('*,contacts(*),organizations(*),pipeline_stages(*)').order('value',{ascending:false}),
+  const [
+    { data: contacts },
+    { data: deals },
+    { data: stages },
+    { data: repos },
+    { data: activities },
+  ] = await Promise.all([
+    db.from('contacts').select('*').order('github_followers', { ascending: false }),
+    db.from('deals').select('*, contacts(*), organizations(*), pipeline_stages(*)').order('value', { ascending: false }),
     db.from('pipeline_stages').select('*').order('position'),
-    db.from('repositories').select('*').order('stars',{ascending:false}),
-    db.from('activities').select('*,contacts(*),repositories(*)').order('created_at',{ascending:false}),
+    db.from('repositories').select('*').order('stars', { ascending: false }),
+    db.from('activities').select('*, contacts(*), repositories(*)').order('created_at', { ascending: false }),
   ]);
-  D = {contacts,deals,stages,repos,activities};
-  renderStats(); renderPipeline(); renderContacts(); renderRepos(); renderActivity();
+
+  D = { contacts, deals, stages, repos, activities };
+
+  renderStats();
+  renderPipeline();
+  renderContacts();
+  renderRepos();
+  renderActivity();
 }
 
+/* ── Stats ── */
 function renderStats() {
-  const {contacts,deals} = D;
-  const open = deals.filter(d=>d.status==='open'), won = deals.filter(d=>d.status==='won');
-  const pipe = open.reduce((s,d)=>s+(d.value||0),0), wonV = won.reduce((s,d)=>s+(d.value||0),0);
+  const { contacts, deals } = D;
+  const open  = deals.filter(d => d.status === 'open');
+  const won   = deals.filter(d => d.status === 'won');
+  const pipe  = open.reduce((s, d) => s + (d.value || 0), 0);
+  const wonV  = won.reduce((s, d) => s + (d.value || 0), 0);
+
   $('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-icon purple">👥</div><div><div class="stat-label">Total Contacts</div><div class="stat-value">${contacts.length}</div><div class="stat-sub">${contacts.filter(c=>c.status==='customer').length} customers · ${contacts.filter(c=>c.status==='lead').length} leads</div></div></div>
-    <div class="stat-card"><div class="stat-icon blue">💼</div><div><div class="stat-label">Open Deals</div><div class="stat-value">${open.length}</div><div class="stat-sub">${deals.length} total · ${won.length} won</div></div></div>
-    <div class="stat-card"><div class="stat-icon yellow">📈</div><div><div class="stat-label">Pipeline Value</div><div class="stat-value">${fmt$(pipe)}</div><div class="stat-sub">across ${open.length} open deals</div></div></div>
-    <div class="stat-card"><div class="stat-icon green">🏆</div><div><div class="stat-label">Won Revenue</div><div class="stat-value">${fmt$(wonV)}</div><div class="stat-sub">${won.length} deals closed</div></div></div>`;
-  $('tc-pipeline').textContent = D.deals.length; $('tc-contacts').textContent = D.contacts.length;
-  $('tc-repos').textContent = D.repos.length; $('tc-activity').textContent = D.activities.length;
+    <div class="stat-card">
+      <div class="stat-icon purple">👥</div>
+      <div>
+        <div class="stat-label">Total Contacts</div>
+        <div class="stat-value">${contacts.length}</div>
+        <div class="stat-sub">${contacts.filter(c=>c.status==='customer').length} customers · ${contacts.filter(c=>c.status==='lead').length} leads</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">💼</div>
+      <div>
+        <div class="stat-label">Open Deals</div>
+        <div class="stat-value">${open.length}</div>
+        <div class="stat-sub">${deals.length} total · ${won.length} won</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">📈</div>
+      <div>
+        <div class="stat-label">Pipeline Value</div>
+        <div class="stat-value">${fmt$(pipe)}</div>
+        <div class="stat-sub">across ${open.length} open deals</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">🏆</div>
+      <div>
+        <div class="stat-label">Won Revenue</div>
+        <div class="stat-value">${fmt$(wonV)}</div>
+        <div class="stat-sub">${won.length} deals closed</div>
+      </div>
+    </div>
+  `;
+
+  $('tc-pipeline').textContent = D.deals.length;
+  $('tc-contacts').textContent = D.contacts.length;
+  $('tc-repos').textContent    = D.repos.length;
+  $('tc-activity').textContent = D.activities.length;
 }
 
+/* ── Pipeline ── */
 function renderPipeline() {
-  const {stages,deals} = D;
+  const { stages, deals } = D;
   const cols = stages.map(s => {
-    const sd = deals.filter(d=>d.stage_id===s.id), total = sd.reduce((a,d)=>a+(d.value||0),0);
-    const cards = sd.length===0 ? '<div class="kanban-empty">No deals</div>' : sd.map(d=>`
-      <div class="deal-card">
-        <div class="deal-title">${d.title}</div>
-        ${d.github_repo?`<div class="deal-repo">⬡ ${d.github_repo}</div>`:''}
-        <div class="deal-footer">
-          <span class="deal-value">${fmt$(d.value)}</span>
-          ${d.contacts?`<div class="deal-contact"><div class="avatar-xs"><img src="${d.contacts.avatar_url}" loading="lazy" onerror="this.style.display='none'"></div>${d.contacts.name.split(' ')[0]}</div>`:''}
+    const sd    = deals.filter(d => d.stage_id === s.id);
+    const total = sd.reduce((a, d) => a + (d.value || 0), 0);
+    return `
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="stage-label">
+            <div class="stage-dot" style="background:${s.color}"></div>
+            ${s.name}
+          </div>
+          <div class="stage-meta">${sd.length} · ${fmt$(total)}</div>
         </div>
-      </div>`).join('');
-    return `<div class="kanban-col"><div class="kanban-header"><div class="stage-label"><div class="stage-dot" style="background:${s.color}"></div>${s.name}</div><div class="stage-meta">${sd.length} · ${fmt$(total)}</div></div><div class="kanban-body">${cards}</div></div>`;
+        <div class="kanban-body">
+          ${sd.length === 0
+            ? '<div class="kanban-empty">No deals</div>'
+            : sd.map(d => `
+              <div class="deal-card">
+                <div class="deal-title">${d.title}</div>
+                ${d.github_repo ? `<div class="deal-repo">⬡ ${d.github_repo}</div>` : ''}
+                <div class="deal-footer">
+                  <span class="deal-value">${fmt$(d.value)}</span>
+                  ${d.contacts ? `
+                    <div class="deal-contact">
+                      <div class="avatar-xs">
+                        <img src="${d.contacts.avatar_url}" loading="lazy" onerror="this.style.display='none'">
+                      </div>
+                      ${d.contacts.name.split(' ')[0]}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    `;
   }).join('');
+
   $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>`;
 }
 
+/* ── Contacts ── */
 function renderContacts() {
-  const rows = D.contacts.map(c=>`
+  const rows = D.contacts.map(c => `
     <tr>
-      <td><div class="contact-cell"><div class="avatar"><img src="${c.avatar_url}" loading="lazy" onerror="this.parentElement.style.background='var(--bg-tertiary)'"></div><div><div class="contact-name">${c.name}</div><div class="contact-handle"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>@${c.github_username}</div></div></div></td>
-      <td>${c.role||'—'}</td><td>${c.company||'—'}</td>
+      <td>
+        <div class="contact-cell">
+          <div class="avatar">
+            <img src="${c.avatar_url}" loading="lazy" onerror="this.parentElement.style.background='var(--bg-tertiary)'">
+          </div>
+          <div>
+            <div class="contact-name">${c.name}</div>
+            <div class="contact-handle">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              @${c.github_username}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td>${c.role || '—'}</td>
+      <td>${c.company || '—'}</td>
       <td><span class="status-badge s-${c.status}">${c.status}</span></td>
-      <td>★ ${fmtN(c.github_stars)}</td><td>⬆ ${fmtN(c.github_followers)}</td>
-      <td style="color:var(--text-secondary);font-size:12px">${c.location||'—'}</td>
-    </tr>`).join('');
-  $('panel-contacts').innerHTML = `<div class="table-wrap"><div class="table-toolbar"><div class="table-title">All Contacts</div><input class="search-box" type="search" placeholder="Search contacts…" oninput="filterContacts(this.value)"></div><table><thead><tr><th>Contact</th><th>Role</th><th>Company</th><th>Status</th><th>Stars</th><th>Followers</th><th>Location</th></tr></thead><tbody id="contacts-body">${rows}</tbody></table></div>`;
-}
-function filterContacts(q) {
-  const lower = q.toLowerCase();
-  document.querySelectorAll('#contacts-body tr').forEach(r => { r.style.display = r.textContent.toLowerCase().includes(lower) ? '' : 'none'; });
+      <td class="num-cell">★ ${fmtN(c.github_stars)}</td>
+      <td class="num-cell">⬆ ${fmtN(c.github_followers)}</td>
+      <td style="color:var(--text-secondary);font-size:12px">${c.location || '—'}</td>
+    </tr>
+  `).join('');
+
+  $('panel-contacts').innerHTML = `
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-title">All Contacts</div>
+        <input class="search-box" type="search" placeholder="Search contacts…" oninput="filterContacts(this.value)">
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Contact</th><th>Role</th><th>Company</th>
+            <th>Status</th><th>Stars</th><th>Followers</th><th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="contacts-body">${rows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
+function filterContacts(q) {
+  const lower = q.toLowerCase();
+  document.querySelectorAll('#contacts-body tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(lower) ? '' : 'none';
+  });
+}
+
+/* ── Repos ── */
 function renderRepos() {
-  const cards = D.repos.map(r=>`
+  const cards = D.repos.map(r => `
     <div class="repo-card">
-      <div class="repo-top"><a class="repo-name" href="${r.url}" target="_blank" rel="noopener">${r.full_name}</a><span class="lang-badge l-${r.language}">${r.language}</span></div>
-      <div class="repo-desc">${r.description||'No description.'}</div>
-      <div class="repo-stats"><div class="repo-stat">★ ${fmtN(r.stars)}</div><div class="repo-stat">⑂ ${fmtN(r.forks)}</div><div class="repo-stat">⚠ ${fmtN(r.open_issues)} issues</div></div>
-    </div>`).join('');
+      <div class="repo-top">
+        <a class="repo-name" href="${r.url}" target="_blank" rel="noopener">${r.full_name}</a>
+        <span class="lang-badge l-${r.language}">${r.language}</span>
+      </div>
+      <div class="repo-desc">${r.description || 'No description available.'}</div>
+      <div class="repo-stats">
+        <div class="repo-stat">★ ${fmtN(r.stars)}</div>
+        <div class="repo-stat">⑂ ${fmtN(r.forks)}</div>
+        <div class="repo-stat">⚠ ${fmtN(r.open_issues)} issues</div>
+      </div>
+    </div>
+  `).join('');
+
   $('panel-repos').innerHTML = `<div class="repos-grid">${cards}</div>`;
 }
 
+/* ── Activity ── */
 const iconMap = {
-  pr_merged:{cls:'fi-pr',emoji:'⬡'},pr_opened:{cls:'fi-pr',emoji:'⬢'},
-  email:{cls:'fi-email',emoji:'✉'},call:{cls:'fi-call',emoji:'☎'},
-  issue_opened:{cls:'fi-issue',emoji:'⚠'},issue_closed:{cls:'fi-issue',emoji:'✓'},
-  star:{cls:'fi-star',emoji:'★'},comment:{cls:'fi-comment',emoji:'◈'},
+  pr_merged:    { cls: 'fi-pr',      emoji: '⬡' },
+  pr_opened:    { cls: 'fi-pr',      emoji: '⬢' },
+  email:        { cls: 'fi-email',   emoji: '✉' },
+  call:         { cls: 'fi-call',    emoji: '☎' },
+  issue_opened: { cls: 'fi-issue',   emoji: '⚠' },
+  issue_closed: { cls: 'fi-issue',   emoji: '✓' },
+  star:         { cls: 'fi-star',    emoji: '★' },
+  comment:      { cls: 'fi-comment', emoji: '◈' },
 };
+
 function renderActivity() {
-  const items = D.activities.map(a=>{
-    const ic = iconMap[a.type]||{cls:'fi-pr',emoji:'●'};
-    return `<div class="feed-item"><div class="feed-icon ${ic.cls}">${ic.emoji}</div><div class="feed-body"><div class="feed-title">${a.title}</div><div class="feed-desc">${a.contacts?`<strong>@${a.contacts.github_username}</strong> · `:''}${a.description||''}${a.github_url?` · <a class="gh-link" href="${a.github_url}" target="_blank" rel="noopener">View on GitHub ↗</a>`:''}</div></div><div class="feed-time">${relTime(a.created_at)}</div></div>`;
+  const items = D.activities.map(a => {
+    const ic = iconMap[a.type] || { cls: 'fi-pr', emoji: '●' };
+    return `
+      <div class="feed-item">
+        <div class="feed-icon ${ic.cls}">${ic.emoji}</div>
+        <div class="feed-body">
+          <div class="feed-title">${a.title}</div>
+          <div class="feed-desc">
+            ${a.contacts ? `<strong>@${a.contacts.github_username}</strong> · ` : ''}
+            ${a.description || ''}
+            ${a.github_url ? ` · <a class="gh-link" href="${a.github_url}" target="_blank" rel="noopener">View on GitHub ↗</a>` : ''}
+          </div>
+        </div>
+        <div class="feed-time">${relTime(a.created_at)}</div>
+      </div>
+    `;
   }).join('');
-  $('panel-activity').innerHTML = `<div class="feed-wrap"><div class="table-toolbar"><div class="table-title">Recent Activity</div><span style="font-size:12px;color:var(--text-muted)">${D.activities.length} events</span></div>${items}</div>`;
+
+  $('panel-activity').innerHTML = `
+    <div class="feed-wrap">
+      <div class="table-toolbar">
+        <div class="table-title">Recent Activity</div>
+        <span style="font-size:12px;color:var(--text-muted)">${D.activities.length} events</span>
+      </div>
+      ${items}
+    </div>
+  `;
 }
 
+/* ── Boot ── */
 init();
 </script>
 </body>
