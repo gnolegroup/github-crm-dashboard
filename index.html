@@ -601,16 +601,18 @@ async function signOut() {
   showLogin();
 }
 
-/* ── Inactivity auto-logout (2 min) ── */
-const INACTIVITY_MS = 2 * 60 * 1000;
+/* ── Inactivity auto-logout (1 min) ── */
+const INACTIVITY_MS = 60 * 1000;
 let inactivityTimer = null;
+let watchingInactivity = false;
 
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(async () => {
-    await db.auth.signOut();
-    showLogin();
-    alert('You have been signed out due to 2 minutes of inactivity.');
+  inactivityTimer = setTimeout(() => {
+    db.auth.signOut().then(() => {
+      showLogin();
+      alert('You have been signed out due to 1 minute of inactivity.');
+    });
   }, INACTIVITY_MS);
 }
 
@@ -619,17 +621,18 @@ function clearInactivityTimer() {
   inactivityTimer = null;
 }
 
+const WATCH_EVENTS = ['mousemove','mousedown','keydown','touchstart','scroll','click'];
+
 function startInactivityWatch() {
-  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
-    document.addEventListener(evt, resetInactivityTimer, { passive: true });
-  });
+  if (watchingInactivity) return;
+  watchingInactivity = true;
+  WATCH_EVENTS.forEach(evt => document.addEventListener(evt, resetInactivityTimer, { passive: true }));
   resetInactivityTimer();
 }
 
 function stopInactivityWatch() {
-  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
-    document.removeEventListener(evt, resetInactivityTimer);
-  });
+  watchingInactivity = false;
+  WATCH_EVENTS.forEach(evt => document.removeEventListener(evt, resetInactivityTimer, { passive: true }));
   clearInactivityTimer();
 }
 
