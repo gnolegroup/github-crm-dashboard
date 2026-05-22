@@ -629,45 +629,11 @@ async function signInWithEmail() {
 }
 
 async function signOut() {
-  clearInactivityTimer();
   await db.auth.signOut();
   showLogin();
 }
 
-/* ── Inactivity auto-logout (1 min) ── */
-const INACTIVITY_MS = 60 * 1000;
-let inactivityTimer = null;
-let watchingInactivity = false;
-
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => {
-    db.auth.signOut().then(() => showLogin());
-  }, INACTIVITY_MS);
-}
-
-function clearInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = null;
-}
-
-const WATCH_EVENTS = ['mousemove','mousedown','keydown','touchstart','scroll','click'];
-
-function startInactivityWatch() {
-  if (watchingInactivity) return;
-  watchingInactivity = true;
-  WATCH_EVENTS.forEach(evt => document.addEventListener(evt, resetInactivityTimer, { passive: true }));
-  resetInactivityTimer();
-}
-
-function stopInactivityWatch() {
-  watchingInactivity = false;
-  WATCH_EVENTS.forEach(evt => document.removeEventListener(evt, resetInactivityTimer, { passive: true }));
-  clearInactivityTimer();
-}
-
 function showLogin() {
-  stopInactivityWatch();
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('app-header').style.display = 'none';
   document.getElementById('app-main').style.display = 'none';
@@ -677,7 +643,6 @@ function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-header').style.display = 'flex';
   document.getElementById('app-main').style.display = 'block';
-  startInactivityWatch();
   document.getElementById('user-chip').textContent = user.email;
 }
 
