@@ -726,32 +726,31 @@ function renderStats() {
   const { contacts, deals } = D;
   const open  = deals.filter(d => d.status === 'open');
   const won   = deals.filter(d => d.status === 'won');
-  const pipe  = open.reduce((s, d) => s + (d.value || 0), 0);
   const wonV  = won.reduce((s, d) => s + (d.value || 0), 0);
 
   $('stats-grid').innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon purple">👥</div>
+      <div class="stat-icon purple">🎯</div>
       <div>
-        <div class="stat-label">Total Contacts</div>
+        <div class="stat-label">Total Leads</div>
         <div class="stat-value">${contacts.length}</div>
         <div class="stat-sub">${contacts.filter(c=>c.status==='customer').length} customers · ${contacts.filter(c=>c.status==='lead').length} leads</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue">💼</div>
+      <div class="stat-icon blue">🔥</div>
       <div>
-        <div class="stat-label">Open Deals</div>
+        <div class="stat-label">Hot Leads</div>
         <div class="stat-value">${open.length}</div>
         <div class="stat-sub">${deals.length} total · ${won.length} won</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon yellow">📈</div>
+      <div class="stat-icon yellow">📡</div>
       <div>
-        <div class="stat-label">Pipeline Value</div>
-        <div class="stat-value">${fmt$(pipe)}</div>
-        <div class="stat-sub">across ${open.length} open deals</div>
+        <div class="stat-label">Sales Channel</div>
+        <div class="stat-value">${D.repos.length}</div>
+        <div class="stat-sub">GitHub repositories tracked</div>
       </div>
     </div>
     <div class="stat-card">
