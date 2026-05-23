@@ -889,6 +889,8 @@ function renderStats() {
   const open = deals.filter(d => d.status === 'open');
   const won  = deals.filter(d => d.status === 'won');
   const wonV = won.reduce((s, d) => s + (d.value || 0), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const todayLeads = contacts.filter(c => c.created_at && c.created_at.slice(0, 10) === today);
 
   $('stats-grid').innerHTML = `
     <div class="stat-card">
@@ -900,11 +902,11 @@ function renderStats() {
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue">🔥</div>
+      <div class="stat-icon blue">🌱</div>
       <div>
-        <div class="stat-label">Hot Leads</div>
-        <div class="stat-value">${open.length}</div>
-        <div class="stat-sub">${deals.length} total · ${won.length} won</div>
+        <div class="stat-label">Today's New Leads</div>
+        <div class="stat-value">${todayLeads.length}</div>
+        <div class="stat-sub">${contacts.length} total · ${open.length} open deals</div>
       </div>
     </div>
     <div class="stat-card">
