@@ -87,6 +87,112 @@
 
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
+    /* ── Nav menu bar ── */
+    .nav-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 40px;
+      position: sticky;
+      top: 56px;
+      z-index: 99;
+      gap: 2px;
+    }
+
+    .nav-menu {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .nav-menu-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background .12s, color .12s;
+      white-space: nowrap;
+    }
+
+    .nav-menu-btn:hover,
+    .nav-menu:hover .nav-menu-btn {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .nav-menu-btn .chevron {
+      font-size: 9px;
+      opacity: 0.6;
+      transition: transform .15s;
+    }
+
+    .nav-menu:hover .nav-menu-btn .chevron {
+      transform: rotate(180deg);
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity .15s, transform .15s, visibility .15s;
+      z-index: 200;
+    }
+
+    .nav-menu:hover .nav-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      border-radius: 5px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .1s, color .1s;
+      user-select: none;
+    }
+
+    .nav-dropdown-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .nav-dropdown-icon {
+      font-size: 13px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 6px;
+    }
+
     /* ── Main ── */
     main { max-width: 1440px; margin: 0 auto; padding: 24px; }
 
@@ -565,6 +671,76 @@
   </div>
 </header>
 
+<!-- ── Nav menu bar ────────────────────────── -->
+<nav class="nav-bar" id="app-nav" style="display:none">
+
+  <!-- Dashboard -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📊</span>Overview</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📈</span>Analytics</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
+    </div>
+  </div>
+
+  <!-- Member -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">👥</span>All Members</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">➕</span>Add Member</div>
+      <div class="nav-dropdown-divider"></div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
+    </div>
+  </div>
+
+  <!-- Leads -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">🎯 Leads <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📋</span>All Leads</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">➕</span>Add Lead</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">⬡</span>Pipeline</div>
+      <div class="nav-dropdown-divider"></div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📥</span>Import</div>
+    </div>
+  </div>
+
+  <!-- Report -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">📊 Report <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">💰</span>Sales Report</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">⚡</span>Activity Report</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🏆</span>Revenue Report</div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">📅 Calendar <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📅</span>Schedule</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🤝</span>Meetings</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🎉</span>Events</div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">⚙ Settings <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🛠</span>General</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔗</span>Integrations</div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">👥</span>Team</div>
+      <div class="nav-dropdown-divider"></div>
+      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">💳</span>Billing</div>
+    </div>
+  </div>
+
+</nav>
+
 <!-- ── Main ────────────────────────────────── -->
 <main id="app-main" style="display:none">
 
@@ -636,12 +812,14 @@ async function signOut() {
 function showLogin() {
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('app-header').style.display = 'none';
+  document.getElementById('app-nav').style.display = 'none';
   document.getElementById('app-main').style.display = 'none';
 }
 
 function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-header').style.display = 'flex';
+  document.getElementById('app-nav').style.display = 'flex';
   document.getElementById('app-main').style.display = 'block';
   document.getElementById('user-chip').textContent = user.email;
 }
