@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TEL CRM Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <style>
     :root {
       --bg-primary: #0d1117;
@@ -632,6 +634,56 @@
       main { padding: 14px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── CRM Analytics ── */
+    .ana-section { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
+    .ana-title { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+    .ana-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .ana-filter-card { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .ana-filter-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); margin-bottom: 2px; }
+    .ana-pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ana-pill { background: none; border: none; border-radius: 20px; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 500; padding: 4px 11px; transition: background .1s, color .1s; white-space: nowrap; }
+    .ana-pill:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .ana-pill.active { background: var(--text-primary); color: var(--bg-primary); }
+    .ana-filter-row-2 { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+    .ana-filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .seg-tag-strip { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+    .seg-tag { display: inline-flex; align-items: center; border-radius: 20px; font-size: 11px; font-weight: 500; padding: 3px 10px; color: #fff; }
+    .ana-kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .ana-kpi-card { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .ana-kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); margin-bottom: 6px; }
+    .ana-kpi-value { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+    .ana-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ana-col-stack { display: flex; flex-direction: column; gap: 16px; }
+    .ana-card { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 20px; overflow: hidden; }
+    .ana-card-header { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+    .ana-prod-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; cursor: pointer; transition: background .1s; }
+    .ana-prod-row:hover, .ana-prod-row.active { background: var(--bg-tertiary); }
+    .ana-prod-rank { font-size: 11px; color: var(--text-muted); width: 14px; text-align: right; flex-shrink: 0; }
+    .ana-prod-icon { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
+    .ana-prod-name { font-size: 12px; color: var(--text-primary); width: 104px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ana-prod-bar-wrap { flex: 1; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; }
+    .ana-prod-bar { height: 100%; border-radius: 3px; transition: width .3s; }
+    .ana-prod-count { font-size: 12px; font-weight: 600; color: var(--text-primary); width: 44px; text-align: right; flex-shrink: 0; }
+    .ana-prod-pct { font-size: 11px; color: var(--text-secondary); width: 30px; text-align: right; flex-shrink: 0; }
+    .ana-plat-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+    .ana-plat-row:last-child { border-bottom: none; }
+    .ana-plat-label { font-size: 12px; color: var(--text-secondary); width: 76px; flex-shrink: 0; }
+    .ana-plat-bar-wrap { flex: 1; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+    .ana-plat-bar { height: 100%; border-radius: 4px; transition: width .3s; }
+    .ana-plat-count { font-size: 12px; font-weight: 600; color: var(--text-primary); width: 48px; text-align: right; flex-shrink: 0; }
+    .ana-gender-body { display: flex; align-items: flex-start; gap: 20px; margin-top: 4px; }
+    .ana-gender-stats { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+    .ana-gender-stat { display: flex; flex-direction: column; gap: 4px; }
+    .ana-gender-pct { font-size: 34px; font-weight: 700; line-height: 1; }
+    .ana-gender-lbl { font-size: 11px; color: var(--text-secondary); }
+    .ana-gender-bar-wrap { height: 5px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; width: 100%; }
+    .ana-gender-bar { height: 100%; border-radius: 3px; transition: width .3s; }
+    .ana-gender-cnt { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .ana-donut-wrap { width: 150px; height: 150px; flex-shrink: 0; }
+    .ana-chart-wrap { position: relative; height: 200px; }
+    .ana-chart-tall { height: 280px; }
+    @media (max-width: 1024px) { .ana-grid-2 { grid-template-columns: 1fr; } .ana-kpi-grid { grid-template-columns: repeat(3,1fr); } }
   </style>
 </head>
 <body>
@@ -979,7 +1031,8 @@ function renderPipeline() {
     `;
   }).join('');
 
-  $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>`;
+  $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>${buildAnaShell()}`;
+  initAnalytics();
 }
 
 /* ── Contacts ── */
@@ -1095,6 +1148,295 @@ function renderActivity() {
       ${items}
     </div>
   `;
+}
+
+/* ── CRM Analytics ── */
+const ANA_P = [
+  { id:'water',    name:'Water purifier', leads:1276, gf:62, dist:[0.45,0.25,0.20,0.10], age:[0.15,0.35,0.28,0.15,0.07], plat:{tk:0.38,ig:0.22,fb:0.28,wa:0.12}, color:'#378ADD', icon:'droplet' },
+  { id:'air',      name:'Air purifier',   leads:992,  gf:55, dist:[0.42,0.28,0.22,0.08], age:[0.18,0.32,0.30,0.14,0.06], plat:{tk:0.35,ig:0.25,fb:0.25,wa:0.15}, color:'#1D9E75', icon:'wind' },
+  { id:'mattress', name:'Mattress',       leads:850,  gf:58, dist:[0.40,0.30,0.22,0.08], age:[0.12,0.38,0.28,0.16,0.06], plat:{tk:0.32,ig:0.28,fb:0.28,wa:0.12}, color:'#7F77DD', icon:'bed' },
+  { id:'aircon',   name:'Aircon',         leads:780,  gf:48, dist:[0.48,0.22,0.20,0.10], age:[0.10,0.30,0.32,0.20,0.08], plat:{tk:0.28,ig:0.22,fb:0.35,wa:0.15}, color:'#85B7EB', icon:'snowflake' },
+  { id:'outdoor',  name:'Outdoor filter', leads:620,  gf:45, dist:[0.38,0.28,0.25,0.09], age:[0.08,0.28,0.35,0.22,0.07], plat:{tk:0.30,ig:0.20,fb:0.32,wa:0.18}, color:'#639922', icon:'filter' },
+  { id:'washer',   name:'Washer dryer',   leads:580,  gf:65, dist:[0.44,0.26,0.22,0.08], age:[0.14,0.36,0.30,0.14,0.06], plat:{tk:0.40,ig:0.30,fb:0.20,wa:0.10}, color:'#D4537E', icon:'washing-machine' },
+  { id:'treadmill',name:'Treadmill',      leads:420,  gf:52, dist:[0.46,0.24,0.20,0.10], age:[0.22,0.40,0.25,0.10,0.03], plat:{tk:0.45,ig:0.28,fb:0.18,wa:0.09}, color:'#D85A30', icon:'run' },
+  { id:'massage',  name:'Massage chair',  leads:310,  gf:50, dist:[0.42,0.25,0.25,0.08], age:[0.08,0.25,0.35,0.25,0.07], plat:{tk:0.30,ig:0.25,fb:0.30,wa:0.15}, color:'#BA7517', icon:'armchair' },
+  { id:'hizero',   name:'Hizero',         leads:180,  gf:60, dist:[0.50,0.22,0.20,0.08], age:[0.20,0.38,0.28,0.10,0.04], plat:{tk:0.42,ig:0.32,fb:0.18,wa:0.08}, color:'#534AB7', icon:'robot' },
+  { id:'cooker',   name:'Cooker',         leads:81,   gf:68, dist:[0.40,0.28,0.22,0.10], age:[0.12,0.32,0.30,0.18,0.08], plat:{tk:0.28,ig:0.30,fb:0.28,wa:0.14}, color:'#E24B4A', icon:'chef-hat' },
+];
+const ANA_ST = { products: new Set(), month:'all', platform:'all', district:'all', gender:'all' };
+const MO_MULT = { all:1.0, jan:0.84, feb:0.97, mar:1.16, apr:1.05, may:0.95 };
+const MO_K = ['jan','feb','mar','apr','may'];
+const MO_L = ['Jan','Feb','Mar','Apr','May'];
+const DI_K = ['bm','tu','be','te'];
+const DI_L = ['B-Muara','Tutong','Belait','Temburong'];
+const DI_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517'];
+const PL_K = ['tk','ig','fb','wa'];
+const PL_L = ['TikTok','Instagram','Facebook','WhatsApp'];
+const PL_C = ['#7F77DD','#D4537E','#378ADD','#1D9E75'];
+const AG_L = ['18–25','26–35','36–45','46–55','56–60'];
+const AG_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517','#888780'];
+let AC = {};
+let anaInited = false;
+
+function anaScale(p, opts) {
+  opts = opts || {};
+  if (ANA_ST.products.size > 0 && !ANA_ST.products.has(p.id)) return 0;
+  let s = MO_MULT[ANA_ST.month];
+  if (!opts.noPl && ANA_ST.platform !== 'all') s *= p.plat[ANA_ST.platform];
+  if (!opts.noDi && ANA_ST.district !== 'all') s *= p.dist[DI_K.indexOf(ANA_ST.district)];
+  if (!opts.noGe && ANA_ST.gender !== 'all') s *= ANA_ST.gender === 'f' ? p.gf/100 : (100-p.gf)/100;
+  return p.leads * s;
+}
+function anaLeads(p) { return Math.round(anaScale(p)); }
+
+function buildAnaShell() {
+  return `<div class="ana-section">
+  <div><div class="ana-title">Leads Analytics</div><div class="ana-subtitle">Brunei Market · Real-time combined filter dashboard</div></div>
+
+  <div class="ana-filter-card">
+    <div class="ana-filter-label">Product</div>
+    <div class="ana-pill-row" id="ana-fprod">
+      <button class="ana-pill active" data-aprod="all">All</button>
+      ${ANA_P.map(p=>`<button class="ana-pill" data-aprod="${p.id}">${p.name}</button>`).join('')}
+    </div>
+    <div class="ana-filter-row-2">
+      <div class="ana-filter-group">
+        <div class="ana-filter-label">Month</div>
+        <div class="ana-pill-row">
+          <button class="ana-pill active" data-af="month" data-av="all">All</button>
+          ${MO_K.map((m,i)=>`<button class="ana-pill" data-af="month" data-av="${m}">${MO_L[i]}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ana-filter-group">
+        <div class="ana-filter-label">Platform</div>
+        <div class="ana-pill-row">
+          <button class="ana-pill active" data-af="platform" data-av="all">All</button>
+          ${PL_K.map((k,i)=>`<button class="ana-pill" data-af="platform" data-av="${k}">${PL_L[i]}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ana-filter-group">
+        <div class="ana-filter-label">District</div>
+        <div class="ana-pill-row">
+          <button class="ana-pill active" data-af="district" data-av="all">All</button>
+          ${DI_K.map((k,i)=>`<button class="ana-pill" data-af="district" data-av="${k}">${DI_L[i]}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ana-filter-group">
+        <div class="ana-filter-label">Gender</div>
+        <div class="ana-pill-row">
+          <button class="ana-pill active" data-af="gender" data-av="all">All</button>
+          <button class="ana-pill" data-af="gender" data-av="f">Female</button>
+          <button class="ana-pill" data-af="gender" data-av="m">Male</button>
+        </div>
+      </div>
+    </div>
+    <div class="seg-tag-strip" id="ana-segtags"></div>
+  </div>
+
+  <div class="ana-kpi-grid" id="ana-kpi"></div>
+
+  <div class="ana-grid-2">
+    <div class="ana-card" id="ana-prodlist"></div>
+    <div class="ana-col-stack">
+      <div class="ana-card" id="ana-platpanel"></div>
+      <div class="ana-card">
+        <div class="ana-card-header">District Split</div>
+        <div class="ana-chart-wrap"><canvas id="ana-dist-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ana-grid-2">
+    <div class="ana-card">
+      <div class="ana-card-header">Age Distribution</div>
+      <div class="ana-chart-wrap"><canvas id="ana-age-chart"></canvas></div>
+    </div>
+    <div class="ana-card">
+      <div class="ana-card-header">Gender Breakdown</div>
+      <div class="ana-gender-body">
+        <div class="ana-gender-stats" id="ana-gender-stats"></div>
+        <div class="ana-donut-wrap"><canvas id="ana-gender-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ana-card">
+    <div class="ana-card-header">Monthly Trend — New Leads vs Converted</div>
+    <div class="ana-chart-wrap ana-chart-tall"><canvas id="ana-trend-chart"></canvas></div>
+  </div>
+</div>`;
+}
+
+function initAnalytics() {
+  if (anaInited) { refreshAna(); return; }
+  anaInited = true;
+
+  document.getElementById('ana-fprod').addEventListener('click', e => {
+    const btn = e.target.closest('[data-aprod]');
+    if (!btn) return;
+    const id = btn.dataset.aprod;
+    if (id === 'all') { ANA_ST.products.clear(); }
+    else { ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id); }
+    refreshAna();
+  });
+
+  document.querySelectorAll('[data-af]').forEach(btn => {
+    btn.addEventListener('click', () => { ANA_ST[btn.dataset.af] = btn.dataset.av; refreshAna(); });
+  });
+
+  const cOpts = { responsive:true, maintainAspectRatio:false, animation:{ duration:250 }, plugins:{ legend:{ display:false } } };
+  const scaleStyle = { ticks:{ color:'#8b949e', font:{ size:11 } }, grid:{ color:'#30363d' } };
+
+  AC.dist = new Chart(document.getElementById('ana-dist-chart'), {
+    type:'bar',
+    data:{ labels:DI_L, datasets:[{ data:[0,0,0,0], backgroundColor:DI_C, borderRadius:4, borderSkipped:false }] },
+    options:{ ...cOpts, scales:{ y:{ ...scaleStyle, beginAtZero:true }, x:{ ...scaleStyle, grid:{ display:false } } } }
+  });
+
+  AC.age = new Chart(document.getElementById('ana-age-chart'), {
+    type:'bar',
+    data:{ labels:AG_L, datasets:[{ data:[0,0,0,0,0], backgroundColor:AG_C, borderRadius:4, borderSkipped:false }] },
+    options:{ ...cOpts, scales:{ y:{ ...scaleStyle, beginAtZero:true }, x:{ ...scaleStyle, grid:{ display:false } } } }
+  });
+
+  AC.gender = new Chart(document.getElementById('ana-gender-chart'), {
+    type:'doughnut',
+    data:{ labels:['Female','Male'], datasets:[{ data:[50,50], backgroundColor:['#378ADD','#7F77DD'], borderWidth:0, hoverOffset:4 }] },
+    options:{ ...cOpts, cutout:'68%' }
+  });
+
+  AC.trend = new Chart(document.getElementById('ana-trend-chart'), {
+    type:'line',
+    data:{ labels:MO_L, datasets:[
+      { label:'New Leads', data:[0,0,0,0,0], borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,.08)', fill:true, tension:.35, pointRadius:5, yAxisID:'y' },
+      { label:'Converted', data:[0,0,0,0,0], borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,.08)', fill:true, tension:.35, pointRadius:5, yAxisID:'y2' }
+    ]},
+    options:{ ...cOpts,
+      plugins:{ legend:{ display:true, labels:{ color:'#8b949e', font:{ size:12 } } }, tooltip:{ mode:'index', intersect:false } },
+      scales:{
+        x:{ ticks:{ color:'#8b949e', font:{ size:12 } }, grid:{ color:'#30363d' } },
+        y:{ position:'left', beginAtZero:true, ticks:{ color:'#7F77DD', font:{ size:11 } }, grid:{ color:'#30363d' } },
+        y2:{ position:'right', beginAtZero:true, ticks:{ color:'#1D9E75', font:{ size:11 } }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+
+  refreshAna();
+}
+
+function anaToggleProduct(id) {
+  ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id);
+  refreshAna();
+}
+
+function refreshAna() {
+  const filtered = ANA_P.map(p => ({ ...p, c: anaLeads(p) }));
+  const total = filtered.reduce((s,p) => s+p.c, 0);
+  const sorted = [...filtered].sort((a,b) => b.c - a.c);
+
+  const platLeads = PL_K.map(k => Math.round(ANA_P.reduce((s,p) => s + anaScale(p,{noPl:true}) * p.plat[k], 0)));
+  const distLeads = DI_K.map((k,i) => Math.round(ANA_P.reduce((s,p) => s + anaScale(p,{noDi:true}) * p.dist[i], 0)));
+  const ageLeads  = [0,1,2,3,4].map(i => Math.round(ANA_P.reduce((s,p) => s + anaScale(p) * p.age[i], 0)));
+  const femL = Math.round(ANA_P.reduce((s,p) => s + anaScale(p,{noGe:true}) * p.gf/100, 0));
+  const malL = Math.round(ANA_P.reduce((s,p) => s + anaScale(p,{noGe:true}) * (100-p.gf)/100, 0));
+  const gTot = femL + malL;
+  const fPct = gTot > 0 ? Math.round(femL/gTot*100) : 50;
+  const mPct = 100 - fPct;
+
+  const selMonths = ANA_ST.month === 'all' ? MO_K : [ANA_ST.month];
+  const trendNew = selMonths.map(m => Math.round(ANA_P.reduce((s,p) => {
+    if (ANA_ST.products.size > 0 && !ANA_ST.products.has(p.id)) return s;
+    let sc = MO_MULT[m];
+    if (ANA_ST.platform !== 'all') sc *= p.plat[ANA_ST.platform];
+    if (ANA_ST.district !== 'all') sc *= p.dist[DI_K.indexOf(ANA_ST.district)];
+    if (ANA_ST.gender !== 'all') sc *= ANA_ST.gender === 'f' ? p.gf/100 : (100-p.gf)/100;
+    return s + p.leads * sc;
+  }, 0)));
+  const trendConv = trendNew.map(v => Math.round(v * 0.28));
+  const trendLabels = selMonths.map(m => MO_L[MO_K.indexOf(m)]);
+
+  const topP = sorted.find(p => p.c > 0) || sorted[0];
+  const topPlIdx = platLeads.indexOf(Math.max(...platLeads));
+  const topDiIdx = distLeads.indexOf(Math.max(...distLeads));
+
+  // KPI
+  document.getElementById('ana-kpi').innerHTML = `
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Total Leads</div><div class="ana-kpi-value">${total.toLocaleString()}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Product</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${topP ? topP.name : '—'}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Platform</div><div class="ana-kpi-value">${PL_L[topPlIdx]}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top District</div><div class="ana-kpi-value">${DI_L[topDiIdx]}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">F / M Split</div><div class="ana-kpi-value">${fPct}% / ${mPct}%</div></div>
+  `;
+
+  // Product list
+  const maxC = Math.max(...sorted.map(p => p.c), 1);
+  document.getElementById('ana-prodlist').innerHTML = `
+    <div class="ana-card-header">Product Rankings</div>
+    ${sorted.map((p,i) => `
+      <div class="ana-prod-row${ANA_ST.products.has(p.id)?' active':''}" onclick="anaToggleProduct('${p.id}')">
+        <div class="ana-prod-rank">${i+1}</div>
+        <i class="ti ti-${p.icon} ana-prod-icon" style="color:${p.color}"></i>
+        <div class="ana-prod-name">${p.name}</div>
+        <div class="ana-prod-bar-wrap"><div class="ana-prod-bar" style="width:${Math.round(p.c/maxC*100)}%;background:${p.color}55;border-right:3px solid ${p.color}"></div></div>
+        <div class="ana-prod-count">${p.c.toLocaleString()}</div>
+        <div class="ana-prod-pct">${total>0?Math.round(p.c/total*100):0}%</div>
+      </div>`).join('')}
+  `;
+
+  // Platform panel
+  const maxPl = Math.max(...platLeads, 1);
+  document.getElementById('ana-platpanel').innerHTML = `
+    <div class="ana-card-header">Platform Split</div>
+    ${PL_K.map((k,i) => `
+      <div class="ana-plat-row">
+        <div class="ana-plat-label">${PL_L[i]}</div>
+        <div class="ana-plat-bar-wrap"><div class="ana-plat-bar" style="width:${Math.round(platLeads[i]/maxPl*100)}%;background:${PL_C[i]}"></div></div>
+        <div class="ana-plat-count">${platLeads[i].toLocaleString()}</div>
+      </div>`).join('')}
+  `;
+
+  // Gender stats
+  document.getElementById('ana-gender-stats').innerHTML = `
+    <div class="ana-gender-stat">
+      <div class="ana-gender-pct" style="color:#378ADD">${fPct}%</div>
+      <div class="ana-gender-lbl">Female</div>
+      <div class="ana-gender-bar-wrap"><div class="ana-gender-bar" style="width:${fPct}%;background:#378ADD"></div></div>
+      <div class="ana-gender-cnt">${femL.toLocaleString()} leads</div>
+    </div>
+    <div class="ana-gender-stat">
+      <div class="ana-gender-pct" style="color:#7F77DD">${mPct}%</div>
+      <div class="ana-gender-lbl">Male</div>
+      <div class="ana-gender-bar-wrap"><div class="ana-gender-bar" style="width:${mPct}%;background:#7F77DD"></div></div>
+      <div class="ana-gender-cnt">${malL.toLocaleString()} leads</div>
+    </div>
+  `;
+
+  // Segment tags
+  const tags = [];
+  ANA_ST.products.forEach(id => { const p = ANA_P.find(x=>x.id===id); if(p) tags.push(`<span class="seg-tag" style="background:${p.color}">${p.name}</span>`); });
+  if (ANA_ST.month !== 'all') tags.push(`<span class="seg-tag" style="background:#534AB7">${MO_L[MO_K.indexOf(ANA_ST.month)]}</span>`);
+  if (ANA_ST.platform !== 'all') tags.push(`<span class="seg-tag" style="background:${PL_C[PL_K.indexOf(ANA_ST.platform)]}">${PL_L[PL_K.indexOf(ANA_ST.platform)]}</span>`);
+  if (ANA_ST.district !== 'all') tags.push(`<span class="seg-tag" style="background:${DI_C[DI_K.indexOf(ANA_ST.district)]}">${DI_L[DI_K.indexOf(ANA_ST.district)]}</span>`);
+  if (ANA_ST.gender !== 'all') tags.push(`<span class="seg-tag" style="background:${ANA_ST.gender==='f'?'#378ADD':'#7F77DD'}">${ANA_ST.gender==='f'?'Female':'Male'}</span>`);
+  document.getElementById('ana-segtags').innerHTML = tags.length ? tags.join('') : '<span style="font-size:11px;color:var(--text-muted)">All data · no filters active</span>';
+
+  // Pill active states
+  document.querySelectorAll('[data-aprod]').forEach(btn => {
+    const id = btn.dataset.aprod;
+    btn.classList.toggle('active', id==='all' ? ANA_ST.products.size===0 : ANA_ST.products.has(id));
+  });
+  document.querySelectorAll('[data-af]').forEach(btn => {
+    btn.classList.toggle('active', ANA_ST[btn.dataset.af] === btn.dataset.av);
+  });
+
+  // Chart updates
+  AC.dist.data.datasets[0].data = distLeads; AC.dist.update('none');
+  AC.age.data.datasets[0].data = ageLeads;   AC.age.update('none');
+  AC.gender.data.datasets[0].data = [femL, malL]; AC.gender.update('none');
+  AC.trend.data.labels = trendLabels;
+  AC.trend.data.datasets[0].data = trendNew;
+  AC.trend.data.datasets[1].data = trendConv;
+  AC.trend.update('none');
 }
 
 /* ── Boot ── */
