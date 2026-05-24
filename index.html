@@ -829,7 +829,7 @@
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
-      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
+      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
       <div class="nav-dropdown-item" onclick="navTo('activity')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
     </div>
   </div>
@@ -1324,7 +1324,8 @@ function renderPipeline() {
     `;
   }).join('');
 
-  $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>`;
+  $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>${buildAnaShell()}`;
+  requestAnimationFrame(initAnalytics);
 }
 
 /* ── Contacts ── */
