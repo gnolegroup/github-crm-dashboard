@@ -668,6 +668,7 @@
     .ana-prod-pct { font-size: 11px; color: var(--text-secondary); width: 30px; text-align: right; flex-shrink: 0; }
     .ana-plat-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
     .ana-plat-row:last-child { border-bottom: none; }
+    .ana-plat-icon { font-size: 16px; width: 20px; flex-shrink: 0; }
     .ana-plat-label { font-size: 12px; color: var(--text-secondary); width: 76px; flex-shrink: 0; }
     .ana-plat-bar-wrap { flex: 1; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
     .ana-plat-bar { height: 100%; border-radius: 4px; transition: width .3s; }
@@ -1173,6 +1174,7 @@ const DI_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517'];
 const PL_K = ['tk','ig','fb','wa'];
 const PL_L = ['TikTok','Instagram','Facebook','WhatsApp'];
 const PL_C = ['#7F77DD','#D4537E','#378ADD','#1D9E75'];
+const PL_ICONS = ['brand-tiktok','brand-instagram','brand-facebook','brand-whatsapp'];
 const AG_L = ['18–25','26–35','36–45','46–55','56–60'];
 const AG_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517','#888780'];
 let AC = {};
@@ -1389,6 +1391,7 @@ function refreshAna() {
     <div class="ana-card-header">Platform Split</div>
     ${PL_K.map((k,i) => `
       <div class="ana-plat-row">
+        <i class="ti ti-${PL_ICONS[i]} ana-plat-icon" style="color:${PL_C[i]}"></i>
         <div class="ana-plat-label">${PL_L[i]}</div>
         <div class="ana-plat-bar-wrap"><div class="ana-plat-bar" style="width:${Math.round(platLeads[i]/maxPl*100)}%;background:${PL_C[i]}"></div></div>
         <div class="ana-plat-count">${platLeads[i].toLocaleString()}</div>
