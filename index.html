@@ -918,7 +918,9 @@ function switchTab(name, btn) {
 }
 
 /* ── Load ── */
+let _loading = false;
 async function loadAll() {
+  if (_loading) return; _loading = true;
   const [
     { data: contacts },
     { data: deals },
@@ -1033,7 +1035,8 @@ function renderPipeline() {
   }).join('');
 
   $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>${buildAnaShell()}`;
-  initAnalytics();
+  // Defer chart init so browser has time to lay out canvases (gives them correct dimensions)
+  requestAnimationFrame(initAnalytics);
 }
 
 /* ── Contacts ── */
@@ -1270,23 +1273,27 @@ function buildAnaShell() {
 }
 
 function initAnalytics() {
-  if (anaInited) { refreshAna(); return; }
-  anaInited = true;
+  // Always destroy stale instances — canvases may have been replaced by a DOM rebuild
+  Object.values(AC).forEach(c => { try { c.destroy(); } catch(e) {} });
+  AC = {};
 
-  document.getElementById('ana-fprod').addEventListener('click', e => {
-    const btn = e.target.closest('[data-aprod]');
-    if (!btn) return;
-    const id = btn.dataset.aprod;
-    if (id === 'all') { ANA_ST.products.clear(); }
-    else { ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id); }
-    refreshAna();
-  });
+  // Wire filters only once using document-level delegation (survives innerHTML rebuilds)
+  if (!anaInited) {
+    anaInited = true;
+    document.addEventListener('click', function(e) {
+      const pb = e.target.closest('[data-aprod]');
+      if (pb) {
+        const id = pb.dataset.aprod;
+        if (id === 'all') ANA_ST.products.clear();
+        else { ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id); }
+        refreshAna(); return;
+      }
+      const fb = e.target.closest('[data-af]');
+      if (fb) { ANA_ST[fb.dataset.af] = fb.dataset.av; refreshAna(); }
+    });
+  }
 
-  document.querySelectorAll('[data-af]').forEach(btn => {
-    btn.addEventListener('click', () => { ANA_ST[btn.dataset.af] = btn.dataset.av; refreshAna(); });
-  });
-
-  const cOpts = { responsive:true, maintainAspectRatio:false, animation:{ duration:250 }, plugins:{ legend:{ display:false } } };
+  const cOpts = { responsive:true, maintainAspectRatio:false, animation:{ duration:300 }, plugins:{ legend:{ display:false } } };
   const scaleStyle = { ticks:{ color:'#8b949e', font:{ size:11 } }, grid:{ color:'#30363d' } };
 
   AC.dist = new Chart(document.getElementById('ana-dist-chart'), {
