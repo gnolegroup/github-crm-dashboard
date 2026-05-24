@@ -725,6 +725,35 @@
     .ls-contacted { background:#1a2233; color:#58a6ff; }
     .ls-converted { background:#2a1f0d; color:#d29922; }
     .ls-lost { background:#2a1212; color:#f85149; }
+
+    /* ── Toast notification ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Member status badge ── */
+    .ms-active   { background:#0d2a0d; color:var(--green); border:1px solid #1f4a1f; }
+    .ms-inactive { background:#2a1212; color:var(--red);   border:1px solid #4a1f1f; }
   </style>
 </head>
 <body>
@@ -771,9 +800,9 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📊</span>Overview</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📈</span>Analytics</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
+      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
+      <div class="nav-dropdown-item" onclick="navTo('activity')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
     </div>
   </div>
 
@@ -781,10 +810,10 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">👥</span>All Members</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">➕</span>Add Member</div>
+      <div class="nav-dropdown-item" onclick="navTo('contacts')"><span class="nav-dropdown-icon">👥</span>All Members</div>
+      <div class="nav-dropdown-item" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
       <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
+      <div class="nav-dropdown-item" onclick="showToast('🔒 Roles & Permissions — coming soon')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
     </div>
   </div>
 
@@ -995,6 +1024,54 @@
     </div>
   </div>
 </div>
+
+<!-- ── Add Member Modal ───────────────────── -->
+<div id="member-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeMemberModal()">
+  <div class="modal-box">
+    <div class="modal-title">
+      👤 Add New Member
+      <button class="modal-close" onclick="closeMemberModal()">✕</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label class="modal-label">Full Name *</label>
+        <input id="mf-name" class="modal-input" type="text" placeholder="e.g. Ahmad Razif">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Phone</label>
+        <input id="mf-phone" class="modal-input" type="text" placeholder="e.g. +6738123456">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Role</label>
+        <select id="mf-role" class="modal-select">
+          <option value="">— Select —</option>
+          <option value="Agent">Agent</option>
+          <option value="Senior Agent">Senior Agent</option>
+          <option value="Manager">Manager</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Status</label>
+        <select id="mf-status" class="modal-select">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="modal-field full">
+        <label class="modal-label">Email</label>
+        <input id="mf-email" class="modal-input" type="email" placeholder="e.g. ahmad@example.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMemberModal()">Cancel</button>
+      <button id="mf-submit" class="btn-save" onclick="submitMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────── -->
+<div id="toast" class="toast"></div>
 
 <!-- ── Script ───────────────────────────────── -->
 <script>
@@ -1861,6 +1938,63 @@ async function submitImport() {
   document.getElementById('import-status').textContent = `✓ Successfully imported ${inserted} leads!`;
   btn.textContent = 'Done ✓';
   setTimeout(closeImportModal, 1500);
+}
+
+/* ── Toast ── */
+function showToast(msg, duration) {
+  duration = duration || 3000;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ── Add Member Modal ── */
+function openMemberModal() {
+  ['mf-name','mf-phone','mf-email'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('mf-role').value   = '';
+  document.getElementById('mf-status').value = 'active';
+  const btn = document.getElementById('mf-submit');
+  btn.disabled = false;
+  btn.textContent = 'Save Member';
+  document.getElementById('member-modal').style.display = 'flex';
+}
+
+function closeMemberModal() {
+  document.getElementById('member-modal').style.display = 'none';
+}
+
+async function submitMember() {
+  const name = document.getElementById('mf-name').value.trim();
+  if (!name) { showToast('⚠ Please enter a name.'); return; }
+
+  const btn = document.getElementById('mf-submit');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const payload = {
+    name,
+    phone:  document.getElementById('mf-phone').value.trim() || null,
+    role:   document.getElementById('mf-role').value  || null,
+    status: document.getElementById('mf-status').value || 'active',
+    email:  document.getElementById('mf-email').value.trim() || null,
+  };
+
+  const { data, error } = await db.from('members').insert([payload]).select();
+  if (error) {
+    showToast('⚠ Error: ' + error.message, 5000);
+    btn.disabled = false;
+    btn.textContent = 'Save Member';
+    return;
+  }
+
+  // Add to local data and refresh contacts panel
+  if (!D.members) D.members = [];
+  D.members = [data[0], ...D.members];
+  renderContacts();
+  closeMemberModal();
+  showToast('✅ Member added successfully!');
 }
 
 /* ── Boot ── */
