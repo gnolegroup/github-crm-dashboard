@@ -829,7 +829,7 @@
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
-      <div class="nav-dropdown-item" onclick="navTo('leads');setTimeout(()=>{const btn=document.querySelector('.leads-subtab-btn:nth-child(2)');if(btn)switchLeadsTab('analytics',btn)},50)"><span class="nav-dropdown-icon">📈</span>Analytics</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
       <div class="nav-dropdown-item" onclick="navTo('activity')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
     </div>
   </div>
@@ -849,7 +849,7 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">🎯 Leads <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('leads');setTimeout(()=>{const btn=document.querySelector('.leads-subtab-btn:nth-child(1)');if(btn)switchLeadsTab('all',btn)},50)"><span class="nav-dropdown-icon">📋</span>All Leads</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📋</span>All Leads</div>
       <div class="nav-dropdown-item" onclick="openLeadModal()"><span class="nav-dropdown-icon">➕</span>Add Lead</div>
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">⬡</span>Pipeline</div>
       <div class="nav-dropdown-divider"></div>
@@ -1788,37 +1788,21 @@ function renderLeads() {
       </tr>`).join('');
 
   $('panel-leads').innerHTML = `
-    <div class="leads-subtabs">
-      <button class="leads-subtab-btn active" onclick="switchLeadsTab('all', this)">📋 All Leads</button>
-      <button class="leads-subtab-btn"        onclick="switchLeadsTab('analytics', this)">📊 Analytics</button>
-    </div>
-
-    <!-- All Leads sub-panel -->
-    <div class="leads-subpanel active" id="lsp-all">
-      <div class="table-wrap">
-        <div class="table-toolbar">
-          <div class="table-title">All Leads <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} records</span></div>
-          <input class="search-box" type="search" placeholder="Search leads…" oninput="filterLeads(this.value)">
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th><th>Phone</th><th>Gender</th><th>Age Group</th>
-              <th>District</th><th>Product</th><th>Platform</th><th>Status</th><th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="leads-body">${rows}</tbody>
-        </table>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-title">All Leads <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} records</span></div>
+        <input class="search-box" type="search" placeholder="Search leads…" oninput="filterLeads(this.value)">
       </div>
-    </div>
-
-    <!-- Analytics sub-panel -->
-    <div class="leads-subpanel" id="lsp-analytics">
-      ${buildAnaShell()}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Phone</th><th>Gender</th><th>Age Group</th>
+            <th>District</th><th>Product</th><th>Platform</th><th>Status</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="leads-body">${rows}</tbody>
+      </table>
     </div>`;
-
-  // Only init charts when analytics sub-panel becomes visible
-  _anaInitPending = true;
 }
 
 function filterLeads(q) {
