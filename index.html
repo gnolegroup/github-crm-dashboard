@@ -1105,11 +1105,11 @@ function renderStats() {
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon yellow">📡</div>
+      <div class="stat-icon yellow">📞</div>
       <div>
-        <div class="stat-label">Open Deals</div>
-        <div class="stat-value">${open.length}</div>
-        <div class="stat-sub">${contacts.length} contacts · ${D.repos.length} repos</div>
+        <div class="stat-label">Blum Contact</div>
+        <div class="stat-value">${leads.filter(l=>l.status==='new').length}</div>
+        <div class="stat-sub">leads not yet contacted</div>
       </div>
     </div>
     <div class="stat-card">
