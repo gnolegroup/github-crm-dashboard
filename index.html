@@ -726,6 +726,34 @@
     .ls-converted { background:#2a1f0d; color:#d29922; }
     .ls-lost { background:#2a1212; color:#f85149; }
 
+    /* ── Leads sub-tabs ── */
+    .leads-subtabs {
+      display: flex;
+      gap: 4px;
+      padding: 16px 0 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .leads-subtab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px 10px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      margin-bottom: -1px;
+    }
+    .leads-subtab-btn:hover { color: var(--text-primary); }
+    .leads-subtab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-light);
+    }
+    .leads-subpanel { display: none; }
+    .leads-subpanel.active { display: block; }
+
     /* ── Toast notification ── */
     .toast {
       position: fixed;
@@ -801,7 +829,7 @@
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
-      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads');setTimeout(()=>{const btn=document.querySelector('.leads-subtab-btn:nth-child(2)');if(btn)switchLeadsTab('analytics',btn)},50)"><span class="nav-dropdown-icon">📈</span>Analytics</div>
       <div class="nav-dropdown-item" onclick="navTo('activity')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
     </div>
   </div>
@@ -821,7 +849,7 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">🎯 Leads <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📋</span>All Leads</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads');setTimeout(()=>{const btn=document.querySelector('.leads-subtab-btn:nth-child(1)');if(btn)switchLeadsTab('all',btn)},50)"><span class="nav-dropdown-icon">📋</span>All Leads</div>
       <div class="nav-dropdown-item" onclick="openLeadModal()"><span class="nav-dropdown-icon">➕</span>Add Lead</div>
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">⬡</span>Pipeline</div>
       <div class="nav-dropdown-divider"></div>
@@ -1444,6 +1472,7 @@ const AG_L = ['18–25','26–35','36–45','46–55','56–60'];
 const AG_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517','#888780'];
 let AC = {};
 let anaInited = false;
+let _anaInitPending = false;
 
 // Returns leads month index (0=Jan … 11=Dec) from lead_date or created_at
 function leadMonth(l) {
@@ -1759,23 +1788,37 @@ function renderLeads() {
       </tr>`).join('');
 
   $('panel-leads').innerHTML = `
-    ${buildAnaShell()}
-    <div class="table-wrap" style="margin-top:32px">
-      <div class="table-toolbar">
-        <div class="table-title">All Leads <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} records</span></div>
-        <input class="search-box" type="search" placeholder="Search leads…" oninput="filterLeads(this.value)">
+    <div class="leads-subtabs">
+      <button class="leads-subtab-btn active" onclick="switchLeadsTab('all', this)">📋 All Leads</button>
+      <button class="leads-subtab-btn"        onclick="switchLeadsTab('analytics', this)">📊 Analytics</button>
+    </div>
+
+    <!-- All Leads sub-panel -->
+    <div class="leads-subpanel active" id="lsp-all">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="table-title">All Leads <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} records</span></div>
+          <input class="search-box" type="search" placeholder="Search leads…" oninput="filterLeads(this.value)">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Phone</th><th>Gender</th><th>Age Group</th>
+              <th>District</th><th>Product</th><th>Platform</th><th>Status</th><th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="leads-body">${rows}</tbody>
+        </table>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th><th>Phone</th><th>Gender</th><th>Age Group</th>
-            <th>District</th><th>Product</th><th>Platform</th><th>Status</th><th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="leads-body">${rows}</tbody>
-      </table>
+    </div>
+
+    <!-- Analytics sub-panel -->
+    <div class="leads-subpanel" id="lsp-analytics">
+      ${buildAnaShell()}
     </div>`;
-  requestAnimationFrame(initAnalytics);
+
+  // Only init charts when analytics sub-panel becomes visible
+  _anaInitPending = true;
 }
 
 function filterLeads(q) {
@@ -1783,6 +1826,18 @@ function filterLeads(q) {
   document.querySelectorAll('#leads-body tr').forEach(row => {
     row.style.display = row.textContent.toLowerCase().includes(lower) ? '' : 'none';
   });
+}
+
+function switchLeadsTab(name, btn) {
+  document.querySelectorAll('.leads-subtab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.leads-subpanel').forEach(p => p.classList.remove('active'));
+  document.getElementById('lsp-' + name).classList.add('active');
+  // Init charts the first time the analytics sub-panel is shown
+  if (name === 'analytics' && _anaInitPending) {
+    _anaInitPending = false;
+    requestAnimationFrame(initAnalytics);
+  }
 }
 
 /* ── Add Lead Modal ── */
