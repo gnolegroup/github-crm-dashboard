@@ -754,6 +754,56 @@
     .leads-subpanel { display: none; }
     .leads-subpanel.active { display: block; }
 
+    /* ── Leads table v3 ── */
+    .leads-filters { display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center }
+    .leads-filters input,.leads-filters select { font-size:12px;padding:5px 9px;border:0.5px solid var(--border);border-radius:6px;background:var(--bg-secondary);color:var(--text-primary) }
+    .leads-filters input:focus,.leads-filters select:focus { outline:none;border-color:var(--accent-light) }
+    .sales-no-cell { font-family:monospace;font-size:11px;color:var(--text-secondary);font-weight:600;white-space:nowrap }
+    .inl-select { font-size:11px;padding:3px 6px;border:0.5px solid var(--border);border-radius:5px;background:var(--bg-secondary);color:var(--text-primary);width:100%;cursor:pointer }
+    .inl-select:focus { outline:none;border-color:var(--accent-light) }
+    .wa-btn { display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;font-weight:500;background:#0d2a0d;color:#3fb950;border:0.5px solid #1f4a1f;border-radius:6px;cursor:pointer;white-space:nowrap }
+    .wa-btn:hover { background:#1a3d1a }
+    .log-btn { display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;border:0.5px solid var(--border);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap }
+    .log-btn:hover { background:var(--bg-tertiary);color:var(--text-primary) }
+    .remark-cell { font-size:11px;color:var(--text-primary);line-height:1.4;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+    .remark-empty { color:var(--text-muted);font-style:italic }
+    /* Stage pills */
+    .stage-pill { display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;white-space:nowrap }
+    .sp-New       { background:#1a2d3d;color:#58a6ff }
+    .sp-Contacted { background:#2a1f4a;color:#a78bfa }
+    .sp-Pending   { background:#2a2008;color:#d29922 }
+    .sp-Closed    { background:#0d2a0d;color:#3fb950 }
+    .sp-Lost      { background:#2a1212;color:#f85149 }
+    /* Source tag */
+    .src-tag { font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap }
+    .src-online  { background:#1a2d3d;color:#58a6ff }
+    .src-offline { background:#2a2008;color:#d29922 }
+    /* Brand tags */
+    .btag { font-size:10px;padding:2px 6px;border-radius:3px;background:#0d2a0d;color:#3fb950;white-space:nowrap }
+    /* Multi-select brand dropdown */
+    .multi-wrap { position:relative;width:100% }
+    .multi-trigger { display:flex;align-items:center;justify-content:space-between;padding:3px 7px;border:0.5px solid var(--border);border-radius:5px;background:var(--bg-secondary);cursor:pointer;font-size:11px;color:var(--text-primary);gap:4px;min-height:26px }
+    .multi-trigger:hover { border-color:var(--text-muted) }
+    .multi-dropdown { display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:6px;z-index:50;overflow:hidden;min-width:130px }
+    .multi-dropdown.open { display:block }
+    .multi-opt { display:flex;align-items:center;gap:7px;padding:7px 10px;font-size:12px;cursor:pointer;color:var(--text-primary) }
+    .multi-opt:hover { background:var(--bg-tertiary) }
+    .multi-opt input[type=checkbox] { width:13px;height:13px;cursor:pointer;accent-color:var(--accent-light) }
+    .brand-tags { display:flex;flex-wrap:wrap;gap:3px;flex:1 }
+    /* Log modal */
+    .log-modal-box { background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:22px;width:420px;max-width:95vw;max-height:85vh;overflow-y:auto }
+    .log-entry { padding:9px 0;border-bottom:0.5px solid var(--border) }
+    .log-entry:last-child { border-bottom:none }
+    .log-date { font-size:10px;color:var(--text-muted);font-family:monospace;margin-bottom:3px }
+    .log-text { font-size:12px;color:var(--text-primary) }
+    /* WA modal */
+    .wa-modal-box { background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:22px;width:460px;max-width:95vw }
+    .wa-send-btn { flex:1;padding:10px;font-size:13px;font-weight:600;background:#25D366;color:#fff;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px }
+    .wa-send-btn:hover { background:#1da851 }
+    /* Brand checkboxes in Add Lead form */
+    .bchk { display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;border:0.5px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);user-select:none;transition:all .15s }
+    .bchk.on { background:#0d2a0d;border-color:#1f6a1f;color:#3fb950;font-weight:500 }
+
     /* ── Toast notification ── */
     .toast {
       position: fixed;
@@ -918,98 +968,122 @@
 
 </main>
 
-<!-- ── Add Lead Modal ─────────────────────── -->
+<!-- ── Add Lead Modal (v3) ────────────────── -->
 <div id="lead-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeLeadModal()">
-  <div class="modal-box">
+  <div class="modal-box" style="width:560px">
     <div class="modal-title">
       🎯 Add New Lead
+      <span id="lf-tel-preview" style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:8px"></span>
       <button class="modal-close" onclick="closeLeadModal()">✕</button>
     </div>
     <div class="modal-grid">
       <div class="modal-field">
-        <label class="modal-label">Full Name *</label>
-        <input id="lf-name" class="modal-input" type="text" placeholder="e.g. Siti Aminah">
+        <label class="modal-label">Sales Agent</label>
+        <input id="lf-agent" class="modal-input" type="text" placeholder="Agent name">
       </div>
       <div class="modal-field">
-        <label class="modal-label">Phone</label>
-        <input id="lf-phone" class="modal-input" type="text" placeholder="e.g. +6738123456">
+        <label class="modal-label">Full Name *</label>
+        <input id="lf-name" class="modal-input" type="text" placeholder="Full name">
       </div>
       <div class="modal-field">
         <label class="modal-label">Gender</label>
         <select id="lf-gender" class="modal-select">
-          <option value="">— Select —</option>
-          <option value="female">Female</option>
-          <option value="male">Male</option>
+          <option value="">—</option>
+          <option>Male</option><option>Female</option>
         </select>
       </div>
       <div class="modal-field">
         <label class="modal-label">Age Group</label>
         <select id="lf-age" class="modal-select">
-          <option value="">— Select —</option>
-          <option value="18-25">18–25</option>
-          <option value="26-35">26–35</option>
-          <option value="36-45">36–45</option>
-          <option value="46-55">46–55</option>
-          <option value="56-60">56–60</option>
+          <option value="">—</option>
+          <option>18–25</option><option>26–35</option><option>36–45</option><option>46–55</option><option>56+</option>
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">District</label>
-        <select id="lf-district" class="modal-select">
-          <option value="">— Select —</option>
-          <option value="bm">Brunei-Muara</option>
-          <option value="tu">Tutong</option>
-          <option value="be">Belait</option>
-          <option value="te">Temburong</option>
+        <label class="modal-label">Area</label>
+        <select id="lf-area" class="modal-select">
+          <option value="">Select area</option>
+          <option>Gadong</option><option>Rimba</option><option>Kiulap</option><option>Mata-Mata</option>
+          <option>Bengkurong</option><option>Lambak Kanan</option><option>Jerudong</option><option>Tungku</option>
+          <option>Tutong Town</option><option>Seria</option><option>Kuala Belait</option>
+          <option>Pandan</option><option>Lumapas</option><option>Sengkurong</option><option>Berakas</option><option>Other</option>
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Product</label>
-        <select id="lf-product" class="modal-select">
-          <option value="">— Select —</option>
-          <option value="water">Water Purifier</option>
-          <option value="air">Air Purifier</option>
-          <option value="mattress">Mattress</option>
-          <option value="aircon">Aircon</option>
-          <option value="outdoor">Outdoor Filter</option>
-          <option value="washer">Washer Dryer</option>
-          <option value="treadmill">Treadmill</option>
-          <option value="massage">Massage Chair</option>
-          <option value="hizero">Hizero</option>
-          <option value="cooker">Cooker</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Platform (Source)</label>
-        <select id="lf-platform" class="modal-select">
-          <option value="">— Select —</option>
-          <option value="tk">TikTok</option>
-          <option value="ig">Instagram</option>
-          <option value="fb">Facebook</option>
-          <option value="wa">WhatsApp</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Status</label>
-        <select id="lf-status" class="modal-select">
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="converted">Converted</option>
-          <option value="lost">Lost</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Lead Date</label>
-        <input id="lf-date" class="modal-input" type="date">
+        <label class="modal-label">Phone</label>
+        <input id="lf-phone" class="modal-input" type="text" placeholder="+673-8xxxxxx">
       </div>
       <div class="modal-field full">
-        <label class="modal-label">Notes</label>
-        <input id="lf-notes" class="modal-input" type="text" placeholder="Optional notes…">
+        <label class="modal-label">Existing customer of</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="lf-brands">
+          <span class="bchk" data-b="Advansse" onclick="togBrand(this)">Advansse</span>
+          <span class="bchk" data-b="Boeffi"   onclick="togBrand(this)">Boeffi</span>
+          <span class="bchk" data-b="Byte"     onclick="togBrand(this)">Byte</span>
+          <span class="bchk" data-b="Cuckoo"   onclick="togBrand(this)">Cuckoo</span>
+          <span class="bchk" data-b="Hart"     onclick="togBrand(this)">Hart</span>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Source</label>
+        <select id="lf-source" class="modal-select">
+          <option value="">Select source</option>
+          <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Stage</label>
+        <select id="lf-stage" class="modal-select">
+          <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
+        </select>
+      </div>
+      <div class="modal-field full">
+        <label class="modal-label">Initial Remark</label>
+        <input id="lf-remark" class="modal-input" type="text" placeholder="First note about this lead…">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeLeadModal()">Cancel</button>
       <button id="lf-submit" class="btn-save" onclick="submitLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── WhatsApp Modal ─────────────────────── -->
+<div id="wa-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeWAModal()">
+  <div class="wa-modal-box">
+    <div class="modal-title">
+      💬 Send WhatsApp Follow-up
+      <button class="modal-close" onclick="closeWAModal()">✕</button>
+    </div>
+    <div id="wa-to" style="font-size:12px;color:var(--text-secondary);background:var(--bg-tertiary);padding:8px 10px;border-radius:6px;margin-bottom:12px"></div>
+    <label class="modal-label" style="display:block;margin-bottom:4px">Message</label>
+    <textarea id="wa-msg" style="width:100%;padding:8px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);min-height:130px;resize:vertical;line-height:1.6;font-family:inherit"></textarea>
+    <div style="font-size:11px;color:var(--text-muted);background:var(--bg-tertiary);padding:7px 10px;border-radius:6px;margin-top:10px">
+      ℹ Opens WhatsApp Web with message pre-filled. You control when to send.
+    </div>
+    <div class="modal-footer">
+      <button class="wa-send-btn" onclick="doSendWA()"><i class="ti ti-brand-whatsapp"></i> Open in WhatsApp</button>
+      <button class="btn-cancel" onclick="closeWAModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Action Log Modal ───────────────────── -->
+<div id="log-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeLogModal()">
+  <div class="log-modal-box">
+    <div class="modal-title">
+      📋 Action Log
+      <button class="modal-close" onclick="closeLogModal()">✕</button>
+    </div>
+    <div id="log-who" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px"></div>
+    <div id="log-entries" style="max-height:280px;overflow-y:auto"></div>
+    <div style="margin-top:14px;border-top:0.5px solid var(--border);padding-top:12px">
+      <label class="modal-label" style="display:block;margin-bottom:6px">Add remark</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="log-input" placeholder="Enter remark…" class="modal-input" style="flex:1;padding:6px 9px;font-size:12px">
+        <button class="btn-save" onclick="addRemark()" style="padding:6px 14px;font-size:12px">Add</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1023,7 +1097,7 @@
     </div>
 
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">
-      CSV must have headers: <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">name, phone, gender, age_group, district, product, platform, status, lead_date, notes</code>
+      CSV must have headers: <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">sales_no, agent, name, phone, gender, age_group, area, source, stage, lead_date, notes</code>
     </p>
 
     <div class="import-drop" id="import-drop" onclick="document.getElementById('import-file').click()"
@@ -1225,7 +1299,7 @@ function renderStats() {
   const wonV = won.reduce((s, d) => s + (d.value || 0), 0);
   const today = new Date().toISOString().slice(0, 10);
   const todayLeads = (leads || []).filter(l => (l.lead_date || (l.created_at || '').slice(0,10)) === today);
-  const converted  = (leads || []).filter(l => l.status === 'converted').length;
+  const converted  = (leads || []).filter(l => l.stage === 'Closed').length;
   const convRate   = leads.length > 0 ? Math.round(converted / leads.length * 100) : 0;
 
   $('stats-grid').innerHTML = `
@@ -1242,14 +1316,14 @@ function renderStats() {
       <div>
         <div class="stat-label">Today's New Leads</div>
         <div class="stat-value">${todayLeads.length}</div>
-        <div class="stat-sub">${leads.length} total · ${leads.filter(l=>l.status==='new').length} pending</div>
+        <div class="stat-sub">${leads.length} total · ${leads.filter(l=>l.stage==='New').length} pending</div>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon yellow">📞</div>
       <div>
         <div class="stat-label">Blum Contact</div>
-        <div class="stat-value">${leads.filter(l=>l.status==='new').length}</div>
+        <div class="stat-value">${leads.filter(l=>l.stage==='New').length}</div>
         <div class="stat-sub">leads not yet contacted</div>
       </div>
     </div>
@@ -1275,32 +1349,34 @@ function renderPipeline() {
 
 
 /* ── CRM Analytics ── */
-// Product metadata only — real numbers come from the leads table
 const ANA_META = [
-  { id:'water',    name:'Water purifier', color:'#378ADD', icon:'droplet' },
-  { id:'air',      name:'Air purifier',   color:'#1D9E75', icon:'wind' },
-  { id:'mattress', name:'Mattress',       color:'#7F77DD', icon:'bed' },
-  { id:'aircon',   name:'Aircon',         color:'#85B7EB', icon:'snowflake' },
-  { id:'outdoor',  name:'Outdoor filter', color:'#639922', icon:'filter' },
-  { id:'washer',   name:'Washer dryer',   color:'#D4537E', icon:'washing-machine' },
-  { id:'treadmill',name:'Treadmill',      color:'#D85A30', icon:'run' },
-  { id:'massage',  name:'Massage chair',  color:'#BA7517', icon:'armchair' },
-  { id:'hizero',   name:'Hizero',         color:'#534AB7', icon:'robot' },
-  { id:'cooker',   name:'Cooker',         color:'#E24B4A', icon:'chef-hat' },
+  { id:'Advansse', name:'Advansse', color:'#378ADD', icon:'star' },
+  { id:'Boeffi',   name:'Boeffi',   color:'#1D9E75', icon:'leaf' },
+  { id:'Byte',     name:'Byte',     color:'#7F77DD', icon:'cpu' },
+  { id:'Cuckoo',   name:'Cuckoo',   color:'#D4537E', icon:'droplet' },
+  { id:'Hart',     name:'Hart',     color:'#BA7517', icon:'heart' },
 ];
-const ANA_ST = { products: new Set(), month:'all', platform:'all', district:'all', gender:'all' };
+const ANA_ST = { brands: new Set(), month:'all', source:'all', district:'all', gender:'all' };
 const MO_K = ['jan','feb','mar','apr','may'];
 const MO_L = ['Jan','Feb','Mar','Apr','May'];
 const MO_IDX = { jan:0, feb:1, mar:2, apr:3, may:4 };
 const DI_K = ['bm','tu','be','te'];
 const DI_L = ['B-Muara','Tutong','Belait','Temburong'];
 const DI_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517'];
-const PL_K = ['tk','ig','fb','wa'];
-const PL_L = ['TikTok','Instagram','Facebook','WhatsApp'];
-const PL_C = ['#7F77DD','#D4537E','#378ADD','#1D9E75'];
-const PL_ICONS = ['brand-tiktok','brand-instagram','brand-facebook','brand-whatsapp'];
-const AG_K = ['18-25','26-35','36-45','46-55','56-60'];
-const AG_L = ['18–25','26–35','36–45','46–55','56–60'];
+// Area → district mapping
+const AREA_TO_DI = {
+  'Gadong':'bm','Rimba':'bm','Kiulap':'bm','Mata-Mata':'bm','Bengkurong':'bm',
+  'Lambak Kanan':'bm','Jerudong':'bm','Tungku':'bm','Lumapas':'bm',
+  'Sengkurong':'bm','Berakas':'bm','Pandan':'bm','Other':'bm',
+  'Tutong Town':'tu',
+  'Seria':'be','Kuala Belait':'be',
+};
+const SRC_ONLINE = ['TikTok','Instagram','Facebook','WhatsApp'];
+const SRC_ALL = ['TikTok','Instagram','Facebook','WhatsApp','CF','Roadshow','Walk-in','Referral','Database'];
+const SRC_C = ['#7F77DD','#D4537E','#378ADD','#1D9E75','#D85A30','#BA7517','#1D9E75','#85B7EB','#888780'];
+const SRC_ICONS = ['brand-tiktok','brand-instagram','brand-facebook','brand-whatsapp','building-store','map-pin','walk','users','database'];
+const AG_K = ['18–25','26–35','36–45','46–55','56+'];
+const AG_L = ['18–25','26–35','36–45','46–55','56+'];
 const AG_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517','#888780'];
 let AC = {};
 let anaInited = false;
@@ -1318,16 +1394,16 @@ function leadMonth(l) {
 function anaFilter(leads, except) {
   except = except || [];
   let r = leads;
-  if (!except.includes('product') && ANA_ST.products.size > 0)
-    r = r.filter(l => ANA_ST.products.has(l.product));
+  if (!except.includes('brands') && ANA_ST.brands.size > 0)
+    r = r.filter(l => (l.brands || []).some(b => ANA_ST.brands.has(b)));
   if (!except.includes('month') && ANA_ST.month !== 'all')
     r = r.filter(l => leadMonth(l) === MO_IDX[ANA_ST.month]);
-  if (!except.includes('platform') && ANA_ST.platform !== 'all')
-    r = r.filter(l => l.platform === ANA_ST.platform);
+  if (!except.includes('source') && ANA_ST.source !== 'all')
+    r = r.filter(l => l.source === ANA_ST.source);
   if (!except.includes('district') && ANA_ST.district !== 'all')
-    r = r.filter(l => l.district === ANA_ST.district);
+    r = r.filter(l => (AREA_TO_DI[l.area] || 'bm') === ANA_ST.district);
   if (!except.includes('gender') && ANA_ST.gender !== 'all')
-    r = r.filter(l => l.gender === ANA_ST.gender);
+    r = r.filter(l => (l.gender || '').toLowerCase() === ANA_ST.gender);
   return r;
 }
 
@@ -1336,7 +1412,7 @@ function buildAnaShell() {
   <div><div class="ana-title">Leads Analytics</div><div class="ana-subtitle">Brunei Market · Real-time combined filter dashboard</div></div>
 
   <div class="ana-filter-card">
-    <div class="ana-filter-label">Product</div>
+    <div class="ana-filter-label">Brand</div>
     <div class="ana-pill-row" id="ana-fprod">
       <button class="ana-pill active" data-aprod="all">All</button>
       ${ANA_META.map(p=>`<button class="ana-pill" data-aprod="${p.id}">${p.name}</button>`).join('')}
@@ -1350,10 +1426,10 @@ function buildAnaShell() {
         </div>
       </div>
       <div class="ana-filter-group">
-        <div class="ana-filter-label">Platform</div>
+        <div class="ana-filter-label">Source</div>
         <div class="ana-pill-row">
-          <button class="ana-pill active" data-af="platform" data-av="all">All</button>
-          ${PL_K.map((k,i)=>`<button class="ana-pill" data-af="platform" data-av="${k}">${PL_L[i]}</button>`).join('')}
+          <button class="ana-pill active" data-af="source" data-av="all">All</button>
+          ${SRC_ALL.map(s=>`<button class="ana-pill" data-af="source" data-av="${s}">${s}</button>`).join('')}
         </div>
       </div>
       <div class="ana-filter-group">
@@ -1367,8 +1443,8 @@ function buildAnaShell() {
         <div class="ana-filter-label">Gender</div>
         <div class="ana-pill-row">
           <button class="ana-pill active" data-af="gender" data-av="all">All</button>
-          <button class="ana-pill" data-af="gender" data-av="f">Female</button>
-          <button class="ana-pill" data-af="gender" data-av="m">Male</button>
+          <button class="ana-pill" data-af="gender" data-av="female">Female</button>
+          <button class="ana-pill" data-af="gender" data-av="male">Male</button>
         </div>
       </div>
     </div>
@@ -1382,7 +1458,7 @@ function buildAnaShell() {
     <div class="ana-col-stack">
       <div class="ana-card" id="ana-platpanel"></div>
       <div class="ana-card">
-        <div class="ana-card-header">District Split</div>
+        <div class="ana-card-header">Area (District)</div>
         <div class="ana-chart-wrap"><canvas id="ana-dist-chart"></canvas></div>
       </div>
     </div>
@@ -1403,7 +1479,7 @@ function buildAnaShell() {
   </div>
 
   <div class="ana-card">
-    <div class="ana-card-header">Monthly Trend — New Leads vs Converted</div>
+    <div class="ana-card-header">Monthly Trend — New Leads vs Closed</div>
     <div class="ana-chart-wrap ana-chart-tall"><canvas id="ana-trend-chart"></canvas></div>
   </div>
 </div>`;
@@ -1421,8 +1497,8 @@ function initAnalytics() {
       const pb = e.target.closest('[data-aprod]');
       if (pb) {
         const id = pb.dataset.aprod;
-        if (id === 'all') ANA_ST.products.clear();
-        else { ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id); }
+        if (id === 'all') ANA_ST.brands.clear();
+        else { ANA_ST.brands.has(id) ? ANA_ST.brands.delete(id) : ANA_ST.brands.add(id); }
         refreshAna(); return;
       }
       const fb = e.target.closest('[data-af]');
@@ -1455,7 +1531,7 @@ function initAnalytics() {
     type:'line',
     data:{ labels:MO_L, datasets:[
       { label:'New Leads', data:[0,0,0,0,0], borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,.08)', fill:true, tension:.35, pointRadius:5, yAxisID:'y' },
-      { label:'Converted', data:[0,0,0,0,0], borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,.08)', fill:true, tension:.35, pointRadius:5, yAxisID:'y2' }
+      { label:'Closed',    data:[0,0,0,0,0], borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,.08)', fill:true, tension:.35, pointRadius:5, yAxisID:'y2' }
     ]},
     options:{ ...cOpts,
       plugins:{ legend:{ display:true, labels:{ color:'#8b949e', font:{ size:12 } } }, tooltip:{ mode:'index', intersect:false } },
@@ -1470,8 +1546,8 @@ function initAnalytics() {
   refreshAna();
 }
 
-function anaToggleProduct(id) {
-  ANA_ST.products.has(id) ? ANA_ST.products.delete(id) : ANA_ST.products.add(id);
+function anaToggleBrand(id) {
+  ANA_ST.brands.has(id) ? ANA_ST.brands.delete(id) : ANA_ST.brands.add(id);
   refreshAna();
 }
 
@@ -1482,53 +1558,53 @@ function refreshAna() {
   const filtered = anaFilter(allLeads);
   const total = filtered.length;
 
-  // Per-product counts from main filtered set
-  const prodCounts = ANA_META.map(p => ({ ...p, c: filtered.filter(l => l.product === p.id).length }));
-  const sorted = [...prodCounts].sort((a, b) => b.c - a.c);
+  // Per-brand counts (lead can have multiple brands)
+  const brandCounts = ANA_META.map(p => ({ ...p, c: filtered.filter(l => (l.brands||[]).includes(p.id)).length }));
+  const sorted = [...brandCounts].sort((a, b) => b.c - a.c);
 
-  // District (exclude district filter so all bars show even when one is selected)
-  const distLeads = DI_K.map(k => anaFilter(allLeads, ['district']).filter(l => l.district === k).length);
+  // District (exclude district filter so all bars show)
+  const distLeads = DI_K.map(k => anaFilter(allLeads, ['district']).filter(l => (AREA_TO_DI[l.area]||'bm') === k).length);
 
   // Age distribution
   const ageLeads = AG_K.map(ag => filtered.filter(l => l.age_group === ag).length);
 
-  // Platform (exclude platform filter)
-  const platLeads = PL_K.map(k => anaFilter(allLeads, ['platform']).filter(l => l.platform === k).length);
+  // Source (exclude source filter)
+  const srcLeads = SRC_ALL.map(s => anaFilter(allLeads, ['source']).filter(l => l.source === s).length);
 
   // Gender (exclude gender filter)
   const gBase = anaFilter(allLeads, ['gender']);
-  const femL = gBase.filter(l => l.gender === 'female').length;
-  const malL = gBase.filter(l => l.gender === 'male').length;
+  const femL = gBase.filter(l => (l.gender||'').toLowerCase() === 'female').length;
+  const malL = gBase.filter(l => (l.gender||'').toLowerCase() === 'male').length;
   const gTot = femL + malL;
   const fPct = gTot > 0 ? Math.round(femL / gTot * 100) : 50;
   const mPct = 100 - fPct;
 
-  // Monthly trend — always show all 5 months; exclude month filter
+  // Monthly trend — exclude month filter
   const trendBase = anaFilter(allLeads, ['month']);
   const trendNew  = MO_K.map((_, i) => trendBase.filter(l => leadMonth(l) === i).length);
-  const trendConv = MO_K.map((_, i) => trendBase.filter(l => leadMonth(l) === i && l.status === 'converted').length);
+  const trendConv = MO_K.map((_, i) => trendBase.filter(l => leadMonth(l) === i && l.stage === 'Closed').length);
 
   // Top values
-  const topP     = sorted.find(p => p.c > 0);
-  const topPlIdx = platLeads.indexOf(Math.max(...platLeads, 0));
-  const topDiIdx = distLeads.indexOf(Math.max(...distLeads, 0));
-  const convRate = total > 0 ? Math.round(filtered.filter(l => l.status === 'converted').length / total * 100) : 0;
+  const topBrand  = sorted.find(p => p.c > 0);
+  const topSrcIdx = srcLeads.indexOf(Math.max(...srcLeads, 0));
+  const topDiIdx  = distLeads.indexOf(Math.max(...distLeads, 0));
+  const closedRate = total > 0 ? Math.round(filtered.filter(l => l.stage === 'Closed').length / total * 100) : 0;
 
   // KPI
   document.getElementById('ana-kpi').innerHTML = `
     <div class="ana-kpi-card"><div class="ana-kpi-label">Total Leads</div><div class="ana-kpi-value">${total.toLocaleString()}</div></div>
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Product</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${topP ? topP.name : '—'}</div></div>
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Platform</div><div class="ana-kpi-value">${total > 0 ? PL_L[topPlIdx] : '—'}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Brand</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${topBrand ? topBrand.name : '—'}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Source</div><div class="ana-kpi-value">${total > 0 && srcLeads[topSrcIdx] > 0 ? SRC_ALL[topSrcIdx] : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top District</div><div class="ana-kpi-value">${total > 0 ? DI_L[topDiIdx] : '—'}</div></div>
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Conversion Rate</div><div class="ana-kpi-value">${convRate}%</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Close Rate</div><div class="ana-kpi-value">${closedRate}%</div></div>
   `;
 
-  // Product list
+  // Brand list
   const maxC = Math.max(...sorted.map(p => p.c), 1);
   document.getElementById('ana-prodlist').innerHTML = `
-    <div class="ana-card-header">Product Rankings</div>
+    <div class="ana-card-header">Brand Rankings</div>
     ${sorted.map((p, i) => `
-      <div class="ana-prod-row${ANA_ST.products.has(p.id) ? ' active' : ''}" onclick="anaToggleProduct('${p.id}')">
+      <div class="ana-prod-row${ANA_ST.brands.has(p.id) ? ' active' : ''}" onclick="anaToggleBrand('${p.id}')">
         <div class="ana-prod-rank">${i + 1}</div>
         <i class="ti ti-${p.icon} ana-prod-icon" style="color:${p.color}"></i>
         <div class="ana-prod-name">${p.name}</div>
@@ -1538,16 +1614,16 @@ function refreshAna() {
       </div>`).join('')}
   `;
 
-  // Platform panel
-  const maxPl = Math.max(...platLeads, 1);
+  // Source panel
+  const maxSrc = Math.max(...srcLeads, 1);
   document.getElementById('ana-platpanel').innerHTML = `
-    <div class="ana-card-header">Platform Split</div>
-    ${PL_K.map((k, i) => `
+    <div class="ana-card-header">Source Split</div>
+    ${SRC_ALL.map((s, i) => `
       <div class="ana-plat-row">
-        <i class="ti ti-${PL_ICONS[i]} ana-plat-icon" style="color:${PL_C[i]}"></i>
-        <div class="ana-plat-label">${PL_L[i]}</div>
-        <div class="ana-plat-bar-wrap"><div class="ana-plat-bar" style="width:${Math.round(platLeads[i] / maxPl * 100)}%;background:${PL_C[i]}"></div></div>
-        <div class="ana-plat-count">${platLeads[i].toLocaleString()}</div>
+        <i class="ti ti-${SRC_ICONS[i]} ana-plat-icon" style="color:${SRC_C[i]}"></i>
+        <div class="ana-plat-label">${s}</div>
+        <div class="ana-plat-bar-wrap"><div class="ana-plat-bar" style="width:${Math.round(srcLeads[i] / maxSrc * 100)}%;background:${SRC_C[i]}"></div></div>
+        <div class="ana-plat-count">${srcLeads[i].toLocaleString()}</div>
       </div>`).join('')}
   `;
 
@@ -1569,17 +1645,17 @@ function refreshAna() {
 
   // Segment tags
   const tags = [];
-  ANA_ST.products.forEach(id => { const p = ANA_META.find(x => x.id === id); if (p) tags.push(`<span class="seg-tag" style="background:${p.color}">${p.name}</span>`); });
+  ANA_ST.brands.forEach(id => { const p = ANA_META.find(x => x.id === id); if (p) tags.push(`<span class="seg-tag" style="background:${p.color}">${p.name}</span>`); });
   if (ANA_ST.month !== 'all') tags.push(`<span class="seg-tag" style="background:#534AB7">${MO_L[MO_K.indexOf(ANA_ST.month)]}</span>`);
-  if (ANA_ST.platform !== 'all') tags.push(`<span class="seg-tag" style="background:${PL_C[PL_K.indexOf(ANA_ST.platform)]}">${PL_L[PL_K.indexOf(ANA_ST.platform)]}</span>`);
+  if (ANA_ST.source !== 'all') tags.push(`<span class="seg-tag" style="background:#378ADD">${ANA_ST.source}</span>`);
   if (ANA_ST.district !== 'all') tags.push(`<span class="seg-tag" style="background:${DI_C[DI_K.indexOf(ANA_ST.district)]}">${DI_L[DI_K.indexOf(ANA_ST.district)]}</span>`);
-  if (ANA_ST.gender !== 'all') tags.push(`<span class="seg-tag" style="background:${ANA_ST.gender === 'f' ? '#378ADD' : '#7F77DD'}">${ANA_ST.gender === 'f' ? 'Female' : 'Male'}</span>`);
+  if (ANA_ST.gender !== 'all') tags.push(`<span class="seg-tag" style="background:${ANA_ST.gender === 'female' ? '#378ADD' : '#7F77DD'}">${ANA_ST.gender === 'female' ? 'Female' : 'Male'}</span>`);
   document.getElementById('ana-segtags').innerHTML = tags.length ? tags.join('') : '<span style="font-size:11px;color:var(--text-muted)">All data · no filters active</span>';
 
   // Pill active states
   document.querySelectorAll('[data-aprod]').forEach(btn => {
     const id = btn.dataset.aprod;
-    btn.classList.toggle('active', id === 'all' ? ANA_ST.products.size === 0 : ANA_ST.products.has(id));
+    btn.classList.toggle('active', id === 'all' ? ANA_ST.brands.size === 0 : ANA_ST.brands.has(id));
   });
   document.querySelectorAll('[data-af]').forEach(btn => {
     btn.classList.toggle('active', ANA_ST[btn.dataset.af] === btn.dataset.av);
@@ -1598,43 +1674,132 @@ function refreshAna() {
 /* ── Leads Table ── */
 const PROD_LABEL = Object.fromEntries(ANA_META.map(p => [p.id, p.name]));
 const PLAT_LABEL = { tk:'TikTok', ig:'Instagram', fb:'Facebook', wa:'WhatsApp' };
-const DIST_LABEL = { bm:'B-Muara', tu:'Tutong', be:'Belait', te:'Temburong' };
+const SRC_ONLINE_SET = new Set(['TikTok','Instagram','Facebook','WhatsApp']);
+const AREA_OPTS = ['Gadong','Rimba','Kiulap','Mata-Mata','Bengkurong','Lambak Kanan','Jerudong','Tungku','Tutong Town','Seria','Kuala Belait','Pandan','Lumapas','Sengkurong','Berakas','Other'];
+const SRC_OPTS_HTML = `<option value="">— select —</option><optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup><optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>`;
+
+function leadsNow() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function latestRemark(l) { const logs=l.logs||[]; const r=logs.filter(e=>e.type==='remark'||e.type==='create'); return r.length?r[r.length-1].text:''; }
+function latestLogDate(l) { const logs=l.logs||[]; return logs.length?logs[logs.length-1].date.split(' ')[0]:'—'; }
+
+function multiTriggerHTML(id, brands) {
+  brands = brands || [];
+  const tags = brands.length ? brands.map(b=>`<span class="btag">${b}</span>`).join('') : `<span style="color:var(--text-muted);font-size:11px">None</span>`;
+  return `<div class="multi-wrap" id="mw-${id}">
+    <div class="multi-trigger" onclick="toggleBrandDrop('${id}')">
+      <div class="brand-tags">${tags}</div>
+      <i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;color:var(--text-muted)"></i>
+    </div>
+    <div class="multi-dropdown" id="md-${id}">
+      ${['Advansse','Boeffi','Byte','Cuckoo','Hart'].map(b=>`<label class="multi-opt"><input type="checkbox" ${brands.includes(b)?'checked':''} onchange="updateLeadBrand('${id}','${b}',this.checked)"> ${b}</label>`).join('')}
+    </div>
+  </div>`;
+}
 
 function renderLeads() {
   const leads = D.leads || [];
   $('tc-leads').textContent = leads.length;
 
   const rows = leads.length === 0
-    ? `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted)">No leads yet — use <strong>Leads → Add Lead</strong> in the menu to get started</td></tr>`
-    : leads.map(l => `
-      <tr>
-        <td><strong>${l.name}</strong></td>
-        <td style="color:var(--text-secondary)">${l.phone || '—'}</td>
-        <td>${l.gender ? (l.gender === 'female' ? '♀ Female' : '♂ Male') : '—'}</td>
-        <td>${l.age_group || '—'}</td>
-        <td>${DIST_LABEL[l.district] || l.district || '—'}</td>
-        <td>${PROD_LABEL[l.product] || l.product || '—'}</td>
-        <td>${PLAT_LABEL[l.platform] || l.platform || '—'}</td>
-        <td><span class="leads-status ls-${l.status || 'new'}">${l.status || 'new'}</span></td>
-        <td style="color:var(--text-secondary);font-size:12px">${l.lead_date || (l.created_at || '').slice(0,10)}</td>
-      </tr>`).join('');
+    ? `<tr><td colspan="14" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
+    : leads.map(l => {
+        const remark = latestRemark(l);
+        const logDate = latestLogDate(l);
+        const stage = l.stage || 'New';
+        const isOnline = SRC_ONLINE_SET.has(l.source||'');
+        return `<tr>
+          <td><span class="sales-no-cell">${l.sales_no||'—'}</span></td>
+          <td style="font-size:12px">${l.agent||'—'}</td>
+          <td style="font-size:12px;font-weight:500">${l.name}</td>
+          <td style="font-size:12px;color:var(--text-secondary)">${l.gender?l.gender.charAt(0):'—'}</td>
+          <td style="font-size:12px;color:var(--text-secondary)">${l.age_group||'—'}</td>
+          <td>
+            <select class="inl-select" onchange="updateLeadField('${l.id}','area',this.value)">
+              ${AREA_OPTS.map(a=>`<option${a===l.area?' selected':''}>${a}</option>`).join('')}
+            </select>
+          </td>
+          <td style="font-family:monospace;font-size:11px">${l.phone||'—'}</td>
+          <td>${multiTriggerHTML(l.id, l.brands||[])}</td>
+          <td>
+            <select class="inl-select" onchange="updateLeadField('${l.id}','source',this.value)">
+              ${SRC_OPTS_HTML.replace(`<option>${l.source}</option>`,`<option selected>${l.source}</option>`)}
+            </select>
+          </td>
+          <td style="font-size:11px;color:var(--text-secondary);white-space:nowrap">${l.lead_date||(l.created_at||'').slice(0,10)||'—'}</td>
+          <td>
+            <select class="inl-select" onchange="updateLeadStage('${l.id}',this.value)">
+              ${['New','Contacted','Pending','Closed','Lost'].map(s=>`<option${s===stage?' selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <button class="log-btn" onclick="openLogModal('${l.id}')">
+              <i class="ti ti-clock" style="font-size:11px"></i> ${logDate}
+            </button>
+          </td>
+          <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
+          <td>
+            <button class="wa-btn" onclick="openWAModal('${l.id}')">
+              <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
 
   $('panel-leads').innerHTML = `
     <div class="table-wrap">
-      <div class="table-toolbar">
-        <div class="table-title">All Leads <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} records</span></div>
-        <input class="search-box" type="search" placeholder="Search leads…" oninput="filterLeads(this.value)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="table-title">Lead Tracker <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} leads</span></div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th><th>Phone</th><th>Gender</th><th>Age Group</th>
-            <th>District</th><th>Product</th><th>Platform</th><th>Status</th><th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="leads-body">${rows}</tbody>
-      </table>
+      <div class="leads-filters">
+        <input type="text" placeholder="Search name, TEL-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
+        <select id="leads-f-stage" onchange="filterLeads()">
+          <option value="">All stages</option>
+          <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
+        </select>
+        <select id="leads-f-source" onchange="filterLeads()">
+          <option value="">All sources</option>
+          <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+        </select>
+        <select id="leads-f-area" onchange="filterLeads()">
+          <option value="">All areas</option>
+          ${AREA_OPTS.map(a=>`<option>${a}</option>`).join('')}
+        </select>
+      </div>
+      <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
+        <table style="width:100%;border-collapse:collapse;min-width:1280px">
+          <colgroup>
+            <col style="width:90px"><col style="width:100px"><col style="width:150px"><col style="width:48px"><col style="width:70px">
+            <col style="width:110px"><col style="width:110px"><col style="width:145px">
+            <col style="width:110px"><col style="width:90px"><col style="width:95px"><col style="width:95px"><col style="width:150px"><col style="width:70px">
+          </colgroup>
+          <thead><tr style="background:var(--bg-tertiary)">
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Sales No.</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Agent</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Name</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">G</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Age</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Area</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Phone</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Existing of</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Source</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Lead Date</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Stage</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Action Date</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Latest Remark</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border)">Action</th>
+          </tr></thead>
+          <tbody id="leads-body">${rows}</tbody>
+        </table>
+      </div>
+      <div id="leads-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No leads match your filters.</div>
     </div>`;
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.multi-wrap'))
+      document.querySelectorAll('.multi-dropdown.open').forEach(d=>d.classList.remove('open'));
+  }, { once: false });
 }
 
 /* ── Members ── */
@@ -1675,36 +1840,51 @@ function filterMembers(q) {
   });
 }
 
-function filterLeads(q) {
-  const lower = q.toLowerCase();
+function filterLeads() {
+  const q = (document.getElementById('leads-srch')?.value||'').toLowerCase();
+  const fs = document.getElementById('leads-f-stage')?.value||'';
+  const fso = document.getElementById('leads-f-source')?.value||'';
+  const fa = document.getElementById('leads-f-area')?.value||'';
+  let shown = 0;
   document.querySelectorAll('#leads-body tr').forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(lower) ? '' : 'none';
+    const txt = row.textContent.toLowerCase();
+    const show = (!q || txt.includes(q)) &&
+                 (!fs  || row.querySelector('.inl-select')?.value === fs ||
+                          [...row.querySelectorAll('.inl-select')].some(s=>s.value===fs)) &&
+                 (!fso || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fso)) &&
+                 (!fa  || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fa));
+    row.style.display = show ? '' : 'none';
+    if (show) shown++;
   });
+  const emptyEl = document.getElementById('leads-empty');
+  if (emptyEl) emptyEl.style.display = shown === 0 ? 'block' : 'none';
 }
 
-function switchLeadsTab(name, btn) {
-  document.querySelectorAll('.leads-subtab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.leads-subpanel').forEach(p => p.classList.remove('active'));
-  document.getElementById('lsp-' + name).classList.add('active');
-  // Init charts the first time the analytics sub-panel is shown
-  if (name === 'analytics' && _anaInitPending) {
-    _anaInitPending = false;
-    requestAnimationFrame(initAnalytics);
-  }
+function toggleBrandDrop(id) {
+  const dd = document.getElementById('md-' + id);
+  if (!dd) return;
+  const isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.multi-dropdown.open').forEach(d=>d.classList.remove('open'));
+  if (!isOpen) dd.classList.add('open');
 }
 
 /* ── Add Lead Modal ── */
-function openLeadModal() {
-  // Set today's date as default
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('lf-date').value = today;
-  // Clear fields
-  ['lf-name','lf-phone','lf-notes'].forEach(id => document.getElementById(id).value = '');
-  ['lf-gender','lf-age','lf-district','lf-product','lf-platform'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('lf-status').value = 'new';
-  document.getElementById('lf-submit').disabled = false;
-  document.getElementById('lf-submit').textContent = 'Save Lead';
+function togBrand(el) { el.classList.toggle('on'); }
+
+async function openLeadModal() {
+  // Get next TEL number preview
+  const { data: telData } = await db.rpc('next_tel_no');
+  document.getElementById('lf-tel-preview').textContent = telData ? `Will be: ${telData}` : '';
+  // Reset brand chips
+  document.querySelectorAll('#lf-brands .bchk').forEach(b => b.classList.remove('on'));
+  // Clear text fields
+  ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // Reset selects
+  ['lf-gender','lf-age','lf-area','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  document.getElementById('lf-stage').value = 'New';
+  const btn = document.getElementById('lf-submit');
+  btn.disabled = false;
+  btn.textContent = 'Save Lead';
   document.getElementById('lead-modal').style.display = 'flex';
 }
 
@@ -1714,39 +1894,161 @@ function closeLeadModal() {
 
 async function submitLead() {
   const name = document.getElementById('lf-name').value.trim();
-  if (!name) { alert('Please enter a name.'); return; }
+  if (!name) { showToast('⚠ Please enter a name.'); return; }
 
   const btn = document.getElementById('lf-submit');
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
+  const brands = [...document.querySelectorAll('#lf-brands .bchk.on')].map(b => b.dataset.b);
+  const stage  = document.getElementById('lf-stage').value || 'New';
+  const remark = document.getElementById('lf-remark').value.trim();
+  const today  = new Date().toISOString().slice(0,10);
+
+  // Get TEL number from Supabase sequence
+  const { data: telNo } = await db.rpc('next_tel_no');
+
   const payload = {
+    sales_no:  telNo || null,
+    agent:     document.getElementById('lf-agent').value.trim() || null,
     name,
-    phone:      document.getElementById('lf-phone').value.trim() || null,
-    gender:     document.getElementById('lf-gender').value || null,
-    age_group:  document.getElementById('lf-age').value || null,
-    district:   document.getElementById('lf-district').value || null,
-    product:    document.getElementById('lf-product').value || null,
-    platform:   document.getElementById('lf-platform').value || null,
-    status:     document.getElementById('lf-status').value || 'new',
-    lead_date:  document.getElementById('lf-date').value || null,
-    notes:      document.getElementById('lf-notes').value.trim() || null,
+    gender:    document.getElementById('lf-gender').value || null,
+    age_group: document.getElementById('lf-age').value || null,
+    area:      document.getElementById('lf-area').value || null,
+    phone:     document.getElementById('lf-phone').value.trim() || null,
+    brands,
+    source:    document.getElementById('lf-source').value || null,
+    stage,
+    lead_date: today,
+    logs: [{ date: leadsNow(), stage, type:'create', text: remark || 'Lead created' }],
   };
 
   const { data, error } = await db.from('leads').insert([payload]).select();
   if (error) {
-    alert('Error saving lead: ' + error.message);
+    showToast('⚠ Error: ' + error.message, 5000);
     btn.disabled = false;
     btn.textContent = 'Save Lead';
     return;
   }
 
-  // Add to local data and re-render without full reload
   D.leads = [data[0], ...D.leads];
   renderLeads();
   renderStats();
   refreshAna();
   closeLeadModal();
+  showToast(`✅ Lead ${telNo||''} saved!`);
+}
+
+/* ── Inline edit (area, source) ── */
+async function updateLeadField(id, field, value) {
+  const { error } = await db.from('leads').update({ [field]: value }).eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  const l = D.leads.find(x => x.id === id);
+  if (l) l[field] = value;
+  refreshAna();
+}
+
+/* ── Stage change ── */
+async function updateLeadStage(id, value) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l) return;
+  const newLog = { date: leadsNow(), stage: value, type:'stage', text:`Stage changed to ${value}` };
+  const newLogs = [...(l.logs||[]), newLog];
+  const { error } = await db.from('leads').update({ stage: value, logs: newLogs }).eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  l.stage = value;
+  l.logs = newLogs;
+  renderLeads();
+  renderStats();
+  refreshAna();
+}
+
+/* ── Brand multi-select inline ── */
+async function updateLeadBrand(id, brand, checked) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l) return;
+  if (!l.brands) l.brands = [];
+  if (checked && !l.brands.includes(brand)) l.brands.push(brand);
+  if (!checked) l.brands = l.brands.filter(b => b !== brand);
+  const { error } = await db.from('leads').update({ brands: l.brands }).eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  // Update just the brand-tags display in the row without full re-render
+  const wrap = document.getElementById('mw-' + id);
+  if (wrap) {
+    const tags = l.brands.length ? l.brands.map(b=>`<span class="btag">${b}</span>`).join('') : `<span style="color:var(--text-muted);font-size:11px">None</span>`;
+    wrap.querySelector('.brand-tags').innerHTML = tags;
+  }
+  refreshAna();
+}
+
+/* ── WhatsApp Modal ── */
+let _activeWA = null;
+function buildWAMsg(l) {
+  const n = l.name, low = n.toLowerCase();
+  const sal = low.includes('haji')||low.includes('hj') ? ' Haji/Hjh' : low.startsWith('dayang')||low.startsWith('dk') ? ' Dayang' : low.startsWith('pg')||low.startsWith('pengiran') ? ' Pengiran' : '';
+  const first = n.split(' ')[sal ? 1 : 0];
+  return `Assalamualaikum${sal} ${first}! 😊\n\nSaya dari pasukan CUCKOO Brunei. Terima kasih kerana menghubungi kami.\n\nKami ingin berkongsi produk terbaik kami yang dapat meningkatkan kualiti hidup anda. 🌿\n\nBoleh kami bantu anda dengan maklumat lanjut?\n\nTerima kasih! 🙏`;
+}
+function openWAModal(id) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l) return;
+  _activeWA = l;
+  document.getElementById('wa-to').innerHTML = `<strong>${l.sales_no||l.id.slice(0,8)}</strong> &nbsp;·&nbsp; ${l.name} &nbsp;·&nbsp; <span style="font-family:monospace">${l.phone||'—'}</span>`;
+  document.getElementById('wa-msg').value = buildWAMsg(l);
+  document.getElementById('wa-modal').style.display = 'flex';
+}
+function closeWAModal() { document.getElementById('wa-modal').style.display = 'none'; _activeWA = null; }
+async function doSendWA() {
+  if (!_activeWA) return;
+  const clean = (_activeWA.phone||'').replace(/[^0-9]/g,'');
+  const num = clean.startsWith('673') ? clean : '673' + clean;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(document.getElementById('wa-msg').value)}`, '_blank');
+  // Log it
+  const newLog = { date: leadsNow(), stage: _activeWA.stage||'New', type:'remark', text:'WhatsApp message sent' };
+  const newLogs = [...(_activeWA.logs||[]), newLog];
+  await db.from('leads').update({ logs: newLogs }).eq('id', _activeWA.id);
+  _activeWA.logs = newLogs;
+  if ((_activeWA.stage||'New') === 'New') {
+    await updateLeadStage(_activeWA.id, 'Contacted');
+  }
+  closeWAModal();
+}
+
+/* ── Action Log Modal ── */
+let _activeLog = null;
+function openLogModal(id) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l) return;
+  _activeLog = l;
+  drawLog();
+  document.getElementById('log-modal').style.display = 'flex';
+}
+function closeLogModal() { document.getElementById('log-modal').style.display = 'none'; _activeLog = null; }
+function drawLog() {
+  if (!_activeLog) return;
+  document.getElementById('log-who').innerHTML = `<span style="font-family:monospace;font-weight:600">${_activeLog.sales_no||'—'}</span> &nbsp;·&nbsp; ${_activeLog.name}`;
+  const entries = [...(_activeLog.logs||[])].reverse();
+  const STAGE_COLORS = { New:'#58a6ff', Contacted:'#a78bfa', Pending:'#d29922', Closed:'#3fb950', Lost:'#f85149' };
+  document.getElementById('log-entries').innerHTML = entries.length
+    ? entries.map(e => `
+        <div class="log-entry">
+          <div class="log-date">${e.date} &nbsp;<span class="stage-pill sp-${e.stage||'New'}">${e.stage||'New'}</span></div>
+          <div class="log-text">${e.text}</div>
+        </div>`).join('')
+    : `<div style="color:var(--text-muted);font-size:12px;padding:12px 0">No entries yet.</div>`;
+  document.getElementById('log-input').value = '';
+}
+async function addRemark() {
+  const inp = document.getElementById('log-input');
+  const txt = inp.value.trim();
+  if (!txt || !_activeLog) return;
+  const newLog = { date: leadsNow(), stage: _activeLog.stage||'New', type:'remark', text: txt };
+  const newLogs = [...(_activeLog.logs||[]), newLog];
+  const { error } = await db.from('leads').update({ logs: newLogs }).eq('id', _activeLog.id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  _activeLog.logs = newLogs;
+  drawLog();
+  renderLeads();
 }
 
 /* ── Import CSV ── */
@@ -1790,18 +2092,18 @@ function handleImportFile(file) {
     }
 
     const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/\s+/g,'_'));
-    const VALID_COLS = ['name','phone','gender','age_group','district','product','platform','status','lead_date','notes'];
+    const VALID_COLS = ['sales_no','agent','name','phone','gender','age_group','area','source','stage','lead_date','notes'];
 
     _importRows = [];
     for (let i = 1; i < lines.length; i++) {
       const vals = parseCSVLine(lines[i]);
       const row = {};
       headers.forEach((h, idx) => { if (VALID_COLS.includes(h)) row[h] = vals[idx] || null; });
-      if (row.name) _importRows.push(row);
+      if (row.name) { row.brands = []; row.logs = []; _importRows.push(row); }
     }
 
     // Preview first 5 rows
-    const previewCols = ['name','phone','gender','age_group','district','product','platform','status','lead_date'];
+    const previewCols = ['sales_no','agent','name','phone','gender','age_group','area','source','stage','lead_date'];
     const preview = _importRows.slice(0, 5);
     document.getElementById('import-preview').innerHTML = `
       <div class="import-preview">
