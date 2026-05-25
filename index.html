@@ -1536,6 +1536,11 @@ function buildAnaShell() {
 
   <div class="ana-kpi-grid" id="ana-kpi"></div>
 
+  <div class="ana-card">
+    <div class="ana-card-header">Product Distribution</div>
+    <div class="ana-chart-wrap" style="height:220px"><canvas id="ana-brand-chart"></canvas></div>
+  </div>
+
   <div class="ana-grid-2">
     <div class="ana-card" id="ana-prodlist"></div>
     <div class="ana-col-stack">
@@ -1608,6 +1613,23 @@ function initAnalytics() {
     type:'doughnut',
     data:{ labels:['Female','Male'], datasets:[{ data:[50,50], backgroundColor:['#378ADD','#7F77DD'], borderWidth:0, hoverOffset:4 }] },
     options:{ ...cOpts, cutout:'68%' }
+  });
+
+  AC.brand = new Chart(document.getElementById('ana-brand-chart'), {
+    type: 'bar',
+    data: {
+      labels: ANA_META.map(p => p.name),
+      datasets: [{
+        data: new Array(ANA_META.length).fill(0),
+        backgroundColor: ANA_META.map(p => p.color + '55'),
+        borderColor:     ANA_META.map(p => p.color),
+        borderWidth: 2, borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: { ...cOpts,
+      plugins: { ...cOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} leads` } } },
+      scales: { y: { ...scaleStyle, beginAtZero: true }, x: { ...scaleStyle, grid: { display: false } } }
+    }
   });
 
   AC.trend = new Chart(document.getElementById('ana-trend-chart'), {
@@ -1745,6 +1767,7 @@ function refreshAna() {
   });
 
   // Chart updates
+  AC.brand.data.datasets[0].data = brandCounts.map(p => p.c); AC.brand.update('none');
   AC.dist.data.datasets[0].data = distLeads; AC.dist.update('none');
   AC.age.data.datasets[0].data  = ageLeads;  AC.age.update('none');
   AC.gender.data.datasets[0].data = [femL, malL]; AC.gender.update('none');
