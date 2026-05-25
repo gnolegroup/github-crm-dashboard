@@ -1026,6 +1026,22 @@
         </div>
       </div>
       <div class="modal-field">
+        <label class="modal-label">Product</label>
+        <select id="lf-product" class="modal-select">
+          <option value="">— select —</option>
+          <option value="water">Water Purifier</option>
+          <option value="air">Air Purifier</option>
+          <option value="mattress">Mattress</option>
+          <option value="aircon">Air Con</option>
+          <option value="outdoor">Outdoor</option>
+          <option value="washer">Washer</option>
+          <option value="treadmill">Treadmill</option>
+          <option value="massage">Massage</option>
+          <option value="hizero">Hizero</option>
+          <option value="cooker">Cooker</option>
+        </select>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">Source</label>
         <select id="lf-source" class="modal-select">
           <option value="">Select source</option>
@@ -1105,6 +1121,22 @@
           <span class="bchk" data-b="Cuckoo"   onclick="togBrand(this)">Cuckoo</span>
           <span class="bchk" data-b="Hart"     onclick="togBrand(this)">Hart</span>
         </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Product</label>
+        <select id="ef-product" class="modal-select">
+          <option value="">— select —</option>
+          <option value="water">Water Purifier</option>
+          <option value="air">Air Purifier</option>
+          <option value="mattress">Mattress</option>
+          <option value="aircon">Air Con</option>
+          <option value="outdoor">Outdoor</option>
+          <option value="washer">Washer</option>
+          <option value="treadmill">Treadmill</option>
+          <option value="massage">Massage</option>
+          <option value="hizero">Hizero</option>
+          <option value="cooker">Cooker</option>
+        </select>
       </div>
       <div class="modal-field">
         <label class="modal-label">Source</label>
@@ -1783,6 +1815,19 @@ const PLAT_LABEL = { tk:'TikTok', ig:'Instagram', fb:'Facebook', wa:'WhatsApp' }
 const SRC_ONLINE_SET = new Set(['TikTok','Instagram','Facebook','WhatsApp']);
 const AREA_OPTS = ['Gadong','Rimba','Kiulap','Mata-Mata','Bengkurong','Lambak Kanan','Jerudong','Tungku','Tutong Town','Seria','Kuala Belait','Pandan','Lumapas','Sengkurong','Berakas','Other'];
 const SRC_OPTS_HTML = `<option value="">— select —</option><optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup><optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>`;
+const PRODUCT_OPTS = [
+  { v:'water',    l:'Water Purifier' },
+  { v:'air',      l:'Air Purifier'   },
+  { v:'mattress', l:'Mattress'       },
+  { v:'aircon',   l:'Air Con'        },
+  { v:'outdoor',  l:'Outdoor'        },
+  { v:'washer',   l:'Washer'         },
+  { v:'treadmill',l:'Treadmill'      },
+  { v:'massage',  l:'Massage'        },
+  { v:'hizero',   l:'Hizero'         },
+  { v:'cooker',   l:'Cooker'         },
+];
+const PRODUCT_OPTS_HTML = `<option value="">—</option>` + PRODUCT_OPTS.map(p=>`<option value="${p.v}">${p.l}</option>`).join('');
 
 function leadsNow() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 function latestRemark(l) { const logs=l.logs||[]; const r=logs.filter(e=>e.type==='remark'||e.type==='create'); return r.length?r[r.length-1].text:''; }
@@ -1807,7 +1852,7 @@ function renderLeads() {
   $('tc-leads').textContent = leads.length;
 
   const rows = leads.length === 0
-    ? `<tr><td colspan="14" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
+    ? `<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
     : leads.map(l => {
         const remark = latestRemark(l);
         const logDate = latestLogDate(l);
@@ -1826,6 +1871,11 @@ function renderLeads() {
           </td>
           <td style="font-family:monospace;font-size:11px">${l.phone||'—'}</td>
           <td>${multiTriggerHTML(l.id, l.brands||[])}</td>
+          <td>
+            <select class="inl-select" onchange="updateLeadField('${l.id}','product',this.value)">
+              ${PRODUCT_OPTS_HTML.replace(`value="${l.product||''}"`,`value="${l.product||''}" selected`)}
+            </select>
+          </td>
           <td>
             <select class="inl-select" onchange="updateLeadField('${l.id}','source',this.value)">
               ${SRC_OPTS_HTML.replace(`<option>${l.source}</option>`,`<option selected>${l.source}</option>`)}
@@ -1878,10 +1928,10 @@ function renderLeads() {
         </select>
       </div>
       <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
-        <table style="width:100%;border-collapse:collapse;min-width:1655px">
+        <table style="width:100%;border-collapse:collapse;min-width:1775px">
           <colgroup>
             <col style="width:100px"><col style="width:115px"><col style="width:160px"><col style="width:75px"><col style="width:75px">
-            <col style="width:125px"><col style="width:125px"><col style="width:160px">
+            <col style="width:125px"><col style="width:125px"><col style="width:160px"><col style="width:130px">
             <col style="width:120px"><col style="width:105px"><col style="width:110px"><col style="width:110px"><col style="width:165px"><col style="width:115px">
           </colgroup>
           <thead><tr style="background:var(--bg-tertiary)">
@@ -1893,6 +1943,7 @@ function renderLeads() {
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Area</th>
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Phone</th>
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Existing of</th>
+            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Product</th>
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Source</th>
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Lead Date</th>
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Stage</th>
@@ -1991,7 +2042,7 @@ async function openLeadModal() {
   // Clear text fields
   ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   // Reset selects
-  ['lf-gender','lf-age','lf-area','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  ['lf-gender','lf-age','lf-area','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
   document.getElementById('lf-stage').value = 'New';
   const btn = document.getElementById('lf-submit');
   btn.disabled = false;
@@ -2028,6 +2079,7 @@ async function submitLead() {
     area:      document.getElementById('lf-area').value || null,
     phone:     document.getElementById('lf-phone').value.trim() || null,
     brands,
+    product:   document.getElementById('lf-product').value || null,
     source:    document.getElementById('lf-source').value || null,
     stage,
     lead_date: today,
@@ -2068,11 +2120,12 @@ function openEditLeadModal(id) {
   document.getElementById('ef-lead-date').value = l.lead_date || '';
 
   // Pre-fill selects
-  document.getElementById('ef-gender').value = l.gender    || '';
-  document.getElementById('ef-age').value    = l.age_group || '';
-  document.getElementById('ef-area').value   = l.area      || '';
-  document.getElementById('ef-source').value = l.source    || '';
-  document.getElementById('ef-stage').value  = l.stage     || 'New';
+  document.getElementById('ef-gender').value  = l.gender    || '';
+  document.getElementById('ef-age').value     = l.age_group || '';
+  document.getElementById('ef-area').value    = l.area      || '';
+  document.getElementById('ef-product').value = l.product   || '';
+  document.getElementById('ef-source').value  = l.source    || '';
+  document.getElementById('ef-stage').value   = l.stage     || 'New';
 
   // Pre-select brand chips
   const brands = l.brands || [];
@@ -2120,6 +2173,7 @@ async function saveEditLead() {
     area:      document.getElementById('ef-area').value             || null,
     phone:     document.getElementById('ef-phone').value.trim()     || null,
     brands,
+    product:   document.getElementById('ef-product').value          || null,
     source:    document.getElementById('ef-source').value           || null,
     lead_date: document.getElementById('ef-lead-date').value        || null,
     stage:     newStage,
