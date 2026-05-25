@@ -197,6 +197,7 @@
 
     /* ── Main ── */
     main { max-width: 1440px; margin: 0 auto; padding: 24px; }
+    main.leads-wide { max-width: 100%; }
 
     /* ── Stats ── */
     .stats-grid {
@@ -1257,6 +1258,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('panel-' + name).classList.add('active');
+  document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
 // Navigate to a tab from the nav bar (no btn reference needed)
