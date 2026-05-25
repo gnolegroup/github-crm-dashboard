@@ -1324,7 +1324,7 @@ function renderPipeline() {
     `;
   }).join('');
 
-  $('panel-pipeline').innerHTML = `<div class="kanban">${cols}</div>${buildAnaShell()}`;
+  $('panel-pipeline').innerHTML = buildAnaShell();
   requestAnimationFrame(initAnalytics);
 }
 
