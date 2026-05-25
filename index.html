@@ -838,7 +838,7 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('contacts')"><span class="nav-dropdown-icon">👥</span>All Members</div>
+      <div class="nav-dropdown-item" onclick="navTo('members')"><span class="nav-dropdown-icon">👥</span>All Members</div>
       <div class="nav-dropdown-item" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
       <div class="nav-dropdown-divider"></div>
       <div class="nav-dropdown-item" onclick="showToast('🔒 Roles & Permissions — coming soon')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
@@ -916,6 +916,9 @@
     <button class="tab-btn" onclick="switchTab('leads',this)">
       🎯 Leads <span class="tab-count" id="tc-leads">—</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('members',this)">
+      👤 Members <span class="tab-count" id="tc-members">—</span>
+    </button>
   </div>
 
   <div class="tab-panel active" id="panel-pipeline"><div class="loading"><div class="spinner"></div>Loading pipeline…</div></div>
@@ -923,6 +926,7 @@
   <div class="tab-panel"        id="panel-repos">   <div class="loading"><div class="spinner"></div>Loading repositories…</div></div>
   <div class="tab-panel"        id="panel-activity"><div class="loading"><div class="spinner"></div>Loading activity…</div></div>
   <div class="tab-panel"        id="panel-leads">   <div class="loading"><div class="spinner"></div>Loading leads…</div></div>
+  <div class="tab-panel"        id="panel-members"> <div class="loading"><div class="spinner"></div>Loading members…</div></div>
 
 </main>
 
@@ -1212,6 +1216,7 @@ async function loadAll() {
     { data: repos },
     { data: activities },
     { data: leads },
+    { data: members },
   ] = await Promise.all([
     db.from('contacts').select('*').order('github_followers', { ascending: false }),
     db.from('deals').select('*, contacts(*), organizations(*), pipeline_stages(*)').order('value', { ascending: false }),
@@ -1219,9 +1224,10 @@ async function loadAll() {
     db.from('repositories').select('*').order('stars', { ascending: false }),
     db.from('activities').select('*, contacts(*), repositories(*)').order('created_at', { ascending: false }),
     db.from('leads').select('*').order('lead_date', { ascending: false }),
+    db.from('members').select('*').order('created_at', { ascending: false }),
   ]);
 
-  D = { contacts, deals, stages, repos, activities, leads: leads || [] };
+  D = { contacts, deals, stages, repos, activities, leads: leads || [], members: members || [] };
 
   renderStats();
   renderPipeline();
@@ -1229,6 +1235,7 @@ async function loadAll() {
   renderRepos();
   renderActivity();
   renderLeads();
+  renderMembers();
 }
 
 /* ── Stats ── */
@@ -1806,6 +1813,44 @@ function renderLeads() {
     </div>`;
 }
 
+/* ── Members ── */
+function renderMembers() {
+  const members = D.members || [];
+  $('tc-members').textContent = members.length;
+
+  const rows = members.length === 0
+    ? `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No members yet — use <strong>Member → Add Member</strong> to get started</td></tr>`
+    : members.map(m => `
+      <tr>
+        <td><strong>${m.name}</strong></td>
+        <td style="color:var(--text-secondary)">${m.phone || '—'}</td>
+        <td style="color:var(--text-secondary)">${m.email || '—'}</td>
+        <td>${m.role || '—'}</td>
+        <td><span class="leads-status ms-${m.status || 'active'}">${m.status || 'active'}</span></td>
+      </tr>`).join('');
+
+  $('panel-members').innerHTML = `
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-title">All Members <span style="font-size:12px;color:var(--text-muted);font-weight:400">${members.length} records</span></div>
+        <input class="search-box" type="search" placeholder="Search members…" oninput="filterMembers(this.value)">
+      </div>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Status</th></tr>
+        </thead>
+        <tbody id="members-body">${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function filterMembers(q) {
+  const lower = q.toLowerCase();
+  document.querySelectorAll('#members-body tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(lower) ? '' : 'none';
+  });
+}
+
 function filterLeads(q) {
   const lower = q.toLowerCase();
   document.querySelectorAll('#leads-body tr').forEach(row => {
@@ -2029,10 +2074,10 @@ async function submitMember() {
     return;
   }
 
-  // Add to local data and refresh contacts panel
+  // Add to local data and refresh members panel
   if (!D.members) D.members = [];
   D.members = [data[0], ...D.members];
-  renderContacts();
+  renderMembers();
   closeMemberModal();
   showToast('✅ Member added successfully!');
 }
