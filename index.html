@@ -764,6 +764,8 @@
     .inl-select:focus { outline:none;border-color:var(--accent-light) }
     .wa-btn { display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;font-weight:500;background:#0d2a0d;color:#3fb950;border:0.5px solid #1f4a1f;border-radius:6px;cursor:pointer;white-space:nowrap }
     .wa-btn:hover { background:#1a3d1a }
+    .edit-lead-btn { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:0.5px solid var(--border);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;flex-shrink:0 }
+    .edit-lead-btn:hover { background:var(--bg-tertiary);color:var(--accent-light);border-color:var(--accent-light) }
     .log-btn { display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;border:0.5px solid var(--border);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap }
     .log-btn:hover { background:var(--bg-tertiary);color:var(--text-primary) }
     .remark-cell { font-size:11px;color:var(--text-primary);line-height:1.4;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
@@ -1046,6 +1048,87 @@
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeLeadModal()">Cancel</button>
       <button id="lf-submit" class="btn-save" onclick="submitLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Lead Modal ────────────────────── -->
+<div id="edit-lead-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeEditLeadModal()">
+  <div class="modal-box" style="width:560px">
+    <div class="modal-title">
+      ✏️ Edit Lead
+      <span id="ef-tel-display" style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:8px"></span>
+      <button class="modal-close" onclick="closeEditLeadModal()">✕</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label class="modal-label">Sales Agent</label>
+        <input id="ef-agent" class="modal-input" type="text" placeholder="Agent name">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Full Name *</label>
+        <input id="ef-name" class="modal-input" type="text" placeholder="Full name">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Gender</label>
+        <select id="ef-gender" class="modal-select">
+          <option value="">—</option>
+          <option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Age Group</label>
+        <select id="ef-age" class="modal-select">
+          <option value="">—</option>
+          <option>18–25</option><option>26–35</option><option>36–45</option><option>46–55</option><option>56+</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Area</label>
+        <select id="ef-area" class="modal-select">
+          <option value="">Select area</option>
+          <option>Gadong</option><option>Rimba</option><option>Kiulap</option><option>Mata-Mata</option>
+          <option>Bengkurong</option><option>Lambak Kanan</option><option>Jerudong</option><option>Tungku</option>
+          <option>Tutong Town</option><option>Seria</option><option>Kuala Belait</option>
+          <option>Pandan</option><option>Lumapas</option><option>Sengkurong</option><option>Berakas</option><option>Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Phone</label>
+        <input id="ef-phone" class="modal-input" type="text" placeholder="+673-8xxxxxx">
+      </div>
+      <div class="modal-field full">
+        <label class="modal-label">Existing customer of</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="ef-brands">
+          <span class="bchk" data-b="Advansse" onclick="togBrand(this)">Advansse</span>
+          <span class="bchk" data-b="Boeffi"   onclick="togBrand(this)">Boeffi</span>
+          <span class="bchk" data-b="Byte"     onclick="togBrand(this)">Byte</span>
+          <span class="bchk" data-b="Cuckoo"   onclick="togBrand(this)">Cuckoo</span>
+          <span class="bchk" data-b="Hart"     onclick="togBrand(this)">Hart</span>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Source</label>
+        <select id="ef-source" class="modal-select">
+          <option value="">Select source</option>
+          <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Lead Date</label>
+        <input id="ef-lead-date" class="modal-input" type="date">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Stage</label>
+        <select id="ef-stage" class="modal-select">
+          <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditLeadModal()">Cancel</button>
+      <button id="ef-submit" class="btn-save" onclick="saveEditLead()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1740,9 +1823,14 @@ function renderLeads() {
           </td>
           <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
           <td>
-            <button class="wa-btn" onclick="openWAModal('${l.id}')">
-              <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
-            </button>
+            <div style="display:flex;gap:4px;align-items:center">
+              <button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead">
+                <i class="ti ti-pencil" style="font-size:11px"></i>
+              </button>
+              <button class="wa-btn" onclick="openWAModal('${l.id}')">
+                <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
+              </button>
+            </div>
           </td>
         </tr>`;
       }).join('');
@@ -1769,11 +1857,11 @@ function renderLeads() {
         </select>
       </div>
       <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
-        <table style="width:100%;border-collapse:collapse;min-width:1620px">
+        <table style="width:100%;border-collapse:collapse;min-width:1655px">
           <colgroup>
             <col style="width:100px"><col style="width:115px"><col style="width:160px"><col style="width:75px"><col style="width:75px">
             <col style="width:125px"><col style="width:125px"><col style="width:160px">
-            <col style="width:120px"><col style="width:105px"><col style="width:110px"><col style="width:110px"><col style="width:165px"><col style="width:80px">
+            <col style="width:120px"><col style="width:105px"><col style="width:110px"><col style="width:110px"><col style="width:165px"><col style="width:115px">
           </colgroup>
           <thead><tr style="background:var(--bg-tertiary)">
             <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Sales No.</th>
@@ -1939,6 +2027,101 @@ async function submitLead() {
   refreshAna();
   closeLeadModal();
   showToast(`✅ Lead ${telNo||''} saved!`);
+}
+
+/* ── Edit Lead Modal ── */
+let _editLeadId = null;
+
+function openEditLeadModal(id) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l) return;
+  _editLeadId = id;
+
+  // Show TEL / Sales No
+  document.getElementById('ef-tel-display').textContent = l.sales_no ? `📋 ${l.sales_no}` : '';
+
+  // Pre-fill text fields
+  document.getElementById('ef-agent').value     = l.agent     || '';
+  document.getElementById('ef-name').value      = l.name      || '';
+  document.getElementById('ef-phone').value     = l.phone     || '';
+  document.getElementById('ef-lead-date').value = l.lead_date || '';
+
+  // Pre-fill selects
+  document.getElementById('ef-gender').value = l.gender    || '';
+  document.getElementById('ef-age').value    = l.age_group || '';
+  document.getElementById('ef-area').value   = l.area      || '';
+  document.getElementById('ef-source').value = l.source    || '';
+  document.getElementById('ef-stage').value  = l.stage     || 'New';
+
+  // Pre-select brand chips
+  const brands = l.brands || [];
+  document.querySelectorAll('#ef-brands .bchk').forEach(b => {
+    b.classList.toggle('on', brands.includes(b.dataset.b));
+  });
+
+  const btn = document.getElementById('ef-submit');
+  btn.disabled = false;
+  btn.textContent = 'Save Changes';
+
+  document.getElementById('edit-lead-modal').style.display = 'flex';
+}
+
+function closeEditLeadModal() {
+  document.getElementById('edit-lead-modal').style.display = 'none';
+  _editLeadId = null;
+}
+
+async function saveEditLead() {
+  const name = document.getElementById('ef-name').value.trim();
+  if (!name) { showToast('⚠ Please enter a name.'); return; }
+  if (!_editLeadId) return;
+
+  const btn = document.getElementById('ef-submit');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const brands    = [...document.querySelectorAll('#ef-brands .bchk.on')].map(b => b.dataset.b);
+  const newStage  = document.getElementById('ef-stage').value || 'New';
+  const l         = D.leads.find(x => x.id === _editLeadId);
+  const oldStage  = l ? l.stage : null;
+
+  // If stage changed, append a stage-change log entry
+  let logs = l ? [...(l.logs || [])] : [];
+  if (l && newStage !== oldStage) {
+    logs.push({ date: leadsNow(), stage: newStage, type: 'stage', text: `Stage changed to ${newStage}` });
+  }
+
+  const payload = {
+    agent:     document.getElementById('ef-agent').value.trim()     || null,
+    name,
+    gender:    document.getElementById('ef-gender').value           || null,
+    age_group: document.getElementById('ef-age').value              || null,
+    area:      document.getElementById('ef-area').value             || null,
+    phone:     document.getElementById('ef-phone').value.trim()     || null,
+    brands,
+    source:    document.getElementById('ef-source').value           || null,
+    lead_date: document.getElementById('ef-lead-date').value        || null,
+    stage:     newStage,
+    logs,
+  };
+
+  const { data, error } = await db.from('leads').update(payload).eq('id', _editLeadId).select();
+  if (error) {
+    showToast('⚠ Error: ' + error.message, 5000);
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+    return;
+  }
+
+  // Update local cache
+  const idx = D.leads.findIndex(x => x.id === _editLeadId);
+  if (idx !== -1) D.leads[idx] = { ...D.leads[idx], ...data[0] };
+
+  renderLeads();
+  renderStats();
+  refreshAna();
+  closeEditLeadModal();
+  showToast('✅ Lead updated!');
 }
 
 /* ── Inline edit (area, source) ── */
