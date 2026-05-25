@@ -830,7 +830,7 @@
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📈</span>Analytics</div>
-      <div class="nav-dropdown-item" onclick="navTo('activity')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
+      <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">🔔</span>Notifications</div>
     </div>
   </div>
 
@@ -904,15 +904,6 @@
     <button class="tab-btn active" onclick="switchTab('pipeline',this)">
       ◈ Pipeline <span class="tab-count" id="tc-pipeline">—</span>
     </button>
-    <button class="tab-btn" onclick="switchTab('contacts',this)">
-      ◎ Contacts <span class="tab-count" id="tc-contacts">—</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('repos',this)">
-      ⬡ Repositories <span class="tab-count" id="tc-repos">—</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('activity',this)">
-      ⚡ Activity <span class="tab-count" id="tc-activity">—</span>
-    </button>
     <button class="tab-btn" onclick="switchTab('leads',this)">
       🎯 Leads <span class="tab-count" id="tc-leads">—</span>
     </button>
@@ -922,9 +913,6 @@
   </div>
 
   <div class="tab-panel active" id="panel-pipeline"><div class="loading"><div class="spinner"></div>Loading pipeline…</div></div>
-  <div class="tab-panel"        id="panel-contacts"><div class="loading"><div class="spinner"></div>Loading contacts…</div></div>
-  <div class="tab-panel"        id="panel-repos">   <div class="loading"><div class="spinner"></div>Loading repositories…</div></div>
-  <div class="tab-panel"        id="panel-activity"><div class="loading"><div class="spinner"></div>Loading activity…</div></div>
   <div class="tab-panel"        id="panel-leads">   <div class="loading"><div class="spinner"></div>Loading leads…</div></div>
   <div class="tab-panel"        id="panel-members"> <div class="loading"><div class="spinner"></div>Loading members…</div></div>
 
@@ -1210,37 +1198,28 @@ let _loading = false;
 async function loadAll() {
   if (_loading) return; _loading = true;
   const [
-    { data: contacts },
     { data: deals },
     { data: stages },
-    { data: repos },
-    { data: activities },
     { data: leads },
     { data: members },
   ] = await Promise.all([
-    db.from('contacts').select('*').order('github_followers', { ascending: false }),
-    db.from('deals').select('*, contacts(*), organizations(*), pipeline_stages(*)').order('value', { ascending: false }),
+    db.from('deals').select('*').order('value', { ascending: false }),
     db.from('pipeline_stages').select('*').order('position'),
-    db.from('repositories').select('*').order('stars', { ascending: false }),
-    db.from('activities').select('*, contacts(*), repositories(*)').order('created_at', { ascending: false }),
     db.from('leads').select('*').order('lead_date', { ascending: false }),
     db.from('members').select('*').order('created_at', { ascending: false }),
   ]);
 
-  D = { contacts, deals, stages, repos, activities, leads: leads || [], members: members || [] };
+  D = { deals: deals || [], stages: stages || [], leads: leads || [], members: members || [] };
 
   renderStats();
   renderPipeline();
-  renderContacts();
-  renderRepos();
-  renderActivity();
   renderLeads();
   renderMembers();
 }
 
 /* ── Stats ── */
 function renderStats() {
-  const { contacts, deals, leads } = D;
+  const { deals, leads } = D;
   const open = deals.filter(d => d.status === 'open');
   const won  = deals.filter(d => d.status === 'won');
   const wonV = won.reduce((s, d) => s + (d.value || 0), 0);
@@ -1285,170 +1264,15 @@ function renderStats() {
   `;
 
   $('tc-pipeline').textContent = D.deals.length;
-  $('tc-contacts').textContent = D.contacts.length;
-  $('tc-repos').textContent    = D.repos.length;
-  $('tc-activity').textContent = D.activities.length;
   $('tc-leads').textContent    = leads.length;
 }
 
 /* ── Pipeline ── */
 function renderPipeline() {
-  const { stages, deals } = D;
-  const cols = stages.map(s => {
-    const sd    = deals.filter(d => d.stage_id === s.id);
-    const total = sd.reduce((a, d) => a + (d.value || 0), 0);
-    return `
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="stage-label">
-            <div class="stage-dot" style="background:${s.color}"></div>
-            ${s.name}
-          </div>
-          <div class="stage-meta">${sd.length} · ${fmt$(total)}</div>
-        </div>
-        <div class="kanban-body">
-          ${sd.length === 0
-            ? '<div class="kanban-empty">No deals</div>'
-            : sd.map(d => `
-              <div class="deal-card">
-                <div class="deal-title">${d.title}</div>
-                ${d.github_repo ? `<div class="deal-repo">⬡ ${d.github_repo}</div>` : ''}
-                <div class="deal-footer">
-                  <span class="deal-value">${fmt$(d.value)}</span>
-                  ${d.contacts ? `
-                    <div class="deal-contact">
-                      <div class="avatar-xs">
-                        <img src="${d.contacts.avatar_url}" loading="lazy" onerror="this.style.display='none'">
-                      </div>
-                      ${d.contacts.name.split(' ')[0]}
-                    </div>
-                  ` : ''}
-                </div>
-              </div>
-            `).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
-
   $('panel-pipeline').innerHTML = buildAnaShell();
   requestAnimationFrame(initAnalytics);
 }
 
-/* ── Contacts ── */
-function renderContacts() {
-  const rows = D.contacts.map(c => `
-    <tr>
-      <td>
-        <div class="contact-cell">
-          <div class="avatar">
-            <img src="${c.avatar_url}" loading="lazy" onerror="this.parentElement.style.background='var(--bg-tertiary)'">
-          </div>
-          <div>
-            <div class="contact-name">${c.name}</div>
-            <div class="contact-handle">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-              @${c.github_username}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td>${c.role || '—'}</td>
-      <td>${c.company || '—'}</td>
-      <td><span class="status-badge s-${c.status}">${c.status}</span></td>
-      <td class="num-cell">★ ${fmtN(c.github_stars)}</td>
-      <td class="num-cell">⬆ ${fmtN(c.github_followers)}</td>
-      <td style="color:var(--text-secondary);font-size:12px">${c.location || '—'}</td>
-    </tr>
-  `).join('');
-
-  $('panel-contacts').innerHTML = `
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <div class="table-title">All Contacts</div>
-        <input class="search-box" type="search" placeholder="Search contacts…" oninput="filterContacts(this.value)">
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Contact</th><th>Role</th><th>Company</th>
-            <th>Status</th><th>Stars</th><th>Followers</th><th>Location</th>
-          </tr>
-        </thead>
-        <tbody id="contacts-body">${rows}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function filterContacts(q) {
-  const lower = q.toLowerCase();
-  document.querySelectorAll('#contacts-body tr').forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(lower) ? '' : 'none';
-  });
-}
-
-/* ── Repos ── */
-function renderRepos() {
-  const cards = D.repos.map(r => `
-    <div class="repo-card">
-      <div class="repo-top">
-        <a class="repo-name" href="${r.url}" target="_blank" rel="noopener">${r.full_name}</a>
-        <span class="lang-badge l-${r.language}">${r.language}</span>
-      </div>
-      <div class="repo-desc">${r.description || 'No description available.'}</div>
-      <div class="repo-stats">
-        <div class="repo-stat">★ ${fmtN(r.stars)}</div>
-        <div class="repo-stat">⑂ ${fmtN(r.forks)}</div>
-        <div class="repo-stat">⚠ ${fmtN(r.open_issues)} issues</div>
-      </div>
-    </div>
-  `).join('');
-
-  $('panel-repos').innerHTML = `<div class="repos-grid">${cards}</div>`;
-}
-
-/* ── Activity ── */
-const iconMap = {
-  pr_merged:    { cls: 'fi-pr',      emoji: '⬡' },
-  pr_opened:    { cls: 'fi-pr',      emoji: '⬢' },
-  email:        { cls: 'fi-email',   emoji: '✉' },
-  call:         { cls: 'fi-call',    emoji: '☎' },
-  issue_opened: { cls: 'fi-issue',   emoji: '⚠' },
-  issue_closed: { cls: 'fi-issue',   emoji: '✓' },
-  star:         { cls: 'fi-star',    emoji: '★' },
-  comment:      { cls: 'fi-comment', emoji: '◈' },
-};
-
-function renderActivity() {
-  const items = D.activities.map(a => {
-    const ic = iconMap[a.type] || { cls: 'fi-pr', emoji: '●' };
-    return `
-      <div class="feed-item">
-        <div class="feed-icon ${ic.cls}">${ic.emoji}</div>
-        <div class="feed-body">
-          <div class="feed-title">${a.title}</div>
-          <div class="feed-desc">
-            ${a.contacts ? `<strong>@${a.contacts.github_username}</strong> · ` : ''}
-            ${a.description || ''}
-            ${a.github_url ? ` · <a class="gh-link" href="${a.github_url}" target="_blank" rel="noopener">View on GitHub ↗</a>` : ''}
-          </div>
-        </div>
-        <div class="feed-time">${relTime(a.created_at)}</div>
-      </div>
-    `;
-  }).join('');
-
-  $('panel-activity').innerHTML = `
-    <div class="feed-wrap">
-      <div class="table-toolbar">
-        <div class="table-title">Recent Activity</div>
-        <span style="font-size:12px;color:var(--text-muted)">${D.activities.length} events</span>
-      </div>
-      ${items}
-    </div>
-  `;
-}
 
 /* ── CRM Analytics ── */
 // Product metadata only — real numbers come from the leads table
