@@ -1650,17 +1650,17 @@ function initAnalytics() {
   AC.brand = new Chart(document.getElementById('ana-brand-chart'), {
     type: 'bar',
     data: {
-      labels: ANA_META.map(p => p.name),
+      labels: PRODUCT_OPTS.map(p => p.l),
       datasets: [{
-        data: new Array(ANA_META.length).fill(0),
-        backgroundColor: ANA_META.map(p => p.color + '55'),
-        borderColor:     ANA_META.map(p => p.color),
+        data: new Array(PRODUCT_OPTS.length).fill(0),
+        backgroundColor: PRODUCT_OPTS.map(p => p.c + '55'),
+        borderColor:     PRODUCT_OPTS.map(p => p.c),
         borderWidth: 2, borderRadius: 8, borderSkipped: false
       }]
     },
     options: { ...cOpts,
       plugins: { ...cOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} leads` } } },
-      scales: { y: { ...scaleStyle, beginAtZero: true }, x: { ...scaleStyle, grid: { display: false } } }
+      scales: { y: { ...scaleStyle, beginAtZero: true }, x: { ...scaleStyle, grid: { display: false }, ticks: { color:'#8b949e', font:{ size:10 } } } }
     }
   });
 
@@ -1799,7 +1799,8 @@ function refreshAna() {
   });
 
   // Chart updates
-  AC.brand.data.datasets[0].data = brandCounts.map(p => p.c); AC.brand.update('none');
+  const productCounts = PRODUCT_OPTS.map(p => filtered.filter(l => l.product === p.v).length);
+  AC.brand.data.datasets[0].data = productCounts; AC.brand.update('none');
   AC.dist.data.datasets[0].data = distLeads; AC.dist.update('none');
   AC.age.data.datasets[0].data  = ageLeads;  AC.age.update('none');
   AC.gender.data.datasets[0].data = [femL, malL]; AC.gender.update('none');
@@ -1816,16 +1817,16 @@ const SRC_ONLINE_SET = new Set(['TikTok','Instagram','Facebook','WhatsApp']);
 const AREA_OPTS = ['Gadong','Rimba','Kiulap','Mata-Mata','Bengkurong','Lambak Kanan','Jerudong','Tungku','Tutong Town','Seria','Kuala Belait','Pandan','Lumapas','Sengkurong','Berakas','Other'];
 const SRC_OPTS_HTML = `<option value="">— select —</option><optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup><optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>`;
 const PRODUCT_OPTS = [
-  { v:'water',    l:'Water Purifier' },
-  { v:'air',      l:'Air Purifier'   },
-  { v:'mattress', l:'Mattress'       },
-  { v:'aircon',   l:'Air Con'        },
-  { v:'outdoor',  l:'Outdoor'        },
-  { v:'washer',   l:'Washer'         },
-  { v:'treadmill',l:'Treadmill'      },
-  { v:'massage',  l:'Massage'        },
-  { v:'hizero',   l:'Hizero'         },
-  { v:'cooker',   l:'Cooker'         },
+  { v:'water',    l:'Water Purifier', c:'#378ADD' },
+  { v:'air',      l:'Air Purifier',   c:'#1D9E75' },
+  { v:'mattress', l:'Mattress',       c:'#7F77DD' },
+  { v:'aircon',   l:'Air Con',        c:'#85B7EB' },
+  { v:'outdoor',  l:'Outdoor',        c:'#3DAB6F' },
+  { v:'washer',   l:'Washer',         c:'#D4537E' },
+  { v:'treadmill',l:'Treadmill',      c:'#D85A30' },
+  { v:'massage',  l:'Massage',        c:'#BA7517' },
+  { v:'hizero',   l:'Hizero',         c:'#534AB7' },
+  { v:'cooker',   l:'Cooker',         c:'#888780' },
 ];
 const PRODUCT_OPTS_HTML = `<option value="">—</option>` + PRODUCT_OPTS.map(p=>`<option value="${p.v}">${p.l}</option>`).join('');
 
