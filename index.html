@@ -951,21 +951,8 @@
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('pipeline',this)">
-      ◈ Pipeline <span class="tab-count" id="tc-pipeline">—</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('leads',this)">
-      🎯 Leads <span class="tab-count" id="tc-leads">—</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('members',this)">
-      👤 Members <span class="tab-count" id="tc-members">—</span>
-    </button>
-  </div>
-
-  <div class="tab-panel active" id="panel-pipeline"><div class="loading"><div class="spinner"></div>Loading pipeline…</div></div>
-  <div class="tab-panel"        id="panel-leads">   <div class="loading"><div class="spinner"></div>Loading leads…</div></div>
+  <div class="tab-panel"        id="panel-pipeline"></div>
+  <div class="tab-panel active" id="panel-leads">   <div class="loading"><div class="spinner"></div>Loading leads…</div></div>
   <div class="tab-panel"        id="panel-members"> <div class="loading"><div class="spinner"></div>Loading members…</div></div>
 
 </main>
@@ -1366,19 +1353,20 @@ function relTime(ts) {
   return d < 30 ? d + 'd ago' : Math.floor(d/30) + 'mo ago';
 }
 
-/* ── Tabs ── */
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+/* ── Page switching (no tab bar) ── */
+function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('panel-' + name).classList.add('active');
+  document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
-// Navigate to a tab from the nav bar (no btn reference needed)
 function navTo(name) {
-  const btn = [...document.querySelectorAll('.tab-btn')].find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + name + "'"));
-  if (btn) switchTab(name, btn);
-  // Scroll to top of main content
+  switchTab(name);
+  // Lazy-render pipeline analytics on first visit
+  if (name === 'pipeline' && !$('panel-pipeline').innerHTML.trim()) {
+    $('panel-pipeline').innerHTML = buildAnaShell();
+    requestAnimationFrame(initAnalytics);
+  }
   document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1401,7 +1389,6 @@ async function loadAll() {
   D = { deals: deals || [], stages: stages || [], leads: leads || [], members: members || [] };
 
   renderStats();
-  renderPipeline();
   renderLeads();
   renderMembers();
 }
