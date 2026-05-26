@@ -1326,7 +1326,7 @@ async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session?.user) {
     showApp(session.user);
-    loadAll();
+    navTo('leads');
   } else {
     showLogin();
   }
@@ -1335,7 +1335,7 @@ async function init() {
 db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
     showApp(session.user);
-    if (!Object.keys(D).length) loadAll();
+    navTo('leads');
   } else if (event === 'SIGNED_OUT') {
     showLogin();
   }
@@ -1360,16 +1360,34 @@ function switchTab(name) {
   document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
-function navTo(name) {
+async function navTo(name) {
   switchTab(name);
+  document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
+
   if (name === 'leads') {
-    if (D.leads !== undefined) renderLeads();
-    else { _loading = false; loadAll(); }
+    $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
+    const { data, error } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+    if (error) {
+      $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ ${error.message} <button onclick="navTo('leads')" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
+      return;
+    }
+    D.leads = data || [];
+    renderLeads();
+
+  } else if (name === 'members') {
+    $('panel-members').innerHTML = '<div class="loading"><div class="spinner"></div>Loading members…</div>';
+    const { data, error } = await db.from('members').select('*').order('created_at', { ascending: false });
+    if (error) {
+      $('panel-members').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ ${error.message}</div>`;
+      return;
+    }
+    D.members = data || [];
+    renderMembers();
+
   } else if (name === 'pipeline' && !$('panel-pipeline').innerHTML.trim()) {
     $('panel-pipeline').innerHTML = buildAnaShell();
     requestAnimationFrame(initAnalytics);
   }
-  document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
 }
 
 /* ── Load ── */
