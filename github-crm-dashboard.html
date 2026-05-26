@@ -103,6 +103,33 @@
       gap: 2px;
     }
 
+    .nav-tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 0 14px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .nav-tab-btn:hover { color: var(--text-primary); }
+    .nav-tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-light);
+    }
+    .nav-tab-divider {
+      width: 1px; height: 18px;
+      background: var(--border);
+      margin: 0 8px;
+    }
+
     .nav-menu {
       position: relative;
       display: inline-flex;
@@ -876,6 +903,13 @@
 <!-- ── Nav menu bar ────────────────────────── -->
 <nav class="nav-bar" id="app-nav" style="display:none">
 
+  <!-- Main view tabs -->
+  <button class="nav-tab-btn" id="nb-pipeline" onclick="navTo('pipeline')">📊 Pipeline</button>
+  <button class="nav-tab-btn active" id="nb-leads"    onclick="navTo('leads')">🎯 Leads</button>
+  <button class="nav-tab-btn" id="nb-members"  onclick="navTo('members')">👤 Members</button>
+
+  <div class="nav-tab-divider"></div>
+
   <!-- Dashboard -->
   <div class="nav-menu">
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
@@ -1364,8 +1398,10 @@ function relTime(ts) {
 function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
   $('panel-' + name).classList.add('active');
   if ($('tb-' + name)) $('tb-' + name).classList.add('active');
+  if ($('nb-' + name)) $('nb-' + name).classList.add('active');
   document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
