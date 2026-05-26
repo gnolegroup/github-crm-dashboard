@@ -1420,10 +1420,15 @@ async function navTo(name) {
     renderMembers();
 
   } else if (name === 'pipeline') {
+    // Always fetch fresh leads so metrics + analytics are populated
+    const { data: leadsData } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+    D.leads = leadsData || [];
     renderStats();
     if (!$('panel-pipeline').innerHTML.trim()) {
       $('panel-pipeline').innerHTML = buildAnaShell();
       requestAnimationFrame(initAnalytics);
+    } else {
+      refreshAna();
     }
   }
 }
