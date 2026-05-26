@@ -1350,7 +1350,7 @@ async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session?.user) {
     showApp(session.user);
-    navTo('leads');
+    navTo('pipeline');
   } else {
     showLogin();
   }
@@ -1359,7 +1359,7 @@ async function init() {
 db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
     showApp(session.user);
-    navTo('leads');
+    navTo('pipeline');
   } else if (event === 'SIGNED_OUT') {
     showLogin();
   }
