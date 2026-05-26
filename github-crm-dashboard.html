@@ -951,6 +951,13 @@
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
 
+  <!-- Tab Bar -->
+  <div class="tabs" id="main-tabs">
+    <button class="tab-btn" id="tb-pipeline" onclick="navTo('pipeline')">📊 Pipeline</button>
+    <button class="tab-btn active" id="tb-leads" onclick="navTo('leads')">🎯 Leads <span id="tc-leads"></span></button>
+    <button class="tab-btn" id="tb-members" onclick="navTo('members')">👤 Members <span id="tc-members"></span></button>
+  </div>
+
   <div class="tab-panel active" id="panel-leads"><div class="loading"><div class="spinner"></div>Loading leads…</div></div>
   <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"><div class="loading"><div class="spinner"></div>Loading members…</div></div>
@@ -1356,7 +1363,9 @@ function relTime(ts) {
 /* ── Page switching via navbar ── */
 function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   $('panel-' + name).classList.add('active');
+  if ($('tb-' + name)) $('tb-' + name).classList.add('active');
   document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
