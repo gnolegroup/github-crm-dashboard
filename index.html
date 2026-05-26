@@ -951,8 +951,21 @@
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
 
-  <div class="tab-panel"        id="panel-pipeline"></div>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('leads',this)">
+      🎯 All Leads <span class="tab-count" id="tc-leads">—</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('pipeline',this)">
+      ◈ Pipeline <span class="tab-count" id="tc-pipeline">—</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('members',this)">
+      👤 Members <span class="tab-count" id="tc-members">—</span>
+    </button>
+  </div>
+
   <div class="tab-panel active" id="panel-leads">   <div class="loading"><div class="spinner"></div>Loading leads…</div></div>
+  <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"> <div class="loading"><div class="spinner"></div>Loading members…</div></div>
 
 </main>
@@ -1353,16 +1366,18 @@ function relTime(ts) {
   return d < 30 ? d + 'd ago' : Math.floor(d/30) + 'mo ago';
 }
 
-/* ── Page switching (no tab bar) ── */
-function switchTab(name) {
+/* ── Tabs ── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('panel-' + name).classList.add('active');
   document.querySelector('main').classList.toggle('leads-wide', name === 'leads');
 }
 
 function navTo(name) {
-  switchTab(name);
-  // Lazy-render pipeline analytics on first visit
+  const btn = [...document.querySelectorAll('.tab-btn')].find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + name + "'"));
+  switchTab(name, btn || null);
   if (name === 'pipeline' && !$('panel-pipeline').innerHTML.trim()) {
     $('panel-pipeline').innerHTML = buildAnaShell();
     requestAnimationFrame(initAnalytics);
