@@ -1393,7 +1393,7 @@ function switchTab(name) {
 async function navTo(name) {
   switchTab(name);
   localStorage.setItem('crm-page', name);
-  document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Metrics only show on the Analytics page
   $('stats-grid').style.display = name === 'pipeline' ? '' : 'none';
