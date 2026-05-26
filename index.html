@@ -978,11 +978,6 @@
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
 
-  <!-- Tab Bar -->
-  <div class="tabs" id="main-tabs">
-    <button class="tab-btn active" id="tb-pipeline" onclick="navTo('pipeline')">📊 Analytics</button>
-  </div>
-
   <div class="tab-panel active" id="panel-leads"><div class="loading"><div class="spinner"></div>Loading leads…</div></div>
   <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"><div class="loading"><div class="spinner"></div>Loading members…</div></div>
@@ -1400,10 +1395,8 @@ async function navTo(name) {
   switchTab(name);
   document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
 
-  // Leads and Members are standalone pages — hide tab strip and metrics
-  const isStandalone = (name === 'leads' || name === 'members');
-  $('main-tabs').style.display  = isStandalone ? 'none' : '';
-  $('stats-grid').style.display = isStandalone ? 'none' : '';
+  // Metrics only show on the Analytics page
+  $('stats-grid').style.display = name === 'pipeline' ? '' : 'none';
 
   if (name === 'leads') {
     $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
