@@ -981,7 +981,6 @@
   <!-- Tab Bar -->
   <div class="tabs" id="main-tabs">
     <button class="tab-btn active" id="tb-pipeline" onclick="navTo('pipeline')">📊 Pipeline</button>
-    <button class="tab-btn" id="tb-members" onclick="navTo('members')">👤 Members <span id="tc-members"></span></button>
   </div>
 
   <div class="tab-panel active" id="panel-leads"><div class="loading"><div class="spinner"></div>Loading leads…</div></div>
@@ -1401,8 +1400,8 @@ async function navTo(name) {
   switchTab(name);
   document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
 
-  // Leads is a dedicated full page — hide the tab strip
-  $('main-tabs').style.display = name === 'leads' ? 'none' : '';
+  // Leads and Members are dedicated full pages — hide the tab strip
+  $('main-tabs').style.display = (name === 'leads' || name === 'members') ? 'none' : '';
 
   if (name === 'leads') {
     $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
