@@ -1789,9 +1789,16 @@ function refreshAna() {
   const topDiIdx  = distLeads.indexOf(Math.max(...distLeads, 0));
   const closedRate = total > 0 ? Math.round(filtered.filter(l => l.stage === 'Closed').length / total * 100) : 0;
 
+  // Top Product (from filtered leads)
+  const kpiProdCount = {};
+  filtered.forEach(l => { if (l.product) kpiProdCount[l.product] = (kpiProdCount[l.product] || 0) + 1; });
+  const kpiTopProdKey = Object.keys(kpiProdCount).sort((a,b) => kpiProdCount[b] - kpiProdCount[a])[0] || null;
+  const kpiTopProdOpt = PRODUCT_OPTS.find(p => p.v === kpiTopProdKey);
+  const kpiTopProdLabel = kpiTopProdOpt ? kpiTopProdOpt.l : '—';
+
   // KPI
   document.getElementById('ana-kpi').innerHTML = `
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Total Leads</div><div class="ana-kpi-value">${total.toLocaleString()}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Product</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${kpiTopProdLabel}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top Brand</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${topBrand ? topBrand.name : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top Source</div><div class="ana-kpi-value">${total > 0 && srcLeads[topSrcIdx] > 0 ? SRC_ALL[topSrcIdx] : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top District</div><div class="ana-kpi-value">${total > 0 ? DI_L[topDiIdx] : '—'}</div></div>
