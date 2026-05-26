@@ -1417,6 +1417,7 @@ async function navTo(name) {
       return;
     }
     D.leads = data || [];
+    renderStats();
     renderLeads();
 
   } else if (name === 'members') {
