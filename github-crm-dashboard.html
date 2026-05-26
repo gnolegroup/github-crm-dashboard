@@ -1390,13 +1390,10 @@ async function loadAll() {
 
 /* ── Stats ── */
 function renderStats() {
-  const { deals, leads } = D;
-  const open = deals.filter(d => d.status === 'open');
-  const won  = deals.filter(d => d.status === 'won');
-  const wonV = won.reduce((s, d) => s + (d.value || 0), 0);
+  const leads = D.leads || [];
   const today = new Date().toISOString().slice(0, 10);
-  const todayLeads = (leads || []).filter(l => (l.lead_date || (l.created_at || '').slice(0,10)) === today);
-  const converted  = (leads || []).filter(l => l.stage === 'Closed').length;
+  const todayLeads = leads.filter(l => (l.lead_date || (l.created_at || '').slice(0,10)) === today);
+  const converted  = leads.filter(l => l.stage === 'Closed').length;
   const convRate   = leads.length > 0 ? Math.round(converted / leads.length * 100) : 0;
 
   $('stats-grid').innerHTML = `
