@@ -1402,6 +1402,9 @@ async function navTo(name) {
   switchTab(name);
   document.getElementById('app-main').scrollIntoView({ behavior: 'smooth' });
 
+  // Leads is a dedicated full page — hide the tab strip
+  $('main-tabs').style.display = name === 'leads' ? 'none' : '';
+
   if (name === 'leads') {
     $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
     const { data, error } = await db.from('leads').select('*').order('lead_date', { ascending: false });
