@@ -1907,8 +1907,8 @@ function refreshAna() {
 
   // KPI
   document.getElementById('ana-kpi').innerHTML = `
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Product</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${kpiTopProdLabel}</div></div>
-    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Brand</div><div class="ana-kpi-value" style="font-size:15px;line-height:1.25">${topBrand ? topBrand.name : '—'}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Product</div><div class="ana-kpi-value">${kpiTopProdLabel}</div></div>
+    <div class="ana-kpi-card"><div class="ana-kpi-label">Top Brand</div><div class="ana-kpi-value">${topBrand ? topBrand.name : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top Source</div><div class="ana-kpi-value">${total > 0 && srcLeads[topSrcIdx] > 0 ? SRC_ALL[topSrcIdx] : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Top District</div><div class="ana-kpi-value">${total > 0 ? DI_L[topDiIdx] : '—'}</div></div>
     <div class="ana-kpi-card"><div class="ana-kpi-label">Close Rate</div><div class="ana-kpi-value">${closedRate}%</div></div>
