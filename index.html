@@ -1028,13 +1028,19 @@
         <input id="lf-dob" class="modal-input" type="date" max="">
       </div>
       <div class="modal-field">
+        <label class="modal-label">District</label>
+        <select id="lf-district" class="modal-select" onchange="updateAreaOpts('lf-area','lf-district')">
+          <option value="">— select district —</option>
+          <option value="bm">Brunei Muara</option>
+          <option value="tu">Tutong</option>
+          <option value="te">Temburong</option>
+          <option value="be">Belait</option>
+        </select>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">Area</label>
         <select id="lf-area" class="modal-select">
-          <option value="">Select area</option>
-          <option>Gadong</option><option>Rimba</option><option>Kiulap</option><option>Mata-Mata</option>
-          <option>Bengkurong</option><option>Lambak Kanan</option><option>Jerudong</option><option>Tungku</option>
-          <option>Tutong Town</option><option>Seria</option><option>Kuala Belait</option>
-          <option>Pandan</option><option>Lumapas</option><option>Sengkurong</option><option>Berakas</option><option>Other</option>
+          <option value="">— select district first —</option>
         </select>
       </div>
       <div class="modal-field">
@@ -1122,13 +1128,19 @@
         <input id="ef-age" class="modal-input" type="number" min="1" max="120" placeholder="e.g. 28">
       </div>
       <div class="modal-field">
+        <label class="modal-label">District</label>
+        <select id="ef-district" class="modal-select" onchange="updateAreaOpts('ef-area','ef-district')">
+          <option value="">— select district —</option>
+          <option value="bm">Brunei Muara</option>
+          <option value="tu">Tutong</option>
+          <option value="te">Temburong</option>
+          <option value="be">Belait</option>
+        </select>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">Area</label>
         <select id="ef-area" class="modal-select">
-          <option value="">Select area</option>
-          <option>Gadong</option><option>Rimba</option><option>Kiulap</option><option>Mata-Mata</option>
-          <option>Bengkurong</option><option>Lambak Kanan</option><option>Jerudong</option><option>Tungku</option>
-          <option>Tutong Town</option><option>Seria</option><option>Kuala Belait</option>
-          <option>Pandan</option><option>Lumapas</option><option>Sengkurong</option><option>Berakas</option><option>Other</option>
+          <option value="">— select district first —</option>
         </select>
       </div>
       <div class="modal-field">
@@ -1663,14 +1675,28 @@ const MO_IDX = { jan:0, feb:1, mar:2, apr:3, may:4 };
 const DI_K = ['bm','tu','be','te'];
 const DI_L = ['B-Muara','Tutong','Belait','Temburong'];
 const DI_C = ['#7F77DD','#378ADD','#1D9E75','#BA7517'];
-// Area → district mapping
-const AREA_TO_DI = {
-  'Gadong':'bm','Rimba':'bm','Kiulap':'bm','Mata-Mata':'bm','Bengkurong':'bm',
-  'Lambak Kanan':'bm','Jerudong':'bm','Tungku':'bm','Lumapas':'bm',
-  'Sengkurong':'bm','Berakas':'bm','Pandan':'bm','Other':'bm',
-  'Tutong Town':'tu',
-  'Seria':'be','Kuala Belait':'be',
+// District → Area data (full Brunei mukim list)
+const AREA_BY_DISTRICT = {
+  bm: { label:'Brunei Muara', areas:['Anggerak Desa','Ban','Batong','Bebatik','Bengkurong','Beribi','Burong Pingai Ayer','Burong Pingai Berakas','Bunut','Delima','Gadong','Jangsak','Jaya Setia','Jerudong','Junjongan','Kapok','Kasat','Katok','Kianggeh','Kiarong','Kilanas','Kiulap','Kota Batu','Kuala Lurah','Kulapis','Kumbang Pasang','Lambak Kanan','Lambak Kiri','Limau Manis','Lugu','Lumapas','Mabohai','Madang','Madewa','Manggis','Masin','Mata-Mata','Menglait','Menunggul','Meragang','Muara Town','Mulaut','Panchor Murai','Parit','Pasir Berakas','Pengkalan Batu','Peramu','Pulaie','Pusar Ulak','Pusat Bandar','Rimba','Saba','Sabun','Salambigar','Selayun','Sengkurong','Serasa','Serusop','Subok','Sungai Akar','Sungai Besar','Sungai Bunga','Sungai Hanching','Sungai Kebun','Sungai Kedayan','Sungai Tilong','Tamoi','Tanjong Nangka','Tanjung Bunut','Tasek Lama','Tasek Meradun','Telanai','Tumasek','Tungku','Wasan'] },
+  tu: { label:'Tutong', areas:['Bukit Beruang','Bukit Udal','Keriam','Kiudang','Kupang','Lamunin','Luagan Dudok','Penanjong','Rambai','Tanjong Maya','Telisai','Tutong Kem','Tutong Town'] },
+  te: { label:'Temburong', areas:['Amo','Bangar','Batu Apoi','Labu','Rataie'] },
+  be: { label:'Belait', areas:['Anduki','Badas','Danau','Kuala Balai','Kuala Belait Town','Labi','Lumut','Maulana','Mumong','Pandan','Panaga','Seria Town','Sungai Bera','Sungai Liang','Sungai Melilit','Sungai Teraban'] }
 };
+// Auto-build reverse mapping: area → district key
+const AREA_TO_DI = Object.fromEntries(Object.entries(AREA_BY_DISTRICT).flatMap(([k,v])=>v.areas.map(a=>[a,k])));
+// Generate optgroup HTML for a select, with optional pre-selected value
+function areaOptsHTML(sel) {
+  return '<option value="">—</option>'+Object.entries(AREA_BY_DISTRICT).map(([k,v])=>
+    `<optgroup label="${v.label}">${v.areas.map(a=>`<option${a===sel?' selected':''}>${a}</option>`).join('')}</optgroup>`
+  ).join('');
+}
+// Populate area dropdown based on selected district
+function updateAreaOpts(areaId, districtId) {
+  const areaSel=document.getElementById(areaId), dk=document.getElementById(districtId).value;
+  areaSel.innerHTML = dk && AREA_BY_DISTRICT[dk]
+    ? '<option value="">— select area —</option>'+AREA_BY_DISTRICT[dk].areas.map(a=>`<option>${a}</option>`).join('')
+    : '<option value="">— select district first —</option>';
+}
 const SRC_ONLINE = ['TikTok','Instagram','Facebook','WhatsApp'];
 const SRC_ALL = ['TikTok','Instagram','Facebook','WhatsApp','CF','Roadshow','Walk-in','Referral','Database'];
 const SRC_C = ['#7F77DD','#D4537E','#378ADD','#1D9E75','#D85A30','#BA7517','#1D9E75','#85B7EB','#888780'];
@@ -2017,7 +2043,6 @@ function refreshAna() {
 const PROD_LABEL = Object.fromEntries(ANA_META.map(p => [p.id, p.name]));
 const PLAT_LABEL = { tk:'TikTok', ig:'Instagram', fb:'Facebook', wa:'WhatsApp' };
 const SRC_ONLINE_SET = new Set(['TikTok','Instagram','Facebook','WhatsApp']);
-const AREA_OPTS = ['Gadong','Rimba','Kiulap','Mata-Mata','Bengkurong','Lambak Kanan','Jerudong','Tungku','Tutong Town','Seria','Kuala Belait','Pandan','Lumapas','Sengkurong','Berakas','Other'];
 const SRC_OPTS_HTML = `<option value="">— select —</option><optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup><optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>`;
 const PRODUCT_OPTS = [
   { v:'water',    l:'Water Purifier', c:'#378ADD', icon:'droplet'   },
@@ -2071,7 +2096,7 @@ function renderLeads() {
           <td style="font-size:12px;color:var(--text-secondary)">${l.age_group||'—'}</td>
           <td>
             <select class="inl-select" onchange="updateLeadField('${l.id}','area',this.value)">
-              ${AREA_OPTS.map(a=>`<option${a===l.area?' selected':''}>${a}</option>`).join('')}
+              ${areaOptsHTML(l.area)}
             </select>
           </td>
           <td style="font-family:monospace;font-size:11px">${l.phone||'—'}</td>
@@ -2129,7 +2154,7 @@ function renderLeads() {
         </select>
         <select id="leads-f-area" onchange="filterLeads()">
           <option value="">All areas</option>
-          ${AREA_OPTS.map(a=>`<option>${a}</option>`).join('')}
+          ${Object.entries(AREA_BY_DISTRICT).map(([k,v])=>`<optgroup label="${v.label}">${v.areas.map(a=>`<option>${a}</option>`).join('')}</optgroup>`).join('')}
         </select>
       </div>
       <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
@@ -2247,7 +2272,8 @@ async function openLeadModal() {
   // Clear text fields
   ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   // Reset selects
-  ['lf-gender','lf-area','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  ['lf-gender','lf-district','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  updateAreaOpts('lf-area','lf-district');
   const dobEl=document.getElementById('lf-dob'); if(dobEl){ dobEl.value=''; dobEl.max=new Date().toISOString().slice(0,10); }
   document.getElementById('lf-stage').value = 'New';
   const btn = document.getElementById('lf-submit');
@@ -2328,6 +2354,9 @@ function openEditLeadModal(id) {
   // Pre-fill selects
   document.getElementById('ef-gender').value  = l.gender    || '';
   document.getElementById('ef-age').value     = /^\d+$/.test(l.age_group||'') ? l.age_group : '';
+  const _diKey = AREA_TO_DI[l.area||''] || '';
+  document.getElementById('ef-district').value = _diKey;
+  updateAreaOpts('ef-area','ef-district');
   document.getElementById('ef-area').value    = l.area      || '';
   document.getElementById('ef-product').value = l.product   || '';
   document.getElementById('ef-source').value  = l.source    || '';
