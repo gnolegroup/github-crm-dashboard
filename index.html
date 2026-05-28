@@ -2115,6 +2115,22 @@ function renderLeads() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <div class="table-title">Lead Tracker <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} leads</span></div>
       </div>
+      <div class="leads-filters">
+        <input type="text" placeholder="Search name, L-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
+        <select id="leads-f-stage" onchange="filterLeads()">
+          <option value="">All stages</option>
+          <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
+        </select>
+        <select id="leads-f-source" onchange="filterLeads()">
+          <option value="">All sources</option>
+          <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+        </select>
+        <select id="leads-f-area" onchange="filterLeads()">
+          <option value="">All areas</option>
+          ${AREA_OPTS.map(a=>`<option>${a}</option>`).join('')}
+        </select>
+      </div>
       <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
         <table style="width:100%;border-collapse:collapse;min-width:1775px">
           <colgroup>
@@ -2143,22 +2159,6 @@ function renderLeads() {
         </table>
       </div>
       <div id="leads-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No leads match your filters.</div>
-      <div class="leads-filters" style="margin-top:12px;margin-bottom:0">
-        <input type="text" placeholder="Search name, L-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
-        <select id="leads-f-stage" onchange="filterLeads()">
-          <option value="">All stages</option>
-          <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
-        </select>
-        <select id="leads-f-source" onchange="filterLeads()">
-          <option value="">All sources</option>
-          <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
-          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
-        </select>
-        <select id="leads-f-area" onchange="filterLeads()">
-          <option value="">All areas</option>
-          ${AREA_OPTS.map(a=>`<option>${a}</option>`).join('')}
-        </select>
-      </div>
     </div>`;
 
   // Close dropdowns when clicking outside
