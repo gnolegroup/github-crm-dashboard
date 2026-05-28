@@ -1539,7 +1539,7 @@ async function navTo(name) {
 
   if (name === 'leads') {
     $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
-    const { data, error } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+    const { data, error } = await db.from('leads').select('*').order('created_at', { ascending: false });
     if (error) {
       $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ ${error.message} <button onclick="navTo('leads')" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
       return;
@@ -1561,14 +1561,14 @@ async function navTo(name) {
   } else if (name === 'survey') {
     if (!D.leads || D.leads.length === 0) {
       $('panel-survey').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-      const { data } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+      const { data } = await db.from('leads').select('*').order('created_at', { ascending: false });
       D.leads = data || [];
     }
     renderSurveyPage();
 
   } else if (name === 'pipeline') {
     // Always fetch fresh leads so metrics + analytics are populated
-    const { data: leadsData } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+    const { data: leadsData } = await db.from('leads').select('*').order('created_at', { ascending: false });
     D.leads = leadsData || [];
     renderStats();
     if (!$('panel-pipeline').innerHTML.trim()) {
@@ -1589,7 +1589,7 @@ async function loadAll() {
       { data: leads, error: e1 },
       { data: members, error: e2 },
     ] = await Promise.all([
-      db.from('leads').select('*').order('lead_date', { ascending: false }),
+      db.from('leads').select('*').order('created_at', { ascending: false }),
       db.from('members').select('*').order('created_at', { ascending: false }),
     ]);
 
@@ -2654,7 +2654,7 @@ async function submitImport() {
   }
 
   // Refresh local data
-  const { data: freshLeads } = await db.from('leads').select('*').order('lead_date', { ascending: false });
+  const { data: freshLeads } = await db.from('leads').select('*').order('created_at', { ascending: false });
   D.leads = freshLeads || [];
   renderLeads(); renderStats(); refreshAna();
 
