@@ -1024,11 +1024,8 @@
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Age Group</label>
-        <select id="lf-age" class="modal-select">
-          <option value="">—</option>
-          <option>18-25</option><option>26-35</option><option>36-45</option><option>46-55</option><option>56-60</option>
-        </select>
+        <label class="modal-label">Date of Birth</label>
+        <input id="lf-dob" class="modal-input" type="date" max="">
       </div>
       <div class="modal-field">
         <label class="modal-label">Area</label>
@@ -1121,11 +1118,8 @@
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Age Group</label>
-        <select id="ef-age" class="modal-select">
-          <option value="">—</option>
-          <option>18-25</option><option>26-35</option><option>36-45</option><option>46-55</option><option>56-60</option>
-        </select>
+        <label class="modal-label">Age</label>
+        <input id="ef-age" class="modal-input" type="number" min="1" max="120" placeholder="e.g. 28">
       </div>
       <div class="modal-field">
         <label class="modal-label">Area</label>
@@ -1873,8 +1867,15 @@ function refreshAna() {
   // District (exclude district filter so all bars show)
   const distLeads = DI_K.map(k => anaFilter(allLeads, ['district']).filter(l => (AREA_TO_DI[l.area]||'bm') === k).length);
 
-  // Age distribution
-  const ageLeads = AG_K.map(ag => filtered.filter(l => l.age_group === ag).length);
+  // Age distribution — supports both exact ages ("28") and legacy group strings ("26-35")
+  const ageLeads = AG_K.map(ag => {
+    const [lo, hi] = ag.split('-').map(Number);
+    return filtered.filter(l => {
+      const a = parseInt(l.age_group);
+      if (isNaN(a)) return l.age_group === ag;   // legacy group string
+      return a >= lo && a <= hi;
+    }).length;
+  });
 
   // Source (exclude source filter)
   const srcLeads = SRC_ALL.map(s => anaFilter(allLeads, ['source']).filter(l => l.source === s).length);
@@ -2246,7 +2247,8 @@ async function openLeadModal() {
   // Clear text fields
   ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   // Reset selects
-  ['lf-gender','lf-age','lf-area','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  ['lf-gender','lf-area','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  const dobEl=document.getElementById('lf-dob'); if(dobEl){ dobEl.value=''; dobEl.max=new Date().toISOString().slice(0,10); }
   document.getElementById('lf-stage').value = 'New';
   const btn = document.getElementById('lf-submit');
   btn.disabled = false;
@@ -2279,7 +2281,7 @@ async function submitLead() {
     agent:     document.getElementById('lf-agent').value.trim() || null,
     name,
     gender:    document.getElementById('lf-gender').value || null,
-    age_group: document.getElementById('lf-age').value || null,
+    age_group: (() => { const d=document.getElementById('lf-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1 ? null : String(age); })(),
     area:      document.getElementById('lf-area').value || null,
     phone:     document.getElementById('lf-phone').value.trim() || null,
     brands,
@@ -2325,7 +2327,7 @@ function openEditLeadModal(id) {
 
   // Pre-fill selects
   document.getElementById('ef-gender').value  = l.gender    || '';
-  document.getElementById('ef-age').value     = l.age_group || '';
+  document.getElementById('ef-age').value     = /^\d+$/.test(l.age_group||'') ? l.age_group : '';
   document.getElementById('ef-area').value    = l.area      || '';
   document.getElementById('ef-product').value = l.product   || '';
   document.getElementById('ef-source').value  = l.source    || '';

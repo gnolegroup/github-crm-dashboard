@@ -105,18 +105,13 @@
         <div class="pill" data-value="female" onclick="pickPill('pg-gender','female')">&#128105; Female / Perempuan</div>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="f-dob">
       <label class="field-label">
-        <span class="en">Age Group</span>
-        <span class="ms">Kumpulan Umur</span>
+        <span class="en">Date of Birth</span>
+        <span class="ms">Tarikh Lahir</span>
       </label>
-      <div class="pill-group" id="pg-age">
-        <div class="pill" data-value="18-25" onclick="pickPill('pg-age','18-25')">18&ndash;25</div>
-        <div class="pill" data-value="26-35" onclick="pickPill('pg-age','26-35')">26&ndash;35</div>
-        <div class="pill" data-value="36-45" onclick="pickPill('pg-age','36-45')">36&ndash;45</div>
-        <div class="pill" data-value="46-55" onclick="pickPill('pg-age','46-55')">46&ndash;55</div>
-        <div class="pill" data-value="56-60" onclick="pickPill('pg-age','56-60')">56&ndash;60</div>
-      </div>
+      <input id="i-dob" type="date" max="" placeholder="DD/MM/YYYY">
+      <div class="err-hint">Please enter your date of birth &middot; Sila masukkan tarikh lahir anda</div>
     </div>
   </div>
 
@@ -247,7 +242,7 @@ function updateProgress() {
     () => document.getElementById('i-phone').value.trim(),
     () => document.getElementById('i-email').value.trim(),
     () => getPill('pg-gender'),
-    () => getPill('pg-age'),
+    () => document.getElementById('i-dob').value,
     () => document.getElementById('i-area').value,
     () => getPill('pg-product'),
     () => getPill('pg-budget'),
@@ -304,7 +299,7 @@ document.getElementById('survey-form').addEventListener('submit', async function
     name:      document.getElementById('i-name').value.trim(),
     phone:     document.getElementById('i-phone').value.trim(),
     gender:    getPill('pg-gender') || null,
-    age_group: getPill('pg-age')    || null,
+    age_group: (() => { const d=document.getElementById('i-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
     area:      document.getElementById('i-area').value || null,
     product:   getPill('pg-product') || null,
     source:    source,
@@ -330,6 +325,9 @@ document.getElementById('survey-form').addEventListener('submit', async function
   s.style.display = 'flex';
   window.scrollTo({ top: 0 });
 });
+
+// Set DOB max to today so future dates can't be selected
+document.getElementById('i-dob').max = new Date().toISOString().slice(0,10);
 </script>
 </body>
 </html>
