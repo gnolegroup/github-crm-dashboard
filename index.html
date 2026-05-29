@@ -2082,6 +2082,11 @@ function renderLeads() {
   const leads = D.leads || [];
   if ($('tc-leads')) $('tc-leads').textContent = leads.length;
 
+  // Stable number map: sort by created_at ASC → oldest = L-0001, newest = L-[N]
+  const _numMap = {};
+  [...leads].sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0))
+    .forEach((l, i) => { _numMap[l.id] = i + 1; });
+
   const rows = leads.length === 0
     ? `<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
     : leads.map((l, i) => {
@@ -2089,7 +2094,7 @@ function renderLeads() {
         const logDate = latestLogDate(l);
         const stage = l.stage || 'New';
         const isOnline = SRC_ONLINE_SET.has(l.source||'');
-        const leadsNo = 'L-' + String(leads.length - i).padStart(4, '0');
+        const leadsNo = 'L-' + String(_numMap[l.id] || (leads.length - i)).padStart(4, '0');
         return `<tr>
           <td><span class="sales-no-cell">${leadsNo}</span></td>
           <td style="font-size:12px">${l.agent||'—'}</td>
