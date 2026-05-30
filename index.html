@@ -757,6 +757,11 @@
     .import-preview td { padding:6px 10px; border-top:1px solid var(--border); color:var(--text-primary); }
     .import-status { font-size:12px; color:var(--text-secondary); margin-top:10px; min-height:18px; }
     /* ── Leads Table ── */
+    .leads-qf { background:var(--bg-tertiary); border:1px solid var(--border); border-radius:20px; font-size:12px; font-weight:500; color:var(--text-secondary); padding:4px 13px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .leads-qf:hover { border-color:#7c3aed; color:#a78bfa; }
+    .leads-qf.active { background:#7c3aed22; border-color:#7c3aed; color:#a78bfa; font-weight:600; }
+    .leads-stat-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .leads-stat-card { background:var(--bg-secondary); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; }
     .leads-status { display:inline-block; border-radius:20px; font-size:11px; font-weight:600; padding:2px 9px; }
     .ls-new { background:#1c2a1c; color:#3fb950; }
     .ls-contacted { background:#1a2233; color:#58a6ff; }
@@ -2110,6 +2115,50 @@ function leadsNow() { const d=new Date(); return `${d.getFullYear()}-${String(d.
 function latestRemark(l) { const logs=l.logs||[]; const r=logs.filter(e=>e.type==='remark'||e.type==='create'); return r.length?r[r.length-1].text:''; }
 function latestLogDate(l) { const logs=l.logs||[]; return logs.length?logs[logs.length-1].date.split(' ')[0]:'—'; }
 
+// Birthday helpers
+function daysUntilBirthday(dob) {
+  if (!dob) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dob);
+  const next = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+  if (next < today) next.setFullYear(today.getFullYear() + 1);
+  return Math.round((next - today) / 86400000);
+}
+function birthdayCell(dob) {
+  const days = daysUntilBirthday(dob);
+  if (days === null) return '<span style="color:var(--text-muted);font-size:11px">—</span>';
+  if (days === 0) return '<span style="background:#ff4d4f;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px;white-space:nowrap">🎂 Today</span>';
+  if (days === 1) return '<span style="background:#fa8c16;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px;white-space:nowrap">Tomorrow</span>';
+  if (days <= 7)  return `<span style="background:#D4A53533;color:#D4A535;border:1px solid #D4A53555;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px">${days}d</span>`;
+  if (days <= 30) return `<span style="font-size:11px;color:var(--text-secondary)">${days}d</span>`;
+  return `<span style="font-size:11px;color:var(--text-muted)">${days}d</span>`;
+}
+function tempBadge(t) {
+  if (!t) return '<span style="color:var(--text-muted);font-size:11px">—</span>';
+  const cfg = { hot:['🔥 Hot','temp-hot'], warm:['☀️ Warm','temp-warm'], cold:['❄️ Cold','temp-cold'] };
+  return `<span class="${cfg[t][1]}">${cfg[t][0]}</span>`;
+}
+
+// Quick filter state
+let _leadsQF = 'all';
+function setLeadsQF(btn, qf) {
+  _leadsQF = qf;
+  document.querySelectorAll('.leads-qf').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterLeads();
+}
+
+// Birthday greeting
+function greetLead(id) {
+  const l = D.leads.find(x => x.id === id);
+  if (!l || !l.phone) { showToast('⚠ No phone number for this lead'); return; }
+  const clean = (l.phone||'').replace(/[^0-9]/g,'');
+  const num = clean.startsWith('673') ? clean : '673' + clean;
+  const first = (l.name||'').split(' ')[0];
+  const msg = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
 function multiTriggerHTML(id, brands) {
   brands = brands || [];
   const tags = brands.length ? brands.map(b=>`<span class="btag">${b}</span>`).join('') : `<span style="color:var(--text-muted);font-size:11px">None</span>`;
@@ -2134,19 +2183,21 @@ function renderLeads() {
     .forEach((l, i) => { _numMap[l.id] = i + 1; });
 
   const rows = leads.length === 0
-    ? `<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
+    ? `<tr><td colspan="17" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
     : leads.map((l, i) => {
-        const remark = latestRemark(l);
+        const remark  = latestRemark(l);
         const logDate = latestLogDate(l);
-        const stage = l.stage || 'New';
-        const isOnline = SRC_ONLINE_SET.has(l.source||'');
+        const stage   = l.stage || 'New';
         const leadsNo = 'L-' + String(_numMap[l.id] || (leads.length - i)).padStart(4, '0');
-        return `<tr>
+        const bdDays  = daysUntilBirthday(l.dob);
+        const muslimTag = l.is_muslim ? '<span title="Muslim lead" style="font-size:10px;margin-left:4px">☪️</span>' : '';
+        return `<tr data-temp="${l.temperature||''}" data-muslim="${l.is_muslim?'1':'0'}" data-bdays="${bdDays??999}">
           <td><span class="sales-no-cell">${leadsNo}</span></td>
           <td style="font-size:12px">${l.agent||'—'}</td>
-          <td style="font-size:12px;font-weight:500">${l.name}</td>
+          <td style="font-size:12px;font-weight:500">${l.name}${muslimTag}</td>
           <td style="font-size:12px;color:var(--text-secondary)">${l.gender?l.gender.charAt(0):'—'}</td>
           <td style="font-size:12px;color:var(--text-secondary)">${l.age_group||'—'}</td>
+          <td style="text-align:center">${birthdayCell(l.dob)}</td>
           <td>
             <select class="inl-select" onchange="updateLeadField('${l.id}','area',this.value)">
               ${areaOptsHTML(l.area)}
@@ -2170,6 +2221,7 @@ function renderLeads() {
               ${['New','Contacted','Pending','Closed','Lost'].map(s=>`<option${s===stage?' selected':''}>${s}</option>`).join('')}
             </select>
           </td>
+          <td>${tempBadge(l.temperature)}</td>
           <td>
             <button class="log-btn" onclick="openLogModal('${l.id}')">
               <i class="ti ti-clock" style="font-size:11px"></i> ${logDate}
@@ -2177,22 +2229,57 @@ function renderLeads() {
           </td>
           <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
           <td>
-            <div style="display:flex;gap:4px;align-items:center">
+            <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
               <button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead">
                 <i class="ti ti-pencil" style="font-size:11px"></i>
               </button>
               <button class="wa-btn" onclick="openWAModal('${l.id}')">
                 <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
               </button>
+              ${l.dob && bdDays !== null && bdDays <= 7 ? `<button class="wa-btn" style="background:#ff4d4f22;color:#ff4d4f;border-color:#ff4d4f55" onclick="greetLead('${l.id}')">🎂 Greet</button>` : ''}
             </div>
           </td>
         </tr>`;
       }).join('');
 
+  const hotCount  = leads.filter(l=>l.temperature==='hot').length;
+  const warmCount = leads.filter(l=>l.temperature==='warm').length;
+  const coldCount = leads.filter(l=>l.temperature==='cold').length;
+  const bdWeek    = leads.filter(l=>{ const d=daysUntilBirthday(l.dob); return d!==null&&d<=7; }).length;
+  const muslimCnt = leads.filter(l=>l.is_muslim).length;
+  const pct = n => leads.length ? Math.round(n/leads.length*100)+'%' : '0%';
+
   $('panel-leads').innerHTML = `
     <div class="table-wrap">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="leads-stat-bar">
+        <div class="leads-stat-card">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary)">Total Leads</div>
+          <div style="font-size:24px;font-weight:700;color:var(--text-primary)">${leads.length}</div>
+        </div>
+        <div class="leads-stat-card" style="border-color:#ff4d4f44">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#ff4d4f">🔥 Hot</div>
+          <div style="font-size:24px;font-weight:700;color:#ff4d4f">${hotCount}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${pct(hotCount)}</div>
+        </div>
+        <div class="leads-stat-card" style="border-color:#fa8c1644">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#fa8c16">☀️ Warm</div>
+          <div style="font-size:24px;font-weight:700;color:#fa8c16">${warmCount}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${pct(warmCount)}</div>
+        </div>
+        <div class="leads-stat-card" style="border-color:#4096ff44">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#4096ff">❄️ Cold</div>
+          <div style="font-size:24px;font-weight:700;color:#4096ff">${coldCount}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${pct(coldCount)}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div class="table-title">Lead Tracker <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} leads</span></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="leads-qf${_leadsQF==='all'?' active':''}"      onclick="setLeadsQF(this,'all')">All</button>
+        <button class="leads-qf${_leadsQF==='hot'?' active':''}"      onclick="setLeadsQF(this,'hot')">🔥 Hot leads <span style="opacity:.7">${hotCount}</span></button>
+        <button class="leads-qf${_leadsQF==='birthday'?' active':''}" onclick="setLeadsQF(this,'birthday')">🎂 Birthday this week <span style="opacity:.7">${bdWeek}</span></button>
+        <button class="leads-qf${_leadsQF==='muslim'?' active':''}"   onclick="setLeadsQF(this,'muslim')">☪️ Muslim leads <span style="opacity:.7">${muslimCnt}</span></button>
       </div>
       <div class="leads-filters">
         <input type="text" placeholder="Search name, L-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
@@ -2213,26 +2300,12 @@ function renderLeads() {
       <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
         <table style="width:100%;border-collapse:collapse;min-width:1775px">
           <colgroup>
-            <col style="width:100px"><col style="width:115px"><col style="width:160px"><col style="width:75px"><col style="width:75px">
-            <col style="width:125px"><col style="width:125px"><col style="width:160px"><col style="width:130px">
-            <col style="width:120px"><col style="width:105px"><col style="width:110px"><col style="width:110px"><col style="width:165px"><col style="width:115px">
+            <col style="width:95px"><col style="width:110px"><col style="width:155px"><col style="width:65px"><col style="width:55px"><col style="width:90px">
+            <col style="width:120px"><col style="width:120px"><col style="width:155px"><col style="width:125px">
+            <col style="width:115px"><col style="width:100px"><col style="width:105px"><col style="width:90px"><col style="width:105px"><col style="width:160px"><col style="width:130px">
           </colgroup>
           <thead><tr style="background:var(--bg-tertiary)">
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Leads No.</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Agent</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Name</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Gender</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Age</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Area</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Phone</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Existing User</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Product</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Source</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Lead Date</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Stage</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Action Date</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Latest Remark</th>
-            <th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">Action</th>
+            ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Product','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
           </tr></thead>
           <tbody id="leads-body">${rows}</tbody>
         </table>
@@ -2286,16 +2359,23 @@ function filterMembers(q) {
 }
 
 function filterLeads() {
-  const q = (document.getElementById('leads-srch')?.value||'').toLowerCase();
-  const fs = document.getElementById('leads-f-stage')?.value||'';
+  const q   = (document.getElementById('leads-srch')?.value||'').toLowerCase();
+  const fs  = document.getElementById('leads-f-stage')?.value||'';
   const fso = document.getElementById('leads-f-source')?.value||'';
-  const fa = document.getElementById('leads-f-area')?.value||'';
+  const fa  = document.getElementById('leads-f-area')?.value||'';
   let shown = 0;
   document.querySelectorAll('#leads-body tr').forEach(row => {
-    const txt = row.textContent.toLowerCase();
-    const show = (!q || txt.includes(q)) &&
-                 (!fs  || row.querySelector('.inl-select')?.value === fs ||
-                          [...row.querySelectorAll('.inl-select')].some(s=>s.value===fs)) &&
+    const txt    = row.textContent.toLowerCase();
+    const temp   = row.dataset.temp   || '';
+    const muslim = row.dataset.muslim === '1';
+    const bdays  = parseInt(row.dataset.bdays ?? '999');
+    const qfPass = _leadsQF === 'all'      ? true :
+                   _leadsQF === 'hot'      ? temp === 'hot' :
+                   _leadsQF === 'birthday' ? bdays <= 7 :
+                   _leadsQF === 'muslim'   ? muslim : true;
+    const show = qfPass &&
+                 (!q   || txt.includes(q)) &&
+                 (!fs  || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fs)) &&
                  (!fso || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fso)) &&
                  (!fa  || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fa));
     row.style.display = show ? '' : 'none';
