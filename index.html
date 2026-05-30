@@ -2917,7 +2917,7 @@ function renderHomeDashboard() {
     <div style="font-size:28px;font-weight:700;color:${c};line-height:1.1">${val}</div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${sub}</div></div>`;
 
-  $('panel-home').innerHTML = `<div style="max-width:1100px;margin:0 auto;padding:24px 20px">
+  $('panel-home').innerHTML = `<div style="padding:24px 28px">
     <div style="margin-bottom:18px">
       <div style="font-size:22px;font-weight:700;color:var(--text-primary)">${greet}, ${agentName} 👋</div>
       <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${dateStr}${urgentBd>0?` · <span style="color:#ff4d4f;font-weight:600">${urgentBd} reminder${urgentBd>1?'s':''} need attention</span>`:''}</div>
