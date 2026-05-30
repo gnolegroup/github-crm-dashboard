@@ -1176,6 +1176,10 @@
         </select>
       </div>
       <div class="modal-field">
+        <label class="modal-label">Date of Birth <span id="ef-age-display" style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></label>
+        <input id="ef-dob" class="modal-input" type="date" max="" oninput="const a=Math.floor((new Date()-new Date(this.value))/31557600000);document.getElementById('ef-age-display').textContent=(!isNaN(a)&&a>0)?'— Age '+a:''">
+      </div>
+      <div class="modal-field">
         <label class="modal-label">District</label>
         <select id="ef-district" class="modal-select" onchange="updateAreaOpts('ef-area','ef-district')">
           <option value="">— select district —</option>
@@ -1228,10 +1232,6 @@
           <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
           <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
         </select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Date of Birth <span id="ef-age-display" style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></label>
-        <input id="ef-dob" class="modal-input" type="date" max="" oninput="const a=Math.floor((new Date()-new Date(this.value))/31557600000);document.getElementById('ef-age-display').textContent=(!isNaN(a)&&a>0)?'— Age '+a:''">
       </div>
       <div class="modal-field">
         <label class="modal-label">Lead Date</label>
