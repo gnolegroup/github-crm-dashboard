@@ -926,7 +926,8 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Overview</div>
+      <div class="nav-dropdown-item" onclick="navTo('home')"><span class="nav-dropdown-icon">🏠</span>Home</div>
+      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Analytics</div>
     </div>
   </div>
 
@@ -1023,7 +1024,8 @@
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Loading…</div>
   </div>
 
-  <div class="tab-panel active" id="panel-leads"><div class="loading"><div class="spinner"></div>Loading leads…</div></div>
+  <div class="tab-panel active" id="panel-home"></div>
+  <div class="tab-panel"        id="panel-leads"><div class="loading"><div class="spinner"></div>Loading leads…</div></div>
   <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"><div class="loading"><div class="spinner"></div>Loading members…</div></div>
   <div class="tab-panel"        id="panel-survey"></div>
@@ -1461,7 +1463,7 @@ async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session?.user) {
     showApp(session.user);
-    const last = localStorage.getItem('crm-page') || 'pipeline';
+    const last = localStorage.getItem('crm-page') || 'home';
     navTo(last);
   } else {
     showLogin();
@@ -1471,7 +1473,7 @@ async function init() {
 db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
     showApp(session.user);
-    const last = localStorage.getItem('crm-page') || 'pipeline';
+    const last = localStorage.getItem('crm-page') || 'home';
     navTo(last);
   } else if (event === 'SIGNED_OUT') {
     showLogin();
@@ -1634,6 +1636,13 @@ async function navTo(name) {
       D.leads = data || [];
     }
     renderSurveyPage();
+
+  } else if (name === 'home') {
+    if (!D.leads || D.leads.length === 0) {
+      const { data: homeData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      D.leads = homeData || [];
+    }
+    renderHomeDashboard();
 
   } else if (name === 'birthday' || name === 'whasend') {
     $('panel-'+name).innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
@@ -2833,6 +2842,146 @@ async function submitImport() {
   document.getElementById('import-status').textContent = `✓ Successfully imported ${inserted} leads!`;
   btn.textContent = 'Done ✓';
   setTimeout(closeImportModal, 1500);
+}
+
+/* ── Home Dashboard ── */
+const SPECIAL_DAYS = [
+  { name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic', icon:'🌙' },
+  { name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑' },
+  { name:'National Day',        date:'2027-02-23', type:'national', icon:'🇧🇳' },
+];
+
+function renderHomeDashboard() {
+  const leads   = D.leads || [];
+  const today   = new Date();
+  const h       = today.getHours();
+  const greet   = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const email   = (document.getElementById('user-chip')?.textContent || '').split('@')[0];
+  const agentName = email ? email.split('.').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ') : 'Team';
+  const dateStr = today.toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  const bdItems = leads.filter(l=>l.dob&&daysUntilBirthday(l.dob)!==null&&daysUntilBirthday(l.dob)<=14)
+    .map(l=>({ l, p:calcBirthdayPriority(l), state:getBirthdayState(l), days:daysUntilBirthday(l.dob), lc:getLastContactDaysAgo(l) }))
+    .filter(x=>x.p!==null&&x.state!=='skipped').sort((a,b)=>b.p-a.p||a.days-b.days);
+  const urgentBd  = bdItems.filter(x=>x.p>=4&&x.state==='pending').length;
+  const muslimCnt = leads.filter(l=>l.is_muslim).length;
+  const totalL    = leads.length;
+  const closed    = leads.filter(l=>l.stage==='Closed').length;
+
+  const upcomingSD = SPECIAL_DAYS.map(sd=>({ ...sd, daysLeft:Math.floor((new Date(sd.date)-today)/86400000) }))
+    .filter(sd=>sd.daysLeft>=0).sort((a,b)=>a.daysLeft-b.daysLeft);
+  const nearSD = upcomingSD[0];
+
+  const srcMap = {}; leads.forEach(l=>{ if(l.source) srcMap[l.source]=(srcMap[l.source]||0)+1; });
+  const srcTop = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const srcMax = Math.max(...srcTop.map(([,n])=>n),1);
+  const srcCol = { TikTok:'#7F77DD', Instagram:'#D4537E', Facebook:'#378ADD', WhatsApp:'#1D9E75', CF:'#D85A30', Roadshow:'#BA7517', 'Walk-in':'#52c41a', Referral:'#85B7EB', Database:'#888780' };
+
+  const prdMap = {}; leads.forEach(l=>{ if(l.product) prdMap[l.product]=(prdMap[l.product]||0)+1; });
+  const prdTop = Object.entries(prdMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const prdMax = Math.max(...prdTop.map(([,n])=>n),1);
+
+  const allLogs = [];
+  leads.forEach(l=>(l.logs||[]).forEach(lg=>allLogs.push({...lg,leadName:l.name,leadArea:l.area,leadProd:l.product,agentName:l.agent})));
+  allLogs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const recent = allLogs.slice(0,10);
+  const actIcon = t=>({ create:'🟢', stage:'🔵', remark:'💬', birthday_sent:'🎂', birthday_snoozed:'⏱' }[t]||'⚪');
+  const actText = lg => {
+    const ag=lg.agentName||'Agent';
+    if(lg.type==='create') return `${ag} added — ${lg.leadName}${lg.leadProd?' · '+(PRODUCT_OPTS.find(o=>o.v===lg.leadProd)?.l||lg.leadProd):''}${lg.leadArea?' · '+lg.leadArea:''}`;
+    if(lg.type==='stage') return `${ag} moved ${lg.leadName} to ${lg.stage}`;
+    if(lg.type==='birthday_sent') return `${ag} sent birthday greeting to ${lg.leadName}`;
+    if(lg.type==='remark') return `${ag}: "${lg.text}"`;
+    return `${ag}: ${lg.text||''}`;
+  };
+
+  const barRow=(label,n,max,color)=>`<div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+      <span style="color:var(--text-primary);font-weight:500">${label}</span>
+      <span style="color:var(--text-secondary)">${totalL?Math.round(n/totalL*100):0}%</span>
+    </div>
+    <div style="background:var(--bg-tertiary);border-radius:4px;height:7px;overflow:hidden">
+      <div style="height:100%;border-radius:4px;background:${color};width:${Math.round(n/max*100)}%"></div>
+    </div></div>`;
+
+  const kpi=(label,val,sub,c,bc)=>`<div style="background:var(--bg-secondary);border:0.5px solid ${bc};border-radius:12px;padding:16px 18px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${c};margin-bottom:6px">${label}</div>
+    <div style="font-size:28px;font-weight:700;color:${c};line-height:1.1">${val}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${sub}</div></div>`;
+
+  $('panel-home').innerHTML = `<div style="max-width:1100px;margin:0 auto;padding:24px 20px">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:700;color:var(--text-primary)">${greet}, ${agentName} 👋</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${dateStr}${urgentBd>0?` · <span style="color:#ff4d4f;font-weight:600">${urgentBd} reminder${urgentBd>1?'s':''} need attention</span>`:''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      ${urgentBd>0?`<div onclick="navTo('birthday')" style="display:flex;align-items:center;justify-content:space-between;background:#ff4d4f18;border:1px solid #ff4d4f44;border-radius:10px;padding:10px 16px;cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">🎂</span><span style="font-size:13px;font-weight:600;color:#ff4d4f">${urgentBd} birthday reminder${urgentBd>1?'s':''} urgent today</span></div><span style="font-size:12px;color:#ff4d4f;font-weight:600">View →</span></div>`:''}
+      ${nearSD&&nearSD.daysLeft<=30?`<div onclick="navTo('specialdays')" style="display:flex;align-items:center;justify-content:space-between;background:#D4A53518;border:1px solid #D4A53544;border-radius:10px;padding:10px 16px;cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">${nearSD.icon}</span><span style="font-size:13px;font-weight:600;color:#D4A535">${nearSD.name} in ${nearSD.daysLeft} day${nearSD.daysLeft!==1?'s':''} — ${nearSD.type==='islamic'?muslimCnt+' Muslim leads':totalL+' leads'}</span></div><span style="font-size:12px;color:#D4A535;font-weight:600">View →</span></div>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${kpi('Total Leads',totalL,leads.filter(l=>(l.created_at||'').slice(0,7)===today.toISOString().slice(0,7)).length+' added this month','var(--text-primary)','var(--border)')}
+      ${kpi('New Customers',closed,Math.round(closed/Math.max(totalL,1)*100)+'% conversion','#52c41a','#52c41a44')}
+      ${kpi('Urgent Birthdays',urgentBd,'Need greetings today','#ff4d4f','#ff4d4f44')}
+      ${kpi('Special Days',upcomingSD.length,'Upcoming events','#D4A535','#D4A53544')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary)">🎂 Birthday Reminders</div>
+          <button onclick="navTo('birthday')" style="font-size:11px;color:#a78bfa;background:none;border:none;cursor:pointer;font-weight:600">See all →</button>
+        </div>
+        ${bdItems.length===0?'<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">No upcoming birthdays in 14 days.</div>':bdItems.slice(0,4).map(({l,p,state,days,lc})=>{
+          const pc=PRIO_CFG[p]||PRIO_CFG[2]; const first=(l.name||'').split(' ')[0];
+          const dl=days===0?'Today 🎂':days===1?'Tomorrow':`In ${days}d`;
+          return `<div style="border:0.5px solid var(--border);border-left:3px solid ${pc.color};border-radius:8px;padding:10px 12px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <span style="background:${pc.color}22;color:${pc.color};border-radius:20px;font-size:9px;font-weight:700;padding:1px 7px">${pc.label}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--text-primary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span>
+              <span style="font-size:11px;color:${days===0?'#ff4d4f':'var(--text-secondary)'};white-space:nowrap">${dl}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px">${PRODUCT_OPTS.find(o=>o.v===l.product)?.l||'—'} · ${l.area||'—'} · Last: ${lc===null?'Never':lc+'d ago'}</div>
+            ${state==='pending'?`<div style="display:flex;gap:5px"><button class="wa-btn" style="font-size:10px;padding:2px 8px" onclick="sendBirthdayGreeting('${l.id}')">📱 Send</button><button class="btn-cancel" style="font-size:10px;padding:2px 7px" onclick="snoozeBirthdayReminder('${l.id}')">⏱ Snooze</button></div>`:`<div style="font-size:11px;color:#52c41a">✓ ${state==='sent'?'Sent':'Snoozed'}</div>`}
+          </div>`;}).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px">Lead Sources</div>
+          ${srcTop.length===0?'<div style="color:var(--text-muted);font-size:12px">No data yet.</div>':srcTop.map(([s,n])=>barRow(s,n,srcMax,srcCol[s]||'#7F77DD')).join('')}
+        </div>
+        <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px">Top Products</div>
+          ${prdTop.length===0?'<div style="color:var(--text-muted);font-size:12px">No data yet.</div>':prdTop.map(([pv,n])=>{ const po=PRODUCT_OPTS.find(o=>o.v===pv); return barRow(po?.l||pv,n,prdMax,po?.c||'#7F77DD'); }).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary)">Special Days Upcoming</div>
+          <button onclick="navTo('specialdays')" style="font-size:11px;color:#a78bfa;background:none;border:none;cursor:pointer;font-weight:600">See all →</button>
+        </div>
+        ${upcomingSD.length===0?'<div style="color:var(--text-muted);font-size:12px">No special days soon.</div>':upcomingSD.slice(0,4).map(sd=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">${sd.icon}</span>
+            <div><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${sd.name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${sd.daysLeft===0?'Today':sd.daysLeft===1?'Tomorrow':'In '+sd.daysLeft+' days'} · ${sd.type==='islamic'?muslimCnt+' Muslim leads':totalL+' leads'}</div></div>
+          </div>
+          <button class="wa-btn" style="font-size:11px;padding:3px 10px" onclick="navTo('specialdays')">Bulk send</button>
+        </div>`).join('')}
+      </div>
+      <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px">Recent Activity</div>
+        ${recent.length===0?'<div style="color:var(--text-muted);font-size:12px">No activity yet.</div>':recent.map(lg=>`
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+          <span style="font-size:13px;flex-shrink:0;margin-top:1px">${actIcon(lg.type)}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${actText(lg)}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">${(lg.date||'').slice(0,16)}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
 }
 
 /* ── Birthday Reminders ── */
