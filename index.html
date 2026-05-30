@@ -726,6 +726,16 @@
     .modal-input, .modal-select { background:var(--bg-tertiary); border:1px solid var(--border); border-radius:7px; color:var(--text-primary); font-size:13px; padding:8px 11px; width:100%; outline:none; }
     .modal-input:focus, .modal-select:focus { border-color:#7c3aed; }
     .modal-select option { background:var(--bg-secondary); }
+    /* Temperature badges */
+    .temp-hot  { background:#ff4d4f22; color:#ff4d4f; border:1px solid #ff4d4f55; border-radius:20px; font-size:11px; font-weight:700; padding:2px 8px; }
+    .temp-warm { background:#fa8c1622; color:#fa8c16; border:1px solid #fa8c1655; border-radius:20px; font-size:11px; font-weight:700; padding:2px 8px; }
+    .temp-cold { background:#1677ff22; color:#4096ff; border:1px solid #4096ff55; border-radius:20px; font-size:11px; font-weight:700; padding:2px 8px; }
+    /* Muslim toggle */
+    .toggle-wrap { display:flex; align-items:center; gap:8px; margin-top:4px; }
+    .toggle-sw { width:38px; height:20px; -webkit-appearance:none; appearance:none; background:var(--border); border-radius:10px; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+    .toggle-sw:checked { background:#D4A535; }
+    .toggle-sw::after { content:''; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:2px; left:2px; transition:left .2s; }
+    .toggle-sw:checked::after { left:20px; }
     .modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
     .btn-cancel { background:none; border:1px solid var(--border); border-radius:7px; color:var(--text-secondary); cursor:pointer; font-size:13px; padding:8px 16px; }
     .btn-cancel:hover { border-color:var(--text-secondary); color:var(--text-primary); }
@@ -1088,6 +1098,22 @@
           <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
         </select>
       </div>
+      <div class="modal-field">
+        <label class="modal-label">Temperature</label>
+        <select id="lf-temperature" class="modal-select">
+          <option value="">— none —</option>
+          <option value="hot">🔥 Hot</option>
+          <option value="warm">☀️ Warm</option>
+          <option value="cold">❄️ Cold</option>
+        </select>
+      </div>
+      <div class="modal-field" style="justify-content:center">
+        <label class="modal-label">Muslim Lead</label>
+        <div class="toggle-wrap">
+          <input id="lf-muslim" type="checkbox" class="toggle-sw">
+          <span style="font-size:12px;color:var(--text-secondary)">Yes — include in Muslim campaigns</span>
+        </div>
+      </div>
       <div class="modal-field full">
         <label class="modal-label">Initial Remark</label>
         <input id="lf-remark" class="modal-input" type="text" placeholder="First note about this lead…">
@@ -1183,6 +1209,10 @@
         </select>
       </div>
       <div class="modal-field">
+        <label class="modal-label">Date of Birth</label>
+        <input id="ef-dob" class="modal-input" type="date" max="">
+      </div>
+      <div class="modal-field">
         <label class="modal-label">Lead Date</label>
         <input id="ef-lead-date" class="modal-input" type="date">
       </div>
@@ -1191,6 +1221,22 @@
         <select id="ef-stage" class="modal-select">
           <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
         </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Temperature</label>
+        <select id="ef-temperature" class="modal-select">
+          <option value="">— none —</option>
+          <option value="hot">🔥 Hot</option>
+          <option value="warm">☀️ Warm</option>
+          <option value="cold">❄️ Cold</option>
+        </select>
+      </div>
+      <div class="modal-field" style="justify-content:center">
+        <label class="modal-label">Muslim Lead</label>
+        <div class="toggle-wrap">
+          <input id="ef-muslim" type="checkbox" class="toggle-sw">
+          <span style="font-size:12px;color:var(--text-secondary)">Yes — include in Muslim campaigns</span>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2279,9 +2325,10 @@ async function openLeadModal() {
   // Clear text fields
   ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   // Reset selects
-  ['lf-gender','lf-district','lf-product','lf-source'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  ['lf-gender','lf-district','lf-product','lf-source','lf-temperature'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
   updateAreaOpts('lf-area','lf-district');
   const dobEl=document.getElementById('lf-dob'); if(dobEl){ dobEl.value=''; dobEl.max=new Date().toISOString().slice(0,10); }
+  const muslimEl=document.getElementById('lf-muslim'); if(muslimEl) muslimEl.checked=false;
   document.getElementById('lf-stage').value = 'New';
   const btn = document.getElementById('lf-submit');
   btn.disabled = false;
@@ -2315,11 +2362,14 @@ async function submitLead() {
     name,
     gender:    document.getElementById('lf-gender').value || null,
     age_group: (() => { const d=document.getElementById('lf-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1 ? null : String(age); })(),
+    dob:       document.getElementById('lf-dob').value || null,
     area:      document.getElementById('lf-area').value || null,
     phone:     document.getElementById('lf-phone').value.trim() || null,
     brands,
     product:   document.getElementById('lf-product').value || null,
     source:    document.getElementById('lf-source').value || null,
+    temperature: document.getElementById('lf-temperature').value || null,
+    is_muslim:   document.getElementById('lf-muslim').checked,
     stage,
     lead_date: today,
     logs: [{ date: leadsNow(), stage, type:'create', text: remark || 'Lead created' }],
@@ -2365,9 +2415,13 @@ function openEditLeadModal(id) {
   document.getElementById('ef-district').value = _diKey;
   updateAreaOpts('ef-area','ef-district');
   document.getElementById('ef-area').value    = l.area      || '';
-  document.getElementById('ef-product').value = l.product   || '';
-  document.getElementById('ef-source').value  = l.source    || '';
-  document.getElementById('ef-stage').value   = l.stage     || 'New';
+  document.getElementById('ef-product').value     = l.product     || '';
+  document.getElementById('ef-source').value      = l.source      || '';
+  document.getElementById('ef-stage').value       = l.stage       || 'New';
+  document.getElementById('ef-dob').value         = l.dob         || '';
+  document.getElementById('ef-dob').max           = new Date().toISOString().slice(0,10);
+  document.getElementById('ef-temperature').value = l.temperature || '';
+  document.getElementById('ef-muslim').checked    = !!l.is_muslim;
 
   // Pre-select brand chips
   const brands = l.brands || [];
@@ -2411,12 +2465,15 @@ async function saveEditLead() {
     agent:     document.getElementById('ef-agent').value.trim()     || null,
     name,
     gender:    document.getElementById('ef-gender').value           || null,
-    age_group: document.getElementById('ef-age').value              || null,
+    age_group: (() => { const d=document.getElementById('ef-dob').value; if(d){ const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); } return document.getElementById('ef-age').value||null; })(),
+    dob:       document.getElementById('ef-dob').value              || null,
     area:      document.getElementById('ef-area').value             || null,
     phone:     document.getElementById('ef-phone').value.trim()     || null,
     brands,
     product:   document.getElementById('ef-product').value          || null,
     source:    document.getElementById('ef-source').value           || null,
+    temperature: document.getElementById('ef-temperature').value    || null,
+    is_muslim:   document.getElementById('ef-muslim').checked,
     lead_date: document.getElementById('ef-lead-date').value        || null,
     stage:     newStage,
     logs,

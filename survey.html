@@ -324,6 +324,7 @@ document.getElementById('survey-form').addEventListener('submit', async function
     phone:     document.getElementById('i-phone').value.trim(),
     gender:    getPill('pg-gender') || null,
     age_group: (() => { const d=document.getElementById('i-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
+    dob:       document.getElementById('i-dob').value || null,
     area:      document.getElementById('i-area').value || null,
     product:   getPill('pg-product') || null,
     source:    source,
