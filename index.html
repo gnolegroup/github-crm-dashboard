@@ -1652,6 +1652,11 @@ async function navTo(name) {
     else renderWhasendPage();
 
   } else if (name === 'specialdays') {
+    if (!D.leads || D.leads.length === 0) {
+      $('panel-specialdays').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+      const { data: sdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      D.leads = sdData || [];
+    }
     renderSpecialDaysPage();
 
   } else if (name === 'pipeline') {
@@ -3194,13 +3199,221 @@ function renderWhasendPage() {
   </div>`;
 }
 
-/* ── Special Days (placeholder) ── */
+/* ── Special Days ── */
+const SPECIAL_DAYS_FULL = [
+  { id:'aidiladha', name:'Hari Raya Aidiladha',  date:'2026-06-06', type:'islamic',  icon:'🌙', audienceType:'muslim', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — TEL Team' },
+  { id:'sultans',   name:"Sultan's Birthday",     date:'2026-07-15', type:'national', icon:'👑', audienceType:'all',    template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — TEL Team' },
+  { id:'national',  name:'National Day 2027',     date:'2027-02-23', type:'national', icon:'🇧🇳', audienceType:'all',  template:'Selamat Hari Kebangsaan Brunei ke-43, {name}! Salam Brunei Darussalam. — TEL Team' },
+];
+
+let _sdFilter = 'all';
+let _customOccasions = JSON.parse(localStorage.getItem('crm-custom-occasions') || '[]');
+let _bulkSendSD = null;
+let _bulkSendLeads = [];
+let _bulkSendIdx = 0;
+
+function setSdFilter(f) { _sdFilter = f; renderSpecialDaysPage(); }
+
+function getAnniversaryLeads(leads) {
+  const now = new Date();
+  return leads.filter(l => {
+    if (l.stage !== 'Closed') return false;
+    const cl = (l.logs||[]).find(lg => lg.type === 'stage' && lg.stage === 'Closed');
+    if (!cl) return false;
+    const d = new Date(cl.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() - 1;
+  });
+}
+
+function getSDById(id) {
+  if (id === 'anniversary') return _currentAnniversarySD;
+  return _currentFullSD.find(x => x.id === id);
+}
+
+let _currentFullSD = [];
+let _currentAnniversarySD = null;
+
 function renderSpecialDaysPage() {
+  const leads     = D.leads || [];
+  const today     = new Date();
+  const muslimL   = leads.filter(l => l.is_muslim);
+  const annivL    = getAnniversaryLeads(leads);
+
+  // Build full list
+  const builtSD = SPECIAL_DAYS_FULL.map(sd => ({
+    ...sd,
+    daysLeft: Math.floor((new Date(sd.date) - today) / 86400000),
+    audience: sd.audienceType === 'muslim' ? muslimL : leads,
+  })).filter(sd => sd.daysLeft >= 0).sort((a,b) => a.daysLeft - b.daysLeft);
+
+  // Anniversary (always today)
+  const annivSD = {
+    id:'anniversary', name:'Purchase Anniversary', date:null, type:'personal', icon:'🎊',
+    audienceType:'personal', daysLeft:0, audience: annivL,
+    template:'Salam {name}! Sudah setahun anda bersama kami. Terima kasih atas kepercayaan anda! — TEL Team'
+  };
+
+  // Custom occasions
+  const customSD = _customOccasions.map(o => ({
+    ...o, daysLeft:Math.floor((new Date(o.date) - today) / 86400000),
+    audience: o.audienceType==='muslim' ? muslimL : leads
+  })).filter(o => o.daysLeft >= 0);
+
+  const allSD = [...(annivL.length > 0 ? [annivSD] : []), ...builtSD, ...customSD]
+    .sort((a,b) => a.daysLeft - b.daysLeft);
+
+  _currentFullSD = allSD;
+  _currentAnniversarySD = annivSD;
+
+  const upcoming30 = allSD.filter(sd => sd.daysLeft <= 30).length;
+
+  const getPrio = d => d === 0 ? {l:'Urgent',c:'#ff4d4f'} : d <= 3 ? {l:'Urgent',c:'#ff4d4f'} : d <= 14 ? {l:'High',c:'#fa8c16'} : d <= 30 ? {l:'Medium',c:'#D4A535'} : {l:'Low',c:'#52c41a'};
+
+  const filtered = allSD.filter(sd => _sdFilter === 'all' || sd.type === _sdFilter);
+
+  const cards = filtered.map(sd => {
+    const p   = getPrio(sd.daysLeft);
+    const aud = sd.audience.length;
+    const audLabel = sd.audienceType === 'muslim' ? `${aud} Muslim leads` : sd.audienceType === 'personal' ? `${aud} leads this month` : `${aud} leads`;
+    const dateLabel = sd.daysLeft === 0 ? 'Today' : sd.daysLeft === 1 ? 'Tomorrow' : `In ${sd.daysLeft} days`;
+    const typeTag = `<span style="background:var(--bg-tertiary);border-radius:4px;font-size:10px;padding:1px 6px;color:var(--text-muted)">${sd.type}</span>`;
+    return `
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-left:3px solid ${p.c};border-radius:12px;padding:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:22px">${sd.icon}</span>
+        <span style="font-size:15px;font-weight:700;color:var(--text-primary)">${sd.name}</span>
+        <span style="background:${p.c}22;color:${p.c};border:1px solid ${p.c}55;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px">${p.l}</span>
+        ${typeTag}
+        <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)">${sd.date?sd.date+' · ':''}${dateLabel}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${audLabel}</div>
+      <div style="background:var(--bg-tertiary);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-secondary);margin-bottom:12px;font-style:italic">"${sd.template}"</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${aud>0?`<button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="openBulkSendModal('${sd.id}')">📤 Bulk send (${audLabel})</button>`:''}
+        <button class="btn-cancel" style="font-size:12px;padding:6px 12px" onclick="openSingleSendModal('${sd.id}')">Send to 1 lead</button>
+      </div>
+    </div>`;
+  }).join('');
+
   $('panel-specialdays').innerHTML = `
-  <div style="max-width:800px;margin:0 auto;padding:24px 20px">
-    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px">🎉 Special Days</div>
-    <div style="font-size:13px;color:var(--text-secondary)">Coming soon — Hari Raya, Sultan's Birthday, Purchase Anniversaries & more.</div>
+  <div style="max-width:900px;margin:0 auto;padding:24px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary)">🎉 Special Day Reminders</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Islamic holidays · national days · custom occasions</div>
+      </div>
+      <button class="btn-save" style="font-size:12px;padding:7px 16px" onclick="bulkSendAllUrgent()">📤 Bulk send urgent</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${[['Upcoming (30d)',upcoming30,'','#D4A535','#D4A53544'],['Muslim Leads',muslimL.length,'tagged as Muslim','var(--text-primary)','var(--border)'],['Campaigns Sent',0,'this month','#52c41a','#52c41a44'],['Bulk Launches',0,'this month','#7F77DD','#7F77DD44']]
+        .map(([l,n,s,c,bc])=>`<div style="background:var(--bg-secondary);border:0.5px solid ${bc};border-radius:10px;padding:14px 16px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${c}">${l}</div><div style="font-size:26px;font-weight:700;color:${c}">${n}</div>${s?`<div style="font-size:11px;color:var(--text-muted)">${s}</div>`:''}</div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+      ${['all','islamic','national','personal'].map(f=>`<button class="leads-qf${_sdFilter===f?' active':''}" onclick="setSdFilter('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+      ${filtered.length===0?'<div style="text-align:center;padding:40px;color:var(--text-muted)">No events in this category.</div>':cards}
+    </div>
+
+    <!-- Add custom occasion -->
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
+      <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px">➕ Add Custom Occasion</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <input id="sd-name" class="modal-input" placeholder="Occasion name" style="font-size:13px">
+        <input id="sd-date" class="modal-input" type="date" style="font-size:13px">
+        <select id="sd-type" class="modal-select" style="font-size:13px">
+          <option value="personal">Personal</option><option value="islamic">Islamic</option><option value="national">National</option>
+        </select>
+      </div>
+      <input id="sd-template" class="modal-input" placeholder='Message template — use {name} for recipient name e.g. "Selamat Hari Lahir {name}!"' style="font-size:13px;margin-bottom:10px">
+      <button class="btn-save" style="font-size:12px;padding:6px 16px" onclick="addCustomOccasion()">Save Occasion</button>
+    </div>
+  </div>
+
+  <!-- Bulk send modal -->
+  <div id="bulk-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeBulkModal()">
+    <div class="modal-box" style="width:580px;max-height:80vh;overflow-y:auto">
+      <div class="modal-title">📤 Bulk Send <button class="modal-close" onclick="closeBulkModal()">✕</button></div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Click Send on each lead to open WhatsApp with the pre-filled message.</div>
+      <div id="bulk-list"></div>
+      <div class="modal-footer"><button class="btn-cancel" onclick="closeBulkModal()">Close</button></div>
+    </div>
   </div>`;
+}
+
+function openBulkSendModal(sdId) {
+  const sd = getSDById(sdId);
+  if (!sd) return;
+  const validLeads = sd.audience.filter(l => l.phone);
+  if (validLeads.length === 0) { showToast('⚠ No leads with phone numbers in this audience'); return; }
+
+  document.getElementById('bulk-list').innerHTML = validLeads.map(l => {
+    const first = (l.name||'').split(' ')[0];
+    const msg = sd.template.replace(/{name}/g, first);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--text-primary)">${l.name}${l.is_muslim?' ☪️':''}</div>
+        <div style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${msg}</div>
+      </div>
+      <button class="wa-btn" style="font-size:11px;white-space:nowrap;flex-shrink:0" onclick="sendSDMsg('${l.id}','${sdId}')">📱 Send</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('bulk-modal').style.display = 'flex';
+}
+
+function openSingleSendModal(sdId) {
+  const sd = getSDById(sdId);
+  if (!sd) return;
+  const lead = sd.audience.find(l => l.phone);
+  if (!lead) { showToast('⚠ No leads with phone numbers in this audience'); return; }
+  sendSDMsg(lead.id, sdId);
+}
+
+function closeBulkModal() {
+  document.getElementById('bulk-modal').style.display = 'none';
+}
+
+function sendSDMsg(leadId, sdId) {
+  const l  = D.leads.find(x => x.id === leadId);
+  const sd = getSDById(sdId);
+  if (!l || !sd) return;
+  const first = (l.name||'').split(' ')[0];
+  const msg = sd.template.replace(/{name}/g, first);
+  const clean = (l.phone||'').replace(/[^0-9]/g,'');
+  const num = clean.startsWith('673') ? clean : '673' + clean;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+  showToast(`📱 Opened WhatsApp for ${l.name}`);
+}
+
+function bulkSendAllUrgent() {
+  const urgent = _currentFullSD.filter(sd => sd.daysLeft <= 3 && sd.audience.length > 0);
+  if (urgent.length === 0) { showToast('No urgent events with leads right now'); return; }
+  openBulkSendModal(urgent[0].id);
+}
+
+function addCustomOccasion() {
+  const name = document.getElementById('sd-name').value.trim();
+  const date = document.getElementById('sd-date').value;
+  const type = document.getElementById('sd-type').value;
+  const tmpl = document.getElementById('sd-template').value.trim();
+  if (!name || !date) { showToast('⚠ Please fill in name and date'); return; }
+  const occ = {
+    id: 'custom_' + Date.now(),
+    name, date, type, icon: type==='islamic'?'🌙':type==='national'?'🎌':'🎊',
+    audienceType: type==='islamic' ? 'muslim' : 'all',
+    template: tmpl || `Salam {name}! Sempena ${name}, kami mengucapkan tahniah! — TEL Team`
+  };
+  _customOccasions.push(occ);
+  localStorage.setItem('crm-custom-occasions', JSON.stringify(_customOccasions));
+  document.getElementById('sd-name').value = '';
+  document.getElementById('sd-date').value = '';
+  document.getElementById('sd-template').value = '';
+  showToast(`✅ "${name}" added!`);
+  renderSpecialDaysPage();
 }
 
 /* ── Toast ── */
