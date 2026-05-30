@@ -756,6 +756,11 @@
     .import-preview th { background:var(--bg-tertiary); padding:6px 10px; text-align:left; color:var(--text-secondary); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:.05em; }
     .import-preview td { padding:6px 10px; border-top:1px solid var(--border); color:var(--text-primary); }
     .import-status { font-size:12px; color:var(--text-secondary); margin-top:10px; min-height:18px; }
+    /* ── Birthday Reminders ── */
+    .bd-card { background:var(--bg-secondary); border:0.5px solid var(--border); border-radius:12px; padding:16px 18px; transition:opacity .2s; }
+    .bd-card.bd-sent { opacity:.55; }
+    .bd-badge { border-radius:20px; font-size:10px; font-weight:700; padding:2px 9px; display:inline-block; }
+
     /* ── Leads Table ── */
     .leads-qf { background:var(--bg-tertiary); border:1px solid var(--border); border-radius:20px; font-size:12px; font-weight:500; color:var(--text-secondary); padding:4px 13px; cursor:pointer; transition:all .15s; white-space:nowrap; }
     .leads-qf:hover { border-color:#7c3aed; color:#a78bfa; }
@@ -941,6 +946,16 @@
     <button class="nav-menu-btn" onclick="navTo('survey')" style="cursor:pointer">📱 Survey</button>
   </div>
 
+  <!-- Reminders -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">🔔 Reminders <span id="bd-nav-badge" style="display:none;background:#ff4d4f;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;vertical-align:middle"></span> <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item" onclick="navTo('birthday')"><span class="nav-dropdown-icon">🎂</span>Birthdays</div>
+      <div class="nav-dropdown-item" onclick="navTo('specialdays')"><span class="nav-dropdown-icon">🎉</span>Special days</div>
+      <div class="nav-dropdown-item" onclick="navTo('whasend')"><span class="nav-dropdown-icon">💬</span>WhatsApp send</div>
+    </div>
+  </div>
+
   <!-- Leads -->
   <div class="nav-menu">
     <button class="nav-menu-btn">🎯 Leads <span class="chevron">▾</span></button>
@@ -1012,6 +1027,9 @@
   <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"><div class="loading"><div class="spinner"></div>Loading members…</div></div>
   <div class="tab-panel"        id="panel-survey"></div>
+  <div class="tab-panel"        id="panel-birthday"></div>
+  <div class="tab-panel"        id="panel-specialdays"></div>
+  <div class="tab-panel"        id="panel-whasend"></div>
 
 </main>
 
@@ -1617,6 +1635,16 @@ async function navTo(name) {
     }
     renderSurveyPage();
 
+  } else if (name === 'birthday' || name === 'whasend') {
+    $('panel-'+name).innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    const { data: bdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    D.leads = bdData || [];
+    if (name === 'birthday') renderBirthdayPage();
+    else renderWhasendPage();
+
+  } else if (name === 'specialdays') {
+    renderSpecialDaysPage();
+
   } else if (name === 'pipeline') {
     // Always fetch fresh leads so metrics + analytics are populated
     const { data: leadsData } = await db.from('leads').select('*').order('created_at', { ascending: false });
@@ -1652,6 +1680,7 @@ async function loadAll() {
     renderStats();
     renderLeads();
     renderMembers();
+    updateReminderBadge();
   } catch(err) {
     console.error('loadAll error:', err);
     $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">Failed to load leads: ${err.message}. <button onclick="_loading=false;loadAll()" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
@@ -2467,6 +2496,7 @@ async function submitLead() {
   renderLeads();
   renderStats();
   refreshAna();
+  updateReminderBadge();
   closeLeadModal();
   showToast(`✅ Lead ${telNo||''} saved!`);
 }
@@ -2803,6 +2833,225 @@ async function submitImport() {
   document.getElementById('import-status').textContent = `✓ Successfully imported ${inserted} leads!`;
   btn.textContent = 'Done ✓';
   setTimeout(closeImportModal, 1500);
+}
+
+/* ── Birthday Reminders ── */
+const PRIO_CFG = {
+  4:{ label:'Urgent', color:'#ff4d4f' },
+  3:{ label:'High',   color:'#fa8c16' },
+  2:{ label:'Medium', color:'#D4A535' },
+  1:{ label:'Low',    color:'#52c41a' },
+  0:{ label:'Info',   color:'#8b949e' },
+};
+
+function getLastContactDaysAgo(lead) {
+  const logs = (lead.logs||[]).filter(lg => !['birthday_snoozed','birthday_skipped'].includes(lg.type));
+  if (!logs.length) return null;
+  const last = new Date(logs[logs.length-1].date);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.floor((today - last) / 86400000);
+}
+
+function getBirthdayState(lead) {
+  const year = new Date().getFullYear();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const logs = (lead.logs||[]).slice().reverse();
+  for (const lg of logs) {
+    if (lg.type === 'birthday_sent'    && lg.year === year) return 'sent';
+    if (lg.type === 'birthday_skipped' && lg.year === year) return 'skipped';
+    if (lg.type === 'birthday_snoozed' && lg.snoozedUntil && new Date(lg.snoozedUntil) > today) return 'snoozed';
+  }
+  return 'pending';
+}
+
+function calcBirthdayPriority(lead) {
+  const days = daysUntilBirthday(lead.dob);
+  if (days === null || days > 30) return null;
+  let p = days === 0 ? 4 : days <= 2 ? 3 : days <= 5 ? 2 : days <= 14 ? 1 : 0;
+  const lc = getLastContactDaysAgo(lead);
+  if (lc === null || lc >= 90) p = 4;
+  else if (lc >= 31) p = Math.min(4, p + 2);
+  else if (lc >= 8)  p = Math.min(4, p + 1);
+  if (lead.temperature === 'hot' || (lead.brands && lead.brands.length > 0)) p = Math.min(4, p + 1);
+  return p;
+}
+
+function updateReminderBadge() {
+  const cnt = (D.leads||[]).filter(l => {
+    if (!l.dob) return false;
+    const p = calcBirthdayPriority(l);
+    return p >= 3 && getBirthdayState(l) === 'pending';
+  }).length;
+  const el = document.getElementById('bd-nav-badge');
+  if (el) { el.style.display = cnt > 0 ? 'inline' : 'none'; el.textContent = cnt; }
+}
+
+let _bdFilter = 'all';
+function setBdFilter(f) { _bdFilter = f; renderBirthdayPage(); }
+
+function renderBirthdayPage() {
+  const leads  = D.leads || [];
+  const year   = new Date().getFullYear();
+
+  const bdItems = leads.filter(l => l.dob && daysUntilBirthday(l.dob) !== null && daysUntilBirthday(l.dob) <= 30)
+    .map(l => ({ l, p: calcBirthdayPriority(l), state: getBirthdayState(l), days: daysUntilBirthday(l.dob), lc: getLastContactDaysAgo(l) }))
+    .filter(x => x.p !== null)
+    .sort((a,b) => b.p - a.p || a.days - b.days);
+
+  const urgentCnt  = bdItems.filter(x => x.p === 4 && x.state === 'pending').length;
+  const pendingCnt = bdItems.filter(x => x.state === 'pending').length;
+  const sentCnt    = bdItems.filter(x => x.state === 'sent').length;
+  const snoozedCnt = bdItems.filter(x => x.state === 'snoozed').length;
+
+  const dayLabel = d => d === 0 ? 'Today 🎂' : d === 1 ? 'Tomorrow' : `In ${d} days`;
+  const lcLabel  = n => n === null ? 'Never contacted' : n === 0 ? 'Today' : `${n}d ago`;
+
+  const visible = bdItems.filter(x => {
+    if (_bdFilter === 'all')     return x.state !== 'skipped';
+    if (_bdFilter === 'sent')    return x.state === 'sent';
+    if (_bdFilter === 'snoozed') return x.state === 'snoozed';
+    return x.state === 'pending' && PRIO_CFG[x.p].label.toLowerCase() === _bdFilter;
+  });
+
+  const cards = visible.map(({l, p, state, days, lc}) => {
+    const pc    = PRIO_CFG[p];
+    const first = (l.name||'').split(' ')[0];
+    const msg   = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+    const lcCol = lc === null || lc >= 90 ? '#ff4d4f' : lc >= 31 ? '#fa8c16' : 'var(--text-muted)';
+    const prodLabel = PRODUCT_OPTS.find(o=>o.v===l.product)?.l || l.product || '—';
+    return `
+    <div class="bd-card${state==='sent'?' bd-sent':''}" id="bdc-${l.id}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="bd-badge" style="background:${pc.color}22;color:${pc.color};border:1px solid ${pc.color}55">${pc.label}</span>
+        <span style="font-size:14px;font-weight:600;color:var(--text-primary)">${l.name}${l.is_muslim?'<span style="font-size:11px;margin-left:4px">☪️</span>':''}</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:${days<=1?'700':'400'};color:${days===0?'#ff4d4f':'var(--text-secondary)'}">Birthday · ${dayLabel(days)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">
+        ${prodLabel} · ${l.area||'—'}
+        &nbsp;·&nbsp;
+        <span style="color:${lcCol}">Last contact: ${lcLabel(lc)}${lc===null||lc>=90?' 🔴':''}</span>
+        ${l.temperature==='hot'?'&nbsp;<span class="temp-hot">🔥 Hot</span>':''}
+      </div>
+      ${state==='sent'?`<div style="font-size:12px;color:#52c41a;padding:6px 10px;background:#52c41a11;border-radius:6px">✓ Birthday greeting sent this year</div>`:''}
+      ${state==='snoozed'?`<div style="font-size:12px;color:#D4A535;padding:6px 10px;background:#D4A53511;border-radius:6px">⏱ Snoozed — will reappear in 3 days</div>`:''}
+      ${state==='pending'?`
+      <input id="bdmsg-${l.id}" class="modal-input" style="font-size:12px;padding:7px 10px;margin-bottom:10px" value="${msg.replace(/"/g,'&quot;')}">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="sendBirthdayGreeting('${l.id}')">📱 Send greeting</button>
+        <button class="btn-cancel" style="font-size:12px;padding:6px 12px" onclick="snoozeBirthdayReminder('${l.id}')">⏱ Snooze (3d)</button>
+        <button class="btn-cancel" style="font-size:12px;padding:6px 12px" onclick="skipBirthdayReminder('${l.id}')">Skip</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  $('panel-birthday').innerHTML = `
+  <div style="max-width:800px;margin:0 auto;padding:24px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary)">🎂 Birthday Reminders</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Personal greetings for each lead</div>
+      </div>
+      ${urgentCnt>0?`<span style="background:#ff4d4f;color:#fff;border-radius:20px;font-size:12px;font-weight:700;padding:4px 14px">${urgentCnt} urgent</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${[['Urgent',urgentCnt,'#ff4d4f'],['Pending',pendingCnt,'#D4A535'],['Sent',sentCnt,'#52c41a'],['Snoozed',snoozedCnt,'#8b949e']].map(([lb,n,c])=>`
+      <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${c}">${lb}</div>
+        <div style="font-size:28px;font-weight:700;color:${c}">${n}</div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">
+      ${['all','urgent','high','medium','low','sent','snoozed'].map(f=>`<button class="leads-qf${_bdFilter===f?' active':''}" onclick="setBdFilter('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${visible.length===0
+        ? '<div style="text-align:center;padding:40px;color:var(--text-muted)">No reminders in this category.</div>'
+        : cards}
+    </div>
+  </div>`;
+  updateReminderBadge();
+}
+
+async function sendBirthdayGreeting(id) {
+  const l = D.leads.find(x=>x.id===id); if (!l) return;
+  const msg = document.getElementById('bdmsg-'+id)?.value || '';
+  if (l.phone) {
+    const clean = (l.phone||'').replace(/[^0-9]/g,'');
+    const num = clean.startsWith('673')?clean:'673'+clean;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+  const newLog = { date:leadsNow(), type:'birthday_sent', year:new Date().getFullYear(), text:'Birthday greeting sent via WhatsApp' };
+  const newLogs = [...(l.logs||[]), newLog];
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',id);
+  if (!error) { l.logs=newLogs; renderBirthdayPage(); showToast('🎂 Birthday greeting sent!'); }
+}
+
+async function snoozeBirthdayReminder(id) {
+  const l = D.leads.find(x=>x.id===id); if (!l) return;
+  const until = new Date(); until.setDate(until.getDate()+3);
+  const newLog = { date:leadsNow(), type:'birthday_snoozed', snoozedUntil:until.toISOString().slice(0,10), text:'Birthday reminder snoozed 3 days' };
+  const newLogs = [...(l.logs||[]), newLog];
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',id);
+  if (!error) { l.logs=newLogs; renderBirthdayPage(); showToast('⏱ Snoozed for 3 days'); }
+}
+
+async function skipBirthdayReminder(id) {
+  const l = D.leads.find(x=>x.id===id); if (!l) return;
+  const newLog = { date:leadsNow(), type:'birthday_skipped', year:new Date().getFullYear(), text:'Birthday reminder skipped for this year' };
+  const newLogs = [...(l.logs||[]), newLog];
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',id);
+  if (!error) { l.logs=newLogs; renderBirthdayPage(); showToast('Birthday skipped for this year'); }
+}
+
+/* ── WhatsApp Send Queue (placeholder) ── */
+function renderWhasendPage() {
+  const leads = D.leads || [];
+  const items = leads.filter(l => {
+    if (!l.dob) return false;
+    const days = daysUntilBirthday(l.dob);
+    return days !== null && days <= 7 && getBirthdayState(l) === 'pending';
+  }).sort((a,b) => daysUntilBirthday(a.dob) - daysUntilBirthday(b.dob));
+
+  const dayLabel = d => d === 0 ? 'Today 🎂' : d === 1 ? 'Tomorrow' : `In ${d} days`;
+
+  const cards = items.map(l => {
+    const first = (l.name||'').split(' ')[0];
+    const msg   = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+    const p     = calcBirthdayPriority(l);
+    const pc    = PRIO_CFG[p||2];
+    return `
+    <div class="bd-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="bd-badge" style="background:${pc.color}22;color:${pc.color};border:1px solid ${pc.color}55">${pc.label}</span>
+        <span style="font-size:14px;font-weight:600;color:var(--text-primary)">${l.name}</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)">Birthday · ${dayLabel(daysUntilBirthday(l.dob))}</span>
+      </div>
+      <input id="wamsg-${l.id}" class="modal-input" style="font-size:12px;padding:7px 10px;margin-bottom:10px" value="${msg.replace(/"/g,'&quot;')}">
+      <button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="sendBirthdayGreeting('${l.id}')">📱 Send WhatsApp</button>
+    </div>`;
+  }).join('');
+
+  $('panel-whasend').innerHTML = `
+  <div style="max-width:800px;margin:0 auto;padding:24px 20px">
+    <div style="margin-bottom:20px">
+      <div style="font-size:20px;font-weight:700;color:var(--text-primary)">💬 WhatsApp Send Queue</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Edit message if needed, then click Send. Opens WhatsApp.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${items.length===0
+        ? '<div style="text-align:center;padding:40px;color:var(--text-muted)">No pending birthday messages in the next 7 days.</div>'
+        : cards}
+    </div>
+  </div>`;
+}
+
+/* ── Special Days (placeholder) ── */
+function renderSpecialDaysPage() {
+  $('panel-specialdays').innerHTML = `
+  <div style="max-width:800px;margin:0 auto;padding:24px 20px">
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px">🎉 Special Days</div>
+    <div style="font-size:13px;color:var(--text-secondary)">Coming soon — Hari Raya, Sultan's Birthday, Purchase Anniversaries & more.</div>
+  </div>`;
 }
 
 /* ── Toast ── */
