@@ -1176,10 +1176,6 @@
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Age</label>
-        <input id="ef-age" class="modal-input" type="number" min="1" max="120" placeholder="e.g. 28">
-      </div>
-      <div class="modal-field">
         <label class="modal-label">District</label>
         <select id="ef-district" class="modal-select" onchange="updateAreaOpts('ef-area','ef-district')">
           <option value="">— select district —</option>
@@ -1234,8 +1230,8 @@
         </select>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Date of Birth</label>
-        <input id="ef-dob" class="modal-input" type="date" max="">
+        <label class="modal-label">Date of Birth <span id="ef-age-display" style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></label>
+        <input id="ef-dob" class="modal-input" type="date" max="" oninput="const a=Math.floor((new Date()-new Date(this.value))/31557600000);document.getElementById('ef-age-display').textContent=(!isNaN(a)&&a>0)?'— Age '+a:''">
       </div>
       <div class="modal-field">
         <label class="modal-label">Lead Date</label>
@@ -2540,7 +2536,6 @@ function openEditLeadModal(id) {
 
   // Pre-fill selects
   document.getElementById('ef-gender').value  = l.gender    || '';
-  document.getElementById('ef-age').value     = /^\d+$/.test(l.age_group||'') ? l.age_group : '';
   const _diKey = AREA_TO_DI[l.area||''] || '';
   document.getElementById('ef-district').value = _diKey;
   updateAreaOpts('ef-area','ef-district');
@@ -2548,8 +2543,10 @@ function openEditLeadModal(id) {
   document.getElementById('ef-product').value     = l.product     || '';
   document.getElementById('ef-source').value      = l.source      || '';
   document.getElementById('ef-stage').value       = l.stage       || 'New';
-  document.getElementById('ef-dob').value         = l.dob         || '';
-  document.getElementById('ef-dob').max           = new Date().toISOString().slice(0,10);
+  document.getElementById('ef-dob').value = l.dob || '';
+  document.getElementById('ef-dob').max   = new Date().toISOString().slice(0,10);
+  const _ageDisp = document.getElementById('ef-age-display');
+  if (_ageDisp && l.dob) { const _a = Math.floor((new Date()-new Date(l.dob))/31557600000); _ageDisp.textContent = (!isNaN(_a)&&_a>0)?'— Age '+_a:''; } else if (_ageDisp) _ageDisp.textContent = l.age_group ? '— Age '+l.age_group : '';
   document.getElementById('ef-temperature').value = l.temperature || '';
   document.getElementById('ef-muslim').checked    = !!l.is_muslim;
 
@@ -2595,7 +2592,7 @@ async function saveEditLead() {
     agent:     document.getElementById('ef-agent').value.trim()     || null,
     name,
     gender:    document.getElementById('ef-gender').value           || null,
-    age_group: (() => { const d=document.getElementById('ef-dob').value; if(d){ const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); } return document.getElementById('ef-age').value||null; })(),
+    age_group: (() => { const d=document.getElementById('ef-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
     dob:       document.getElementById('ef-dob').value              || null,
     area:      document.getElementById('ef-area').value             || null,
     phone:     document.getElementById('ef-phone').value.trim()     || null,
