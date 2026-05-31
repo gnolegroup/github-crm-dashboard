@@ -1094,7 +1094,7 @@
         </div>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Product</label>
+        <label class="modal-label">Interested Product</label>
         <select id="lf-product" class="modal-select">
           <option value="">— select —</option>
           <option value="air">Air Purifier</option>
@@ -1221,7 +1221,7 @@
         </div>
       </div>
       <div class="modal-field">
-        <label class="modal-label">Product</label>
+        <label class="modal-label">Interested Product</label>
         <select id="ef-product" class="modal-select">
           <option value="">— select —</option>
           <option value="air">Air Purifier</option>
@@ -1607,7 +1607,7 @@ function renderSurveyPage() {
             '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Name</th>' +
             '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Phone</th>' +
             '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Area</th>' +
-            '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Product</th>' +
+            '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Interested Product</th>' +
             '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Source</th>' +
             '<th style="text-align:left;padding:8px 10px;color:var(--text-muted);font-weight:600">Date</th>' +
           '</tr></thead>' +
@@ -2383,7 +2383,7 @@ function renderLeads() {
             <col style="width:115px"><col style="width:100px"><col style="width:105px"><col style="width:90px"><col style="width:105px"><col style="width:160px"><col style="width:130px">
           </colgroup>
           <thead><tr style="background:var(--bg-tertiary)">
-            ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Product','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
+            ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Interested Product','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
           </tr></thead>
           <tbody id="leads-body">${rows}</tbody>
         </table>
