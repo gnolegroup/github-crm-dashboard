@@ -1097,27 +1097,27 @@
         <label class="modal-label">Product</label>
         <select id="lf-product" class="modal-select">
           <option value="">— select —</option>
-          <option value="water">Water Purifier</option>
           <option value="air">Air Purifier</option>
-          <option value="mattress">Mattress</option>
-          <option value="aircon">Air Con</option>
-          <option value="outdoor">Outdoor</option>
-          <option value="washer">Washer</option>
-          <option value="treadmill">Treadmill</option>
-          <option value="massage">Massage Chair</option>
-          <option value="hizero">Hizero</option>
+          <option value="aircon">Aircon</option>
           <option value="cooker">Cooker</option>
-          <option value="ps5">PS 5</option>
-          <option value="nintendo">Nintendo Switch OLED</option>
-          <option value="sofa">Sofa</option>
-          <option value="smarttv">Smart TV</option>
-          <option value="spinbike">Spinning Bike</option>
-          <option value="fridge">Refrigerator</option>
-          <option value="washing">Washing Machine</option>
-          <option value="freezer">Freezer</option>
           <option value="dryer">Dryer Only</option>
           <option value="hfcm">Floor Cleaner</option>
+          <option value="freezer">Freezer</option>
+          <option value="hizero">Hizero</option>
+          <option value="massage">Massage Chair</option>
+          <option value="mattress">Mattress</option>
+          <option value="nintendo">Nintendo Switch OLED</option>
+          <option value="outdoor">Outdoor Filter</option>
+          <option value="ps5">PS 5</option>
+          <option value="fridge">Refrigerator</option>
+          <option value="smarttv">Smart TV</option>
+          <option value="sofa">Sofa</option>
+          <option value="spinbike">Spinning Bike</option>
           <option value="steamiron">Steam Iron</option>
+          <option value="treadmill">Treadmill</option>
+          <option value="washer">Washer Dryer</option>
+          <option value="washing">Washing Machine</option>
+          <option value="water">Water Purifier</option>
         </select>
       </div>
       <div class="modal-field">
@@ -1224,27 +1224,27 @@
         <label class="modal-label">Product</label>
         <select id="ef-product" class="modal-select">
           <option value="">— select —</option>
-          <option value="water">Water Purifier</option>
           <option value="air">Air Purifier</option>
-          <option value="mattress">Mattress</option>
-          <option value="aircon">Air Con</option>
-          <option value="outdoor">Outdoor</option>
-          <option value="washer">Washer</option>
-          <option value="treadmill">Treadmill</option>
-          <option value="massage">Massage Chair</option>
-          <option value="hizero">Hizero</option>
+          <option value="aircon">Aircon</option>
           <option value="cooker">Cooker</option>
-          <option value="ps5">PS 5</option>
-          <option value="nintendo">Nintendo Switch OLED</option>
-          <option value="sofa">Sofa</option>
-          <option value="smarttv">Smart TV</option>
-          <option value="spinbike">Spinning Bike</option>
-          <option value="fridge">Refrigerator</option>
-          <option value="washing">Washing Machine</option>
-          <option value="freezer">Freezer</option>
           <option value="dryer">Dryer Only</option>
           <option value="hfcm">Floor Cleaner</option>
+          <option value="freezer">Freezer</option>
+          <option value="hizero">Hizero</option>
+          <option value="massage">Massage Chair</option>
+          <option value="mattress">Mattress</option>
+          <option value="nintendo">Nintendo Switch OLED</option>
+          <option value="outdoor">Outdoor Filter</option>
+          <option value="ps5">PS 5</option>
+          <option value="fridge">Refrigerator</option>
+          <option value="smarttv">Smart TV</option>
+          <option value="sofa">Sofa</option>
+          <option value="spinbike">Spinning Bike</option>
           <option value="steamiron">Steam Iron</option>
+          <option value="treadmill">Treadmill</option>
+          <option value="washer">Washer Dryer</option>
+          <option value="washing">Washing Machine</option>
+          <option value="water">Water Purifier</option>
         </select>
       </div>
       <div class="modal-field">
@@ -2165,27 +2165,27 @@ const PLAT_LABEL = { tk:'TikTok', ig:'Instagram', fb:'Facebook', wa:'WhatsApp' }
 const SRC_ONLINE_SET = new Set(['TikTok','Instagram','Facebook','WhatsApp']);
 const SRC_OPTS_HTML = `<option value="">— select —</option><optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup><optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>`;
 const PRODUCT_OPTS = [
-  { v:'water',     l:'Water Purifier',          c:'#378ADD', icon:'droplet'        },
   { v:'air',       l:'Air Purifier',            c:'#1D9E75', icon:'wind'           },
-  { v:'mattress',  l:'Mattress',                c:'#7F77DD', icon:'bed'            },
   { v:'aircon',    l:'Aircon',                  c:'#85B7EB', icon:'snowflake'      },
-  { v:'outdoor',   l:'Outdoor Filter',          c:'#3DAB6F', icon:'filter'         },
-  { v:'washer',    l:'Washer Dryer',            c:'#D4537E', icon:'wash'           },
-  { v:'treadmill', l:'Treadmill',               c:'#D85A30', icon:'run'            },
-  { v:'massage',   l:'Massage Chair',           c:'#BA7517', icon:'armchair'       },
-  { v:'hizero',    l:'Hizero',                  c:'#534AB7', icon:'robot'          },
   { v:'cooker',    l:'Cooker',                  c:'#888780', icon:'flame'          },
-  { v:'ps5',       l:'PS 5',                    c:'#003791', icon:'device-gamepad' },
-  { v:'nintendo',  l:'Nintendo Switch OLED',    c:'#e4000f', icon:'device-gamepad' },
-  { v:'sofa',      l:'Sofa',                    c:'#8B5A2B', icon:'armchair'       },
-  { v:'smarttv',   l:'Smart TV',                c:'#2d5f8a', icon:'device-tv'      },
-  { v:'spinbike',  l:'Spinning Bike',           c:'#e67e22', icon:'bike'           },
-  { v:'fridge',    l:'Refrigerator',            c:'#3498db', icon:'snowflake'      },
-  { v:'washing',   l:'Washing Machine',         c:'#2980b9', icon:'wash'           },
-  { v:'freezer',   l:'Freezer',                 c:'#a9d6e5', icon:'snowflake'      },
   { v:'dryer',     l:'Dryer Only',              c:'#f39c12', icon:'wind'           },
   { v:'hfcm',      l:'Floor Cleaner',           c:'#27ae60', icon:'bucket'         },
+  { v:'freezer',   l:'Freezer',                 c:'#a9d6e5', icon:'snowflake'      },
+  { v:'hizero',    l:'Hizero',                  c:'#534AB7', icon:'robot'          },
+  { v:'massage',   l:'Massage Chair',           c:'#BA7517', icon:'armchair'       },
+  { v:'mattress',  l:'Mattress',                c:'#7F77DD', icon:'bed'            },
+  { v:'nintendo',  l:'Nintendo Switch OLED',    c:'#e4000f', icon:'device-gamepad' },
+  { v:'outdoor',   l:'Outdoor Filter',          c:'#3DAB6F', icon:'filter'         },
+  { v:'ps5',       l:'PS 5',                    c:'#003791', icon:'device-gamepad' },
+  { v:'fridge',    l:'Refrigerator',            c:'#3498db', icon:'snowflake'      },
+  { v:'smarttv',   l:'Smart TV',                c:'#2d5f8a', icon:'device-tv'      },
+  { v:'sofa',      l:'Sofa',                    c:'#8B5A2B', icon:'armchair'       },
+  { v:'spinbike',  l:'Spinning Bike',           c:'#e67e22', icon:'bike'           },
   { v:'steamiron', l:'Steam Iron',              c:'#8e44ad', icon:'wind'           },
+  { v:'treadmill', l:'Treadmill',               c:'#D85A30', icon:'run'            },
+  { v:'washer',    l:'Washer Dryer',            c:'#D4537E', icon:'wash'           },
+  { v:'washing',   l:'Washing Machine',         c:'#2980b9', icon:'wash'           },
+  { v:'water',     l:'Water Purifier',          c:'#378ADD', icon:'droplet'        },
 ];
 const PRODUCT_OPTS_HTML = `<option value="">—</option>` + PRODUCT_OPTS.map(p=>`<option value="${p.v}">${p.l}</option>`).join('');
 
