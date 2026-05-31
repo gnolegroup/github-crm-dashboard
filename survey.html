@@ -16,6 +16,10 @@
 
     .progress-bar  { height: 4px; background: #eee; }
     .progress-fill { height: 100%; background: linear-gradient(90deg,#F6DF72,#D4A535); transition: width .4s ease; width: 0%; }
+    .event-banner { background:linear-gradient(135deg,#FFF8E7,#FFF3D0); border-bottom:2px solid #D4A535; padding:10px 16px; text-align:center; font-size:13px; font-weight:600; color:#9B6B1A; display:none; }
+    .mode-toggle-wrap { background:#fff; padding:12px 16px; display:flex; gap:8px; border-bottom:1px solid #eee; }
+    .mode-btn { flex:1; padding:10px; border:1.5px solid #D4A535; border-radius:10px; background:#fff; color:#9B6B1A; font-weight:600; font-size:14px; cursor:pointer; text-align:center; transition:all .2s; }
+    .mode-btn.active { background:#D4A535; color:#5a3a00; }
 
     .survey-card { background: #fff; border-radius: 16px; margin: 20px 16px 0; padding: 24px 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
 
@@ -65,10 +69,22 @@
   <div class="survey-sub">Help us serve you better &middot; Bantu kami melayani anda dengan lebih baik</div>
 </div>
 <div class="progress-bar" id="pbar"><div class="progress-fill" id="progress-fill"></div></div>
+<div id="event-banner" class="event-banner"></div>
+<div class="mode-toggle-wrap">
+  <button type="button" class="mode-btn active" id="mode-quick" onclick="setMode('quick')">⚡ Quick Mode</button>
+  <button type="button" class="mode-btn" id="mode-full" onclick="setMode('full')">📋 Full Mode</button>
+</div>
 
 <form id="survey-form" novalidate>
 
   <div class="survey-card">
+    <div class="field" id="f-agent-field">
+      <label class="field-label">
+        <span class="en">Sales Agent</span>
+        <span class="ms">Ejen Jualan</span>
+      </label>
+      <input type="text" id="i-agent" placeholder="Agent name">
+    </div>
     <div class="field" id="f-name">
       <label class="field-label">
         <span class="en">Full Name <span class="req">*</span></span>
@@ -94,7 +110,7 @@
     </div>
   </div>
 
-  <div class="survey-card">
+  <div class="survey-card" id="card-personal">
     <div class="field">
       <label class="field-label">
         <span class="en">Gender</span>
@@ -172,7 +188,7 @@
       </div>
       <div class="err-hint">Please select a product &middot; Sila pilih produk</div>
     </div>
-    <div class="field">
+    <div class="field" id="f-budget-wrap">
       <label class="field-label">
         <span class="en">Monthly Budget (BND)</span>
         <span class="ms">Bajet Bulanan (BND)</span>
@@ -187,7 +203,7 @@
     </div>
   </div>
 
-  <div class="survey-card">
+  <div class="survey-card" id="card-extra">
     <div class="field">
       <label class="field-label">
         <span class="en">How did you hear about us?</span>
@@ -242,6 +258,27 @@ const SUPABASE_URL = 'https://zpvmqbvwmftkrkfxsblm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwdm1xYnZ3bWZ0a3JrZnhzYmxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTM5NDksImV4cCI6MjA5NDk4OTk0OX0.X1yirvyOZJrxRHNwRqPQxc7zZZsR8ww-QLaGXoByooc';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// URL params for event tracking
+const _urlP      = new URLSearchParams(window.location.search);
+const _actType   = _urlP.get('type')  || '';
+const _eventName = _urlP.get('name')  || '';
+const _agentParam= _urlP.get('agent') || '';
+
+let _surveyMode = 'quick';
+const ACT_TYPE_LABELS = { event:'Event', roadshow:'Roadshow', d2d:'Door to Door', walkin:'Walk-in', random:'Random Survey' };
+const ACT_SOURCE_MAP  = { event:'CF', roadshow:'Roadshow', d2d:'Walk-in', walkin:'Walk-in', random:'Survey' };
+
+function setMode(mode) {
+  _surveyMode = mode;
+  document.getElementById('mode-quick').classList.toggle('active', mode === 'quick');
+  document.getElementById('mode-full').classList.toggle('active', mode === 'full');
+  ['f-email','card-personal','f-budget-wrap','card-extra'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = mode === 'quick' ? 'none' : '';
+  });
+  updateProgress();
+}
+
 const SURVEY_AREAS = {
   bm: ['Anggerak Desa','Ban','Batong','Bebatik','Bengkurong','Beribi','Burong Pingai Ayer','Burong Pingai Berakas','Bunut','Delima','Gadong','Jangsak','Jaya Setia','Jerudong','Junjongan','Kapok','Kasat','Katok','Kianggeh','Kiarong','Kilanas','Kiulap','Kota Batu','Kuala Lurah','Kulapis','Kumbang Pasang','Lambak Kanan','Lambak Kiri','Limau Manis','Lugu','Lumapas','Mabohai','Madang','Madewa','Manggis','Masin','Mata-Mata','Menglait','Menunggul','Meragang','Muara Town','Mulaut','Panchor Murai','Parit','Pasir Berakas','Pengkalan Batu','Peramu','Pulaie','Pusar Ulak','Pusat Bandar','Rimba','Saba','Sabun','Salambigar','Selayun','Sengkurong','Serasa','Serusop','Subok','Sungai Akar','Sungai Besar','Sungai Bunga','Sungai Hanching','Sungai Kebun','Sungai Kedayan','Sungai Tilong','Tamoi','Tanjong Nangka','Tanjung Bunut','Tasek Lama','Tasek Meradun','Telanai','Tumasek','Tungku','Wasan'],
   tu: ['Bukit Beruang','Bukit Udal','Keriam','Kiudang','Kupang','Lamunin','Luagan Dudok','Penanjong','Rambai','Tanjong Maya','Telisai','Tutong Kem','Tutong Town'],
@@ -275,14 +312,14 @@ function updateProgress() {
     () => document.getElementById('i-name').value.trim(),
     () => document.getElementById('i-phone').value.trim(),
     () => document.getElementById('i-email').value.trim(),
-    () => getPill('pg-gender'),
-    () => document.getElementById('i-dob').value,
+    () => _surveyMode === 'full' ? getPill('pg-gender') : true,
+    () => _surveyMode === 'full' ? document.getElementById('i-dob').value : true,
     () => document.getElementById('i-district').value,
     () => document.getElementById('i-area').value,
     () => getPill('pg-product'),
-    () => getPill('pg-budget'),
-    () => getPill('pg-source'),
-    () => document.getElementById('i-remarks').value.trim(),
+    () => _surveyMode === 'full' ? getPill('pg-budget') : true,
+    () => _surveyMode === 'full' ? getPill('pg-source') : true,
+    () => _surveyMode === 'full' ? document.getElementById('i-remarks').value.trim() : true,
   ];
   const filled = checks.filter(fn => fn()).length;
   document.getElementById('progress-fill').style.width = Math.round(filled / checks.length * 100) + '%';
@@ -322,13 +359,15 @@ document.getElementById('survey-form').addEventListener('submit', async function
 
   const email   = document.getElementById('i-email').value.trim();
   const budget  = getPill('pg-budget');
-  const remarks = document.getElementById('i-remarks').value.trim();
-  const source  = getPill('pg-source') || 'Survey';
+  const remarks = _surveyMode === 'full' ? document.getElementById('i-remarks').value.trim() : '';
+  const source  = _surveyMode === 'full' ? (getPill('pg-source') || ACT_SOURCE_MAP[_actType] || 'Survey') : (ACT_SOURCE_MAP[_actType] || 'Survey');
+  const agentVal = document.getElementById('i-agent').value.trim() || _agentParam || null;
 
   const noteParts = [];
-  if (email)   noteParts.push('Email: ' + email);
-  if (budget)  noteParts.push('Budget: ' + budget);
-  if (remarks) noteParts.push('Remarks: ' + remarks);
+  if (email)         noteParts.push('Email: ' + email);
+  if (budget)        noteParts.push('Budget: ' + budget);
+  if (remarks)       noteParts.push('Remarks: ' + remarks);
+  if (_eventName)    noteParts.push('Event: ' + _eventName);
 
   const payload = {
     name:      document.getElementById('i-name').value.trim(),
@@ -338,11 +377,14 @@ document.getElementById('survey-form').addEventListener('submit', async function
     dob:       document.getElementById('i-dob').value || null,
     area:      document.getElementById('i-area').value || null,
     product:   getPill('pg-product') || null,
-    source:    source,
-    stage:     'New',
-    lead_date: new Date().toISOString().slice(0,10),
-    notes:     noteParts.length ? noteParts.join(' | ') : null,
-    logs:      [{ date: new Date().toLocaleString('en-GB'), stage: 'New', type: 'create', text: 'Submitted via Market Survey' }],
+    agent:         agentVal,
+    source:        source,
+    activity_type: _actType   || null,
+    event_name:    _eventName || null,
+    stage:         'New',
+    lead_date:     new Date().toISOString().slice(0,10),
+    notes:         noteParts.length ? noteParts.join(' | ') : null,
+    logs:          [{ date: new Date().toLocaleString('en-GB'), stage: 'New', type: 'create', text: `Submitted via ${ACT_TYPE_LABELS[_actType]||'Market Survey'}${_eventName?' — '+_eventName:''}` }],
   };
 
   const { error } = await db.from('leads').insert([payload]);
@@ -364,6 +406,16 @@ document.getElementById('survey-form').addEventListener('submit', async function
 
 // Set DOB max to today so future dates can't be selected
 document.getElementById('i-dob').max = new Date().toISOString().slice(0,10);
+
+// Init: event banner, agent pre-fill, default Quick Mode
+if (_eventName) {
+  const banner = document.getElementById('event-banner');
+  const typeLabel = ACT_TYPE_LABELS[_actType] || _actType || '';
+  banner.textContent = (typeLabel ? typeLabel + ' · ' : '') + '📍 ' + _eventName;
+  banner.style.display = 'block';
+}
+if (_agentParam) document.getElementById('i-agent').value = _agentParam;
+setMode('quick');
 </script>
 </body>
 </html>
