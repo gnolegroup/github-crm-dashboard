@@ -1083,8 +1083,9 @@
       </div>
       <div class="modal-field">
         <label class="modal-label">Phone</label>
-        <input id="lf-phone" class="modal-input" type="text" placeholder="+673-8xxxxxx">
+        <input id="lf-phone" class="modal-input" type="text" placeholder="+673-8xxxxxx" oninput="checkDuplicatePhone()">
       </div>
+      <div id="lf-dup-warn" style="display:none;grid-column:1/-1;background:#ff4d4f18;border:1px solid #ff4d4f44;border-radius:8px;padding:10px 14px;font-size:12px;color:#ff4d4f;line-height:1.6"></div>
       <div class="modal-field full">
         <label class="modal-label">Existing User of</label>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="lf-brands">
@@ -1330,6 +1331,15 @@
   </div>
 </div>
 
+<!-- ── Duplicate Scan Modal ──────────────── -->
+<div id="dup-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="width:640px;max-height:80vh;overflow-y:auto">
+    <div class="modal-title">🔍 Duplicate Leads <button class="modal-close" onclick="document.getElementById('dup-modal').style.display='none'">✕</button></div>
+    <div id="dup-content" style="margin-bottom:12px"></div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('dup-modal').style.display='none'">Close</button></div>
+  </div>
+</div>
+
 <!-- ── Import CSV Modal ───────────────────── -->
 <div id="import-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeImportModal()">
   <div class="modal-box" style="width:600px">
@@ -1357,7 +1367,8 @@
 
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
-      <button id="import-submit" class="btn-save" onclick="submitImport()" disabled>Import Leads</button>
+      <button id="import-skip-btn" class="btn-cancel" style="display:none;color:#ff4d4f;border-color:#ff4d4f55" onclick="submitImport(true)">Skip duplicates & Import</button>
+      <button id="import-submit" class="btn-save" onclick="submitImport(false)" disabled>Import All</button>
     </div>
   </div>
 </div>
@@ -2370,6 +2381,7 @@ function renderLeads() {
       </div>
       <div class="leads-filters">
         <input type="text" placeholder="Search name, L-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
+        <button class="btn-cancel" style="font-size:12px;padding:5px 12px;white-space:nowrap" onclick="scanDuplicates()">🔍 Scan duplicates</button>
         <select id="leads-f-stage" onchange="filterLeads()">
           <option value="">All stages</option>
           <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
@@ -2854,8 +2866,18 @@ function handleImportFile(file) {
         </table>
       </div>`;
 
-    document.getElementById('import-status').textContent =
-      `✓ Found ${_importRows.length} lead${_importRows.length!==1?'s':''} ready to import${_importRows.length>5?' (showing first 5)':''}.`;
+    const existingPhones = new Set((D.leads||[]).map(l=>normalizePhone(l.phone)).filter(p=>p.length>=6));
+    const dupCount = _importRows.filter(r=>existingPhones.has(normalizePhone(r.phone||''))).length;
+    const skipBtn  = document.getElementById('import-skip-btn');
+    if (dupCount > 0) {
+      document.getElementById('import-status').innerHTML =
+        `✓ Found <strong>${_importRows.length}</strong> lead${_importRows.length!==1?'s':''} · <span style="color:#ff4d4f"><strong>${dupCount}</strong> duplicate phone${dupCount>1?'s':''} detected</span>.`;
+      if (skipBtn) { skipBtn.style.display='inline-block'; skipBtn.textContent=`Skip ${dupCount} duplicate${dupCount>1?'s':''} & Import`; }
+    } else {
+      document.getElementById('import-status').textContent =
+        `✓ Found ${_importRows.length} lead${_importRows.length!==1?'s':''} ready to import${_importRows.length>5?' (showing first 5)':''}.`;
+      if (skipBtn) skipBtn.style.display='none';
+    }
     document.getElementById('import-submit').disabled = _importRows.length === 0;
   };
 
@@ -2863,18 +2885,28 @@ function handleImportFile(file) {
   else reader.readAsText(file);
 }
 
-async function submitImport() {
+async function submitImport(skipDups=false) {
   if (_importRows.length === 0) return;
   const btn = document.getElementById('import-submit');
   btn.disabled = true;
+
+  // Duplicate check
+  let rowsToInsert = _importRows;
+  if (skipDups) {
+    const existingPhones = new Set((D.leads||[]).map(l=>normalizePhone(l.phone)).filter(p=>p.length>=6));
+    const before = rowsToInsert.length;
+    rowsToInsert = rowsToInsert.filter(r => !existingPhones.has(normalizePhone(r.phone||'')));
+    showToast(`⏭ Skipped ${before-rowsToInsert.length} duplicates`, 3000);
+  }
+
   btn.textContent = 'Importing…';
-  document.getElementById('import-status').textContent = `Saving ${_importRows.length} leads to Supabase…`;
+  document.getElementById('import-status').textContent = `Saving ${rowsToInsert.length} leads to Supabase…`;
 
   // Insert in batches of 50
   const BATCH = 50;
   let inserted = 0;
-  for (let i = 0; i < _importRows.length; i += BATCH) {
-    const batch = _importRows.slice(i, i + BATCH);
+  for (let i = 0; i < rowsToInsert.length; i += BATCH) {
+    const batch = rowsToInsert.slice(i, i + BATCH);
     const { error } = await db.from('leads').insert(batch);
     if (error) {
       document.getElementById('import-status').textContent = `⚠ Error at row ${i+1}: ${error.message}`;
@@ -2892,6 +2924,73 @@ async function submitImport() {
   document.getElementById('import-status').textContent = `✓ Successfully imported ${inserted} leads!`;
   btn.textContent = 'Done ✓';
   setTimeout(closeImportModal, 1500);
+}
+
+/* ── Duplicate Detection ── */
+function normalizePhone(p) { return (p||'').replace(/[^0-9]/g,''); }
+
+function checkDuplicatePhone() {
+  const raw  = document.getElementById('lf-phone').value.trim();
+  const ph   = normalizePhone(raw);
+  const warn = document.getElementById('lf-dup-warn');
+  if (!ph || ph.length < 6) { warn.style.display='none'; return; }
+  const found = (D.leads||[]).filter(l => {
+    const ep = normalizePhone(l.phone);
+    return ep.length >= 6 && (ep === ph || ep.endsWith(ph) || ph.endsWith(ep));
+  });
+  if (found.length > 0) {
+    const l = found[0];
+    warn.style.display = 'block';
+    warn.innerHTML = `⚠️ <strong>${l.name}</strong> already exists with this number
+      &nbsp;<span style="background:var(--bg-tertiary);border-radius:4px;padding:1px 6px;font-size:11px">${l.stage||'New'}</span>&nbsp;
+      · Added ${l.lead_date||'—'} · ${l.source||'—'}
+      <br><span style="color:var(--text-muted)">You can still save as a new lead if this is a different enquiry.</span>
+      <button onclick="closeLeadModal();setTimeout(()=>openEditLeadModal('${l.id}'),100)" style="margin-left:10px;color:#a78bfa;background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;text-decoration:underline">View existing →</button>`;
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+function scanDuplicates() {
+  const leads = D.leads || [];
+  const phoneMap = {};
+  leads.forEach(l => {
+    const p = normalizePhone(l.phone);
+    if (p.length >= 6) { if (!phoneMap[p]) phoneMap[p]=[]; phoneMap[p].push(l); }
+  });
+  const groups = Object.values(phoneMap).filter(g=>g.length>1);
+
+  if (groups.length === 0) { showToast('✅ No duplicates found — your data is clean!', 4000); return; }
+
+  document.getElementById('dup-content').innerHTML =
+    `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Found <strong style="color:#ff4d4f">${groups.length} group${groups.length>1?'s':''}</strong> of duplicate phone numbers. Review and remove as needed.</div>` +
+    groups.map(group => `
+    <div style="background:var(--bg-secondary);border:0.5px solid #ff4d4f44;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:#ff4d4f;margin-bottom:8px">⚠️ Same phone: ${group[0].phone||'—'}</div>
+      ${group.map(l=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border);flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${l.name}</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${l.stage||'—'} · ${l.lead_date||'—'} · ${l.source||'—'} · ${l.area||'—'}</span>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn-cancel" style="font-size:11px;padding:3px 10px" onclick="document.getElementById('dup-modal').style.display='none';setTimeout(()=>openEditLeadModal('${l.id}'),100)">View</button>
+          <button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f55" onclick="confirmDeleteDup('${l.id}','${l.name.replace(/'/g,'')}')">Remove</button>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('dup-modal').style.display = 'flex';
+}
+
+async function confirmDeleteDup(id, name) {
+  if (!confirm(`Remove "${name}" from leads? This cannot be undone.`)) return;
+  const { error } = await db.from('leads').delete().eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  D.leads = D.leads.filter(l => l.id !== id);
+  renderLeads(); renderStats();
+  showToast(`✅ "${name}" removed.`);
+  scanDuplicates(); // refresh the modal
 }
 
 /* ── Follow-Up Reminder System ── */
