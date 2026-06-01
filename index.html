@@ -937,9 +937,9 @@
     <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('members')"><span class="nav-dropdown-icon">👥</span>All Members</div>
-      <div class="nav-dropdown-item" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
+      <div class="nav-dropdown-item" id="nav-add-member" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
       <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item" onclick="showToast('🔒 Roles & Permissions — coming soon')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
+      <div class="nav-dropdown-item" id="nav-roles" onclick="showToast('🔒 Roles & Permissions — coming soon')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
     </div>
   </div>
 
@@ -966,7 +966,7 @@
       <div class="nav-dropdown-item" onclick="navTo('leads')"><span class="nav-dropdown-icon">📋</span>All Leads</div>
       <div class="nav-dropdown-item" onclick="openLeadModal()"><span class="nav-dropdown-icon">➕</span>Add Lead</div>
       <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item" onclick="openImportModal()"><span class="nav-dropdown-icon">📥</span>Import Excel / CSV</div>
+      <div class="nav-dropdown-item" id="nav-import" onclick="openImportModal()"><span class="nav-dropdown-icon">📥</span>Import Excel / CSV</div>
     </div>
   </div>
 
@@ -1430,10 +1430,27 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let D = { currentRole:'Admin', currentAgentName:'', currentEmail:'' };
 const ADMIN_ROLES = ['Admin','Manager'];
-function isAdmin() { return ADMIN_ROLES.includes(D.currentRole); }
+function isAdmin()        { return ADMIN_ROLES.includes(D.currentRole); }
+function canEditLead(l)   { return isAdmin() || !l.agent || l.agent === D.currentAgentName; }
+function canDeleteLead()  { return isAdmin(); }
+function canImport()      { return ['Admin','Manager','Senior Agent'].includes(D.currentRole); }
+function canAddMember()   { return D.currentRole === 'Admin'; }
+
 function filterLeadsByRole(leads) {
-  if (isAdmin() || !D.currentAgentName) return leads;
-  return leads.filter(l => l.agent === D.currentAgentName);
+  if (isAdmin() || D.currentRole === 'Senior Agent') return leads; // Admin/Manager/Sr.Agent see all
+  if (!D.currentAgentName) return leads;
+  return leads.filter(l => l.agent === D.currentAgentName); // Agent sees own only
+}
+
+function applyPermissions() {
+  const mgNav     = document.getElementById('nav-manager-view');
+  const importNav = document.getElementById('nav-import');
+  const addMemNav = document.getElementById('nav-add-member');
+  const rolesNav  = document.getElementById('nav-roles');
+  if (mgNav)     mgNav.style.display     = isAdmin()        ? '' : 'none';
+  if (importNav) importNav.style.display = canImport()      ? '' : 'none';
+  if (addMemNav) addMemNav.style.display = canAddMember()   ? '' : 'none';
+  if (rolesNav)  rolesNav.style.display  = canAddMember()   ? '' : 'none';
 }
 
 /* ── Auth ── */
@@ -1497,10 +1514,7 @@ async function showApp(user) {
     badge.style.background  = isAdmin() ? '#D4A535' : '#7F77DD';
   }
 
-  // Hide Manager View for non-admins
-  const mgNav = document.getElementById('nav-manager-view');
-  if (mgNav) mgNav.style.display = isAdmin() ? '' : 'none';
-
+  applyPermissions();
   startClock();
 }
 
@@ -2361,9 +2375,7 @@ function renderLeads() {
           <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
           <td>
             <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-              <button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead">
-                <i class="ti ti-pencil" style="font-size:11px"></i>
-              </button>
+              ${canEditLead(l)?`<button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
               <button class="wa-btn" onclick="openWAModal('${l.id}')">
                 <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
               </button>
@@ -2405,8 +2417,9 @@ function renderLeads() {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div class="table-title">Lead Tracker <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} leads</span></div>
-        ${!isAdmin()&&D.currentAgentName?`<span style="background:#7F77DD22;color:#a78bfa;border:1px solid #7F77DD44;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">🔒 Showing your leads only</span>`:''}
-        ${isAdmin()?`<span style="background:#D4A53522;color:#D4A535;border:1px solid #D4A53544;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">👑 Admin — All leads</span>`:''}
+        ${D.currentRole==='Agent'&&D.currentAgentName?`<span style="background:#7F77DD22;color:#a78bfa;border:1px solid #7F77DD44;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">🔒 Your leads only</span>`:''}
+        ${D.currentRole==='Senior Agent'?`<span style="background:#1D9E7522;color:#1D9E75;border:1px solid #1D9E7544;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">⭐ All leads — own edits only</span>`:''}
+        ${isAdmin()?`<span style="background:#D4A53522;color:#D4A535;border:1px solid #D4A53544;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">👑 ${D.currentRole} — Full access</span>`:''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
         <button class="leads-qf${_leadsQF==='all'?' active':''}"      onclick="setLeadsQF(this,'all')">All</button>
@@ -2612,6 +2625,7 @@ let _editLeadId = null;
 function openEditLeadModal(id) {
   const l = D.leads.find(x => x.id === id);
   if (!l) return;
+  if (!canEditLead(l)) { showToast('⚠ You can only edit your own leads'); return; }
   _editLeadId = id;
 
   // Show TEL / Sales No
@@ -2830,6 +2844,7 @@ async function addRemark() {
 let _importRows = [];
 
 function openImportModal() {
+  if (!canImport()) { showToast('⚠ Import is available for Admin, Manager & Senior Agent only'); return; }
   _importRows = [];
   document.getElementById('import-preview').innerHTML = '';
   document.getElementById('import-status').textContent = '';
@@ -3019,6 +3034,7 @@ function scanDuplicates() {
 }
 
 async function confirmDeleteDup(id, name) {
+  if (!canDeleteLead()) { showToast('⚠ Only Admin & Manager can delete leads'); return; }
   if (!confirm(`Remove "${name}" from leads? This cannot be undone.`)) return;
   const { error } = await db.from('leads').delete().eq('id', id);
   if (error) { showToast('⚠ ' + error.message, 4000); return; }
@@ -4025,6 +4041,7 @@ function showToast(msg, duration) {
 
 /* ── Add Member Modal ── */
 function openMemberModal() {
+  if (!canAddMember()) { showToast('⚠ Only Admin can add team members'); return; }
   ['mf-name','mf-phone','mf-email'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('mf-role').value   = '';
   document.getElementById('mf-status').value = 'active';
