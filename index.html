@@ -915,6 +915,7 @@
   <div class="header-actions">
     <span class="badge-live">Live · Supabase</span>
     <div class="user-chip" id="user-chip"></div>
+    <span id="role-badge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#7F77DD;color:#fff;margin-left:4px"></span>
     <button class="signout-btn" onclick="signOut()">Sign out</button>
   </div>
 </header>
@@ -974,7 +975,7 @@
     <button class="nav-menu-btn">📊 Report <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
       <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📈</span>Statistics</div>
-      <div class="nav-dropdown-item" onclick="navTo('manager')"><span class="nav-dropdown-icon">🏆</span>Manager View</div>
+      <div class="nav-dropdown-item" id="nav-manager-view" onclick="navTo('manager')"><span class="nav-dropdown-icon">🏆</span>Manager View</div>
     </div>
   </div>
 
@@ -1427,7 +1428,13 @@ const SUPABASE_URL = 'https://zpvmqbvwmftkrkfxsblm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwdm1xYnZ3bWZ0a3JrZnhzYmxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTM5NDksImV4cCI6MjA5NDk4OTk0OX0.X1yirvyOZJrxRHNwRqPQxc7zZZsR8ww-QLaGXoByooc';
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let D = {};
+let D = { currentRole:'Admin', currentAgentName:'', currentEmail:'' };
+const ADMIN_ROLES = ['Admin','Manager'];
+function isAdmin() { return ADMIN_ROLES.includes(D.currentRole); }
+function filterLeadsByRole(leads) {
+  if (isAdmin() || !D.currentAgentName) return leads;
+  return leads.filter(l => l.agent === D.currentAgentName);
+}
 
 /* ── Auth ── */
 async function signInWithEmail() {
@@ -1465,16 +1472,35 @@ function showLogin() {
   document.getElementById('app-main').style.display = 'none';
 }
 
-function showApp(user) {
+async function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-header').style.display = 'flex';
   document.getElementById('app-nav').style.display = 'flex';
   document.getElementById('app-main').style.display = 'block';
   document.getElementById('user-chip').textContent = user.email;
+
+  // Fetch role from members table
+  const { data: member } = await db.from('members').select('*').eq('email', user.email).maybeSingle();
+  D.currentRole      = member?.role  || 'Agent';
+  D.currentAgentName = member?.name  || '';
+  D.currentEmail     = user.email;
+
   // Nav bar user + clock
-  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-  $('nav-user').textContent = name;
-  $('nav-avatar').textContent = name.charAt(0).toUpperCase();
+  const displayName = member?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  $('nav-user').textContent   = displayName;
+  $('nav-avatar').textContent = displayName.charAt(0).toUpperCase();
+
+  // Role badge
+  const badge = document.getElementById('role-badge');
+  if (badge) {
+    badge.textContent       = D.currentRole;
+    badge.style.background  = isAdmin() ? '#D4A535' : '#7F77DD';
+  }
+
+  // Hide Manager View for non-admins
+  const mgNav = document.getElementById('nav-manager-view');
+  if (mgNav) mgNav.style.display = isAdmin() ? '' : 'none';
+
   startClock();
 }
 
@@ -1493,7 +1519,7 @@ function startClock() {
 async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session?.user) {
-    showApp(session.user);
+    await showApp(session.user);
     const last = localStorage.getItem('crm-page') || 'home';
     navTo(last);
   } else {
@@ -1503,9 +1529,10 @@ async function init() {
 
 db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
-    showApp(session.user);
-    const last = localStorage.getItem('crm-page') || 'home';
-    navTo(last);
+    showApp(session.user).then(() => {
+      const last = localStorage.getItem('crm-page') || 'home';
+      navTo(last);
+    });
   } else if (event === 'SIGNED_OUT') {
     showLogin();
   }
@@ -1646,7 +1673,7 @@ async function navTo(name) {
       $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ ${error.message} <button onclick="navTo('leads')" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
       return;
     }
-    D.leads = data || [];
+    D.leads = filterLeadsByRole(data || []);
     renderStats();
     try {
       renderLeads();
@@ -1669,27 +1696,27 @@ async function navTo(name) {
     if (!D.leads || D.leads.length === 0) {
       $('panel-survey').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
       const { data } = await db.from('leads').select('*').order('created_at', { ascending: false });
-      D.leads = data || [];
+      D.leads = filterLeadsByRole(data || []);
     }
     renderSurveyPage();
 
   } else if (name === 'home') {
     if (!D.leads || D.leads.length === 0) {
       const { data: homeData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-      D.leads = homeData || [];
+      D.leads = filterLeadsByRole(homeData || []);
     }
     renderHomeDashboard();
 
   } else if (name === 'followups') {
     $('panel-followups').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     const { data: fuData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-    D.leads = fuData || [];
+    D.leads = filterLeadsByRole(fuData || []);
     renderFollowUpPage();
 
   } else if (name === 'birthday' || name === 'whasend') {
     $('panel-'+name).innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     const { data: bdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-    D.leads = bdData || [];
+    D.leads = filterLeadsByRole(bdData || []);
     if (name === 'birthday') renderBirthdayPage();
     else renderWhasendPage();
 
@@ -1697,20 +1724,21 @@ async function navTo(name) {
     if (!D.leads || D.leads.length === 0) {
       $('panel-specialdays').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
       const { data: sdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-      D.leads = sdData || [];
+      D.leads = filterLeadsByRole(sdData || []);
     }
     renderSpecialDaysPage();
 
   } else if (name === 'manager') {
+    if (!isAdmin()) { showToast('⚠ Manager View is for Admin & Manager only'); navTo('home'); return; }
     $('panel-manager').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     const { data: mgData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-    D.leads = mgData || [];
+    D.leads = mgData || []; // admin sees ALL leads — no role filter
     renderManagerView();
 
   } else if (name === 'pipeline') {
     // Always fetch fresh leads so metrics + analytics are populated
     const { data: leadsData } = await db.from('leads').select('*').order('created_at', { ascending: false });
-    D.leads = leadsData || [];
+    D.leads = isAdmin() ? (leadsData||[]) : filterLeadsByRole(leadsData||[]);
     renderStats();
     if (!$('panel-pipeline').innerHTML.trim()) {
       $('panel-pipeline').innerHTML = buildAnaShell();
@@ -1737,7 +1765,7 @@ async function loadAll() {
     if (e1) console.error('leads fetch error:', e1);
     if (e2) console.error('members fetch error:', e2);
 
-    D = { leads: leads || [], members: members || [] };
+    D = { leads: filterLeadsByRole(leads||[]), members: members||[], currentRole:D.currentRole, currentAgentName:D.currentAgentName, currentEmail:D.currentEmail };
 
     renderStats();
     renderLeads();
@@ -2377,6 +2405,8 @@ function renderLeads() {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div class="table-title">Lead Tracker <span style="font-size:12px;color:var(--text-muted);font-weight:400">${leads.length} leads</span></div>
+        ${!isAdmin()&&D.currentAgentName?`<span style="background:#7F77DD22;color:#a78bfa;border:1px solid #7F77DD44;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">🔒 Showing your leads only</span>`:''}
+        ${isAdmin()?`<span style="background:#D4A53522;color:#D4A535;border:1px solid #D4A53544;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px">👑 Admin — All leads</span>`:''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
         <button class="leads-qf${_leadsQF==='all'?' active':''}"      onclick="setLeadsQF(this,'all')">All</button>
