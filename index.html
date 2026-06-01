@@ -2985,6 +2985,33 @@ function fuWhatsApp(leadId) {
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
+async function backfillFollowUps() {
+  const leads = D.leads || [];
+  const noFU  = leads.filter(l => !(l.logs||[]).some(lg => lg.type === 'followup') && l.stage !== 'Closed' && l.stage !== 'Lost');
+  if (noFU.length === 0) { showToast('✅ All leads already have follow-up sequences!'); return; }
+
+  const btn = document.getElementById('backfill-btn');
+  if (btn) { btn.disabled = true; btn.textContent = `Creating sequences for ${noFU.length} leads…`; }
+
+  let done = 0;
+  const BATCH = 10;
+  for (let i = 0; i < noFU.length; i += BATCH) {
+    const batch = noFU.slice(i, i + BATCH);
+    await Promise.all(batch.map(async l => {
+      const baseDate = l.lead_date || (l.created_at||'').slice(0,10) || new Date().toISOString().slice(0,10);
+      const fuLogs   = createFollowUpLogs(baseDate);
+      const newLogs  = [...(l.logs||[]), ...fuLogs];
+      const {error}  = await db.from('leads').update({ logs: newLogs }).eq('id', l.id);
+      if (!error) { l.logs = newLogs; done++; }
+    }));
+  }
+
+  showToast(`✅ Created follow-up sequences for ${done} leads!`, 4000);
+  updateFollowUpBadge();
+  renderFollowUpPage();
+  renderHomeDashboard();
+}
+
 function renderFollowUpPage() {
   const leads    = D.leads || [];
   const dueItems = getAllFollowUps(leads);
@@ -3049,7 +3076,10 @@ function renderFollowUpPage() {
         <div style="font-size:20px;font-weight:700;color:var(--text-primary)">📋 Follow-up Reminders</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Agent task manager — never miss a follow-up</div>
       </div>
-      ${overdueCount>0?`<span style="background:#ff4d4f;color:#fff;border-radius:20px;font-size:12px;font-weight:700;padding:4px 14px">${overdueCount} overdue</span>`:''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${overdueCount>0?`<span style="background:#ff4d4f;color:#fff;border-radius:20px;font-size:12px;font-weight:700;padding:4px 14px">${overdueCount} overdue</span>`:''}
+        <button id="backfill-btn" class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="backfillFollowUps()">⚙ Create sequences for existing leads</button>
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
