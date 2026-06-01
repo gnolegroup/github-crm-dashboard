@@ -951,6 +951,7 @@
   <div class="nav-menu">
     <button class="nav-menu-btn">🔔 Reminders <span id="bd-nav-badge" style="display:none;background:#ff4d4f;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;vertical-align:middle"></span> <span class="chevron">▾</span></button>
     <div class="nav-dropdown">
+      <div class="nav-dropdown-item" onclick="navTo('followups')"><span class="nav-dropdown-icon">📋</span>Follow-ups</div>
       <div class="nav-dropdown-item" onclick="navTo('birthday')"><span class="nav-dropdown-icon">🎂</span>Birthdays</div>
       <div class="nav-dropdown-item" onclick="navTo('specialdays')"><span class="nav-dropdown-icon">🎉</span>Special days</div>
       <div class="nav-dropdown-item" onclick="navTo('whasend')"><span class="nav-dropdown-icon">💬</span>WhatsApp send</div>
@@ -1028,6 +1029,7 @@
   <div class="tab-panel"        id="panel-pipeline"></div>
   <div class="tab-panel"        id="panel-members"><div class="loading"><div class="spinner"></div>Loading members…</div></div>
   <div class="tab-panel"        id="panel-survey"></div>
+  <div class="tab-panel"        id="panel-followups"></div>
   <div class="tab-panel"        id="panel-birthday"></div>
   <div class="tab-panel"        id="panel-specialdays"></div>
   <div class="tab-panel"        id="panel-whasend"></div>
@@ -1662,6 +1664,12 @@ async function navTo(name) {
     }
     renderHomeDashboard();
 
+  } else if (name === 'followups') {
+    $('panel-followups').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    const { data: fuData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    D.leads = fuData || [];
+    renderFollowUpPage();
+
   } else if (name === 'birthday' || name === 'whasend') {
     $('panel-'+name).innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     const { data: bdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
@@ -1719,6 +1727,7 @@ async function loadAll() {
     renderLeads();
     renderMembers();
     updateReminderBadge();
+    updateFollowUpBadge();
   } catch(err) {
     console.error('loadAll error:', err);
     $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">Failed to load leads: ${err.message}. <button onclick="_loading=false;loadAll()" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
@@ -2530,7 +2539,7 @@ async function submitLead() {
     is_muslim:   document.getElementById('lf-muslim').checked,
     stage,
     lead_date: today,
-    logs: [{ date: leadsNow(), stage, type:'create', text: remark || 'Lead created' }],
+    logs: [{ date: leadsNow(), stage, type:'create', text: remark || 'Lead created' }, ...createFollowUpLogs(today)],
   };
 
   const { data, error } = await db.from('leads').insert([payload]).select();
@@ -2885,6 +2894,180 @@ async function submitImport() {
   setTimeout(closeImportModal, 1500);
 }
 
+/* ── Follow-Up Reminder System ── */
+const FU_SEQUENCE = [
+  { day:1,  title:'First contact — call or WhatsApp' },
+  { day:3,  title:'Follow up — no response yet?' },
+  { day:7,  title:'Send product info & quotation' },
+  { day:14, title:'Final follow up — close or mark lost' },
+  { day:30, title:'Re-engage — 1 month check-in' },
+];
+
+function createFollowUpLogs(leadDate) {
+  const base = new Date(leadDate + 'T00:00:00');
+  return FU_SEQUENCE.map(s => {
+    const due = new Date(base);
+    due.setDate(due.getDate() + s.day);
+    return { type:'followup', fid:'fu'+s.day+'_'+Math.random().toString(36).slice(2,7), title:s.title, due_date:due.toISOString().slice(0,10), status:'pending', seq:s.day };
+  });
+}
+
+function getAllFollowUps(leads) {
+  const today = new Date().toISOString().slice(0,10);
+  const items = [];
+  leads.forEach(l => {
+    (l.logs||[]).forEach(lg => {
+      if (lg.type !== 'followup') return;
+      if (lg.status === 'done' || lg.status === 'skipped') return;
+      if (lg.status === 'snoozed' && lg.snoozed_until > today) return;
+      if (lg.due_date <= today) items.push({ lead:l, fu:lg, daysOverdue:Math.floor((new Date(today)-new Date(lg.due_date))/86400000) });
+    });
+  });
+  return items.sort((a,b) => b.daysOverdue - a.daysOverdue || a.fu.seq - b.fu.seq);
+}
+
+function getUpcomingFollowUps(leads) {
+  const today = new Date().toISOString().slice(0,10);
+  const items = [];
+  leads.forEach(l => {
+    (l.logs||[]).forEach(lg => {
+      if (lg.type !== 'followup' || lg.status !== 'pending') return;
+      if (lg.due_date > today) items.push({ lead:l, fu:lg, daysLeft:Math.floor((new Date(lg.due_date)-new Date(today))/86400000) });
+    });
+  });
+  return items.sort((a,b) => a.daysLeft - b.daysLeft);
+}
+
+function fuPriority(daysOverdue) {
+  return daysOverdue >= 3 ? {l:'Urgent',   c:'#ff4d4f'} :
+         daysOverdue >= 1 ? {l:'Overdue',   c:'#fa8c16'} :
+                            {l:'Due Today', c:'#D4A535'};
+}
+
+function updateFollowUpBadge() {
+  const fuCount = getAllFollowUps(D.leads||[]).length;
+  const bdCount = (D.leads||[]).filter(l => { if(!l.dob) return false; const p=calcBirthdayPriority(l); return p>=3&&getBirthdayState(l)==='pending'; }).length;
+  const total   = fuCount + bdCount;
+  const el = document.getElementById('bd-nav-badge');
+  if (el) { el.style.display = total>0?'inline':'none'; el.textContent = total; }
+}
+
+let _fuTab = 'due';
+function setFuTab(t) { _fuTab = t; renderFollowUpPage(); }
+
+async function markFollowUpDone(leadId, fid) {
+  const l = D.leads.find(x=>x.id===leadId); if(!l) return;
+  const newLogs = l.logs.map(lg => lg.fid===fid ? {...lg, status:'done', done_at:leadsNow()} : lg);
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',leadId);
+  if (!error) { l.logs=newLogs; renderFollowUpPage(); renderHomeDashboard(); updateFollowUpBadge(); showToast('✅ Follow-up marked done!'); }
+}
+
+async function snoozeFollowUp(leadId, fid) {
+  const l = D.leads.find(x=>x.id===leadId); if(!l) return;
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const newLogs = l.logs.map(lg => lg.fid===fid ? {...lg, status:'snoozed', snoozed_until:tomorrow.toISOString().slice(0,10)} : lg);
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',leadId);
+  if (!error) { l.logs=newLogs; renderFollowUpPage(); renderHomeDashboard(); updateFollowUpBadge(); showToast('⏱ Snoozed until tomorrow'); }
+}
+
+async function skipFollowUp(leadId, fid) {
+  const l = D.leads.find(x=>x.id===leadId); if(!l) return;
+  const newLogs = l.logs.map(lg => lg.fid===fid ? {...lg, status:'skipped'} : lg);
+  const {error} = await db.from('leads').update({logs:newLogs}).eq('id',leadId);
+  if (!error) { l.logs=newLogs; renderFollowUpPage(); updateFollowUpBadge(); showToast('Reminder skipped'); }
+}
+
+function fuWhatsApp(leadId) {
+  const l = D.leads.find(x=>x.id===leadId); if(!l||!l.phone) { showToast('⚠ No phone number'); return; }
+  const clean=(l.phone||'').replace(/[^0-9]/g,''); const num=clean.startsWith('673')?clean:'673'+clean;
+  const prod = PRODUCT_OPTS.find(o=>o.v===l.product)?.l||l.product||'our product';
+  const msg  = `Hi ${(l.name||'').split(' ')[0]}! 😊 This is ${l.agent||'the TEL team'} from TEL Home Appliances. Just following up on your interest in ${prod}. Are you still interested? We'd love to help! 🙏`;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function renderFollowUpPage() {
+  const leads    = D.leads || [];
+  const dueItems = getAllFollowUps(leads);
+  const upItems  = getUpcomingFollowUps(leads);
+  const doneItems= [];
+  leads.forEach(l=>(l.logs||[]).forEach(lg=>{ if(lg.type==='followup'&&lg.status==='done') doneItems.push({lead:l,fu:lg}); }));
+  doneItems.sort((a,b)=>new Date(b.fu.done_at||0)-new Date(a.fu.done_at||0));
+
+  const todayCount   = dueItems.filter(x=>x.daysOverdue===0).length;
+  const overdueCount = dueItems.filter(x=>x.daysOverdue>0).length;
+  const upcomingCount= upItems.length;
+  const doneCount    = doneItems.length;
+
+  const tabs=[['due','📋 Due ('+dueItems.length+')'],['upcoming','⏳ Upcoming ('+upcomingCount+')'],['done','✅ Done ('+doneCount+')']];
+
+  const fuCard = ({lead:l, fu, daysOverdue=0, daysLeft=null}) => {
+    const p    = daysLeft!==null ? {l:'Upcoming',c:'#7F77DD'} : fuPriority(daysOverdue);
+    const prod = PRODUCT_OPTS.find(o=>o.v===l.product)?.l||l.product||'—';
+    const dueLabel = daysOverdue>0 ? `${daysOverdue}d overdue` : daysLeft!==null ? `In ${daysLeft}d` : 'Due today';
+    return `
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-left:3px solid ${p.c};border-radius:12px;padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="background:${p.c}22;color:${p.c};border:1px solid ${p.c}55;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px">${p.l}</span>
+        <span style="font-size:14px;font-weight:600;color:var(--text-primary)">${l.name}</span>
+        ${l.temperature==='hot'?'<span class="temp-hot">🔥 Hot</span>':''}
+        <span style="margin-left:auto;font-size:12px;color:${daysOverdue>0?'#ff4d4f':'var(--text-secondary)'};font-weight:${daysOverdue>0?700:400}">${dueLabel}</span>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:5px">📌 ${fu.title}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${prod} · ${l.area||'—'} · ${l.agent||'—'} · ${l.phone||'—'}</div>
+      ${daysLeft===null?`
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-save"   style="font-size:12px;padding:6px 12px" onclick="markFollowUpDone('${l.id}','${fu.fid}')">✅ Done</button>
+        <button class="wa-btn"     style="font-size:12px;padding:6px 12px" onclick="fuWhatsApp('${l.id}')">📱 WhatsApp</button>
+        <button class="btn-cancel" style="font-size:12px;padding:6px 10px" onclick="snoozeFollowUp('${l.id}','${fu.fid}')">⏱ Snooze</button>
+        <button class="btn-cancel" style="font-size:12px;padding:6px 10px" onclick="skipFollowUp('${l.id}','${fu.fid}')">Skip</button>
+      </div>`:`<div style="font-size:11px;color:var(--text-muted)">Scheduled — will appear when due</div>`}
+    </div>`;
+  };
+
+  const doneCard = ({lead:l, fu}) => `
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:10px;padding:12px 16px;opacity:.65;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:18px">✅</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${l.name} <span style="font-weight:400;color:var(--text-muted)">— ${fu.title}</span></div>
+        <div style="font-size:11px;color:var(--text-muted)">Done ${(fu.done_at||'').slice(0,10)} · ${l.agent||'—'}</div>
+      </div>
+    </div>`;
+
+  const visibleDue  = _fuTab==='due'      ? dueItems    : [];
+  const visibleUp   = _fuTab==='upcoming' ? upItems     : [];
+  const visibleDone = _fuTab==='done'     ? doneItems   : [];
+
+  const content =
+    _fuTab==='due'      ? (dueItems.length===0?'<div style="text-align:center;padding:40px;color:var(--text-muted)">🎉 No follow-ups due today.</div>':dueItems.map(fuCard).join('')) :
+    _fuTab==='upcoming' ? (upItems.length===0 ?'<div style="text-align:center;padding:40px;color:var(--text-muted)">No upcoming follow-ups scheduled.</div>':upItems.map(i=>fuCard({...i,daysOverdue:0,daysLeft:i.daysLeft})).join('')) :
+    (doneItems.length===0?'<div style="text-align:center;padding:40px;color:var(--text-muted)">No completed follow-ups yet.</div>':doneItems.slice(0,30).map(doneCard).join(''));
+
+  $('panel-followups').innerHTML = `
+  <div style="padding:24px 28px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary)">📋 Follow-up Reminders</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Agent task manager — never miss a follow-up</div>
+      </div>
+      ${overdueCount>0?`<span style="background:#ff4d4f;color:#fff;border-radius:20px;font-size:12px;font-weight:700;padding:4px 14px">${overdueCount} overdue</span>`:''}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${[['Due Today',todayCount,'#D4A535','#D4A53544'],['Overdue',overdueCount,'#ff4d4f','#ff4d4f44'],['Upcoming',upcomingCount,'#7F77DD','#7F77DD44'],['Done',doneCount,'#52c41a','#52c41a44']]
+        .map(([l,n,c,bc])=>`<div style="background:var(--bg-secondary);border:0.5px solid ${bc};border-radius:10px;padding:14px 16px">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${c}">${l}</div>
+          <div style="font-size:26px;font-weight:700;color:${c}">${n}</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+      ${tabs.map(([t,l])=>`<button class="leads-qf${_fuTab===t?' active':''}" onclick="setFuTab('${t}')">${l}</button>`).join('')}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">${content}</div>
+  </div>`;
+}
+
 /* ── Home Dashboard ── */
 const SPECIAL_DAYS = [
   { name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic', icon:'🌙' },
@@ -2965,6 +3148,36 @@ function renderHomeDashboard() {
       ${kpi('Urgent Birthdays',urgentBd,'Need greetings today','#ff4d4f','#ff4d4f44')}
       ${kpi('Special Days',upcomingSD.length,'Upcoming events','#D4A535','#D4A53544')}
     </div>
+
+    <!-- Today's Follow-up Tasks -->
+    ${(()=>{
+      const fuDue=getAllFollowUps(leads);
+      if(fuDue.length===0) return '';
+      const urgent=fuDue.filter(x=>x.daysOverdue>0).length;
+      return `<div style="background:var(--bg-secondary);border:0.5px solid ${urgent>0?'#ff4d4f44':'var(--border)'};border-radius:12px;padding:18px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary)">📋 Today\'s Follow-ups${urgent>0?` <span style="background:#ff4d4f;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${urgent} overdue</span>`:''}</div>
+          <button onclick="navTo(\'followups\')" style="font-size:11px;color:#a78bfa;background:none;border:none;cursor:pointer;font-weight:600">See all →</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${fuDue.slice(0,5).map(({lead:l,fu,daysOverdue})=>{
+            const p=fuPriority(daysOverdue);
+            const prod=PRODUCT_OPTS.find(o=>o.v===l.product)?.l||'—';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border);border-left:3px solid ${p.c};border-radius:8px;flex-wrap:wrap">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name} <span style="color:var(--text-muted);font-weight:400">— ${fu.title}</span></div>
+                <div style="font-size:11px;color:var(--text-muted)">${prod} · ${l.area||'—'}${daysOverdue>0?` · <span style="color:#ff4d4f;font-weight:600">${daysOverdue}d overdue</span>`:' · Due today'}</div>
+              </div>
+              <div style="display:flex;gap:5px;flex-shrink:0">
+                <button class="wa-btn" style="font-size:10px;padding:2px 8px" onclick="fuWhatsApp(\'${l.id}\')">📱</button>
+                <button class="btn-save" style="font-size:10px;padding:2px 8px" onclick="markFollowUpDone(\'${l.id}\',\'${fu.fid}\')">✅</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })()}
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
