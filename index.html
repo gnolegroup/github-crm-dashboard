@@ -2215,8 +2215,8 @@ const PRODUCT_OPTS = [
 const PRODUCT_OPTS_HTML = `<option value="">—</option>` + PRODUCT_OPTS.map(p=>`<option value="${p.v}">${p.l}</option>`).join('');
 
 function leadsNow() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-function latestRemark(l) { const logs=l.logs||[]; const r=logs.filter(e=>e.type==='remark'||e.type==='create'); return r.length?r[r.length-1].text:''; }
-function latestLogDate(l) { const logs=l.logs||[]; return logs.length?logs[logs.length-1].date.split(' ')[0]:'—'; }
+function latestRemark(l) { const logs=l.logs||[]; const r=logs.filter(e=>(e.type==='remark'||e.type==='create')&&e.text); return r.length?r[r.length-1].text:''; }
+function latestLogDate(l) { const logs=(l.logs||[]).filter(lg=>lg.date&&lg.type!=='followup'); return logs.length?logs[logs.length-1].date.split(' ')[0]:'—'; }
 
 // Birthday helpers
 function daysUntilBirthday(dob) {
