@@ -939,7 +939,7 @@
       <div class="nav-dropdown-item" onclick="navTo('members')"><span class="nav-dropdown-icon">👥</span>All Members</div>
       <div class="nav-dropdown-item" id="nav-add-member" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
       <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item" id="nav-roles" onclick="showToast('🔒 Roles & Permissions — coming soon')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
+      <div class="nav-dropdown-item" id="nav-roles" onclick="navTo('members')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
     </div>
   </div>
 
@@ -2472,30 +2472,67 @@ function renderMembers() {
   const members = D.members || [];
   if ($('tc-members')) $('tc-members').textContent = members.length;
 
+  const roleColors = { Admin:'#D4A535', Manager:'#52c41a', 'Senior Agent':'#7F77DD', Agent:'#378ADD' };
+
   const rows = members.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No members yet — use <strong>Member → Add Member</strong> to get started</td></tr>`
+    ? `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">No members yet — click <strong>+ Add Member</strong> to get started</td></tr>`
     : members.map(m => `
       <tr>
         <td><strong>${m.name}</strong></td>
-        <td style="color:var(--text-secondary)">${m.phone || '—'}</td>
-        <td style="color:var(--text-secondary)">${m.email || '—'}</td>
-        <td>${m.role || '—'}</td>
-        <td><span class="leads-status ms-${m.status || 'active'}">${m.status || 'active'}</span></td>
+        <td style="color:var(--text-secondary);font-size:12px">${m.phone || '—'}</td>
+        <td style="color:var(--text-secondary);font-size:12px">${m.email || '—'}</td>
+        <td>
+          ${canAddMember()
+            ? `<select class="inl-select" onchange="updateMemberField('${m.id}','role',this.value)" style="font-size:12px;color:${roleColors[m.role]||'var(--text-primary)'}">
+                ${['Agent','Senior Agent','Manager','Admin'].map(r=>`<option${r===m.role?' selected':''}>${r}</option>`).join('')}
+               </select>`
+            : `<span style="font-size:12px;font-weight:600;color:${roleColors[m.role]||'var(--text-primary)'}">${m.role||'—'}</span>`}
+        </td>
+        <td>
+          ${canAddMember()
+            ? `<select class="inl-select" onchange="updateMemberField('${m.id}','status',this.value)">
+                <option${m.status==='active'?' selected':''}>active</option>
+                <option${m.status==='inactive'?' selected':''}>inactive</option>
+               </select>`
+            : `<span class="leads-status ms-${m.status||'active'}">${m.status||'active'}</span>`}
+        </td>
+        ${canAddMember()?`<td><button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f44" onclick="deleteMember('${m.id}','${m.name.replace(/'/g,'')}')">Remove</button></td>`:'<td></td>'}
       </tr>`).join('');
 
   $('panel-members').innerHTML = `
     <div class="table-wrap">
       <div class="table-toolbar">
-        <div class="table-title">All Members <span style="font-size:12px;color:var(--text-muted);font-weight:400">${members.length} records</span></div>
-        <input class="search-box" type="search" placeholder="Search members…" oninput="filterMembers(this.value)">
+        <div class="table-title">Team Members <span style="font-size:12px;color:var(--text-muted);font-weight:400">${members.length} records</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="search-box" type="search" placeholder="Search members…" oninput="filterMembers(this.value)">
+          ${canAddMember()?`<button class="btn-add-lead" onclick="openMemberModal()">+ Add Member</button>`:''}
+        </div>
       </div>
       <table>
         <thead>
-          <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Status</th></tr>
+          <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
         </thead>
         <tbody id="members-body">${rows}</tbody>
       </table>
     </div>`;
+}
+
+async function updateMemberField(id, field, value) {
+  const { error } = await db.from('members').update({ [field]: value }).eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  const m = D.members.find(x => x.id === id);
+  if (m) m[field] = value;
+  showToast(`✅ ${field.charAt(0).toUpperCase()+field.slice(1)} updated to "${value}"`);
+}
+
+async function deleteMember(id, name) {
+  if (!canAddMember()) { showToast('⚠ Admin only'); return; }
+  if (!confirm(`Remove "${name}" from the team? This cannot be undone.`)) return;
+  const { error } = await db.from('members').delete().eq('id', id);
+  if (error) { showToast('⚠ ' + error.message, 4000); return; }
+  D.members = D.members.filter(m => m.id !== id);
+  renderMembers();
+  showToast(`✅ "${name}" removed from team`);
 }
 
 function filterMembers(q) {
