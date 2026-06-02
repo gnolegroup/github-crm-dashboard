@@ -1931,7 +1931,13 @@ function anaFilter(leads, except) {
 
 function buildAnaShell() {
   return `<div class="ana-section">
-  <div><div class="ana-title">Leads Analytics</div><div class="ana-subtitle">Brunei Market · Real-time combined filter dashboard</div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div><div class="ana-title">Leads Analytics</div><div class="ana-subtitle">Brunei Market · Real-time combined filter dashboard</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="exportExcel()">📥 Export Excel</button>
+      <button class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="exportPDF()">🖨 Export PDF</button>
+    </div>
+  </div>
 
   <div class="ana-kpi-grid" id="ana-kpi"></div>
 
@@ -4042,9 +4048,15 @@ function renderManagerView() {
 
   $('panel-manager').innerHTML = `
   <div style="max-width:900px;margin:0 auto;padding:24px 20px">
-    <div style="margin-bottom:20px">
-      <div style="font-size:20px;font-weight:700;color:var(--text-primary)">🏆 Manager View</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Team performance · ${month}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary)">🏆 Manager View</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Team performance · ${month}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="exportExcel()">📥 Export Excel</button>
+        <button class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="exportPDF()">🖨 Export PDF</button>
+      </div>
     </div>
 
     <!-- Stats row -->
@@ -4076,6 +4088,127 @@ function renderManagerView() {
       ${tabContent}
     </div>
   </div>`;
+}
+
+/* ── Report Export ── */
+function _topItem(leads, field, labelFn) {
+  const map = {}; leads.forEach(l=>{ if(l[field]) map[l[field]]=(map[l[field]]||0)+1; });
+  const top = Object.entries(map).sort((a,b)=>b[1]-a[1])[0];
+  return top ? `${labelFn?labelFn(top[0]):top[0]} (${top[1]})` : '—';
+}
+
+function exportExcel() {
+  if (typeof XLSX === 'undefined') { showToast('⚠ SheetJS not loaded'); return; }
+  const leads  = D.leads || [];
+  const today  = new Date();
+  const month  = today.toLocaleDateString('en-MY', { month:'long', year:'numeric' });
+  const fname  = `TEL-Report-${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}.xlsx`;
+  const closed = leads.filter(l=>l.stage==='Closed').length;
+  const lost   = leads.filter(l=>l.stage==='Lost').length;
+  const wb     = XLSX.utils.book_new();
+
+  // Sheet 1 — Summary
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['TEL Home Appliances — Monthly Performance Report'],
+    [month],[''],
+    ['Metric','Value'],
+    ['Total Leads', leads.length],
+    ['Closed Deals', closed],
+    ['Lost', lost],
+    ['Pending', leads.filter(l=>!['Closed','Lost'].includes(l.stage)).length],
+    ['Conversion Rate', leads.length ? Math.round(closed/leads.length*100)+'%' : '0%'],[''],
+    ['Top Product', _topItem(leads,'product',v=>PRODUCT_OPTS.find(o=>o.v===v)?.l||v)],
+    ['Top Source',  _topItem(leads,'source')],
+    ['Top District', _topItem(leads,'area',v=>AREA_TO_DI[v]?DI_L[DI_K.indexOf(AREA_TO_DI[v])]:v)],
+    ['Hot Leads', leads.filter(l=>l.temperature==='hot').length],
+    ['Warm Leads', leads.filter(l=>l.temperature==='warm').length],
+    ['Cold Leads', leads.filter(l=>l.temperature==='cold').length],
+    ['Muslim Leads', leads.filter(l=>l.is_muslim).length],
+  ]), 'Summary');
+
+  // Sheet 2 — Agent Performance
+  const agMap = {};
+  leads.forEach(l=>{ const a=l.agent||'Unassigned'; if(!agMap[a]) agMap[a]={total:0,closed:0,lost:0}; agMap[a].total++; if(l.stage==='Closed') agMap[a].closed++; if(l.stage==='Lost') agMap[a].lost++; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Agent','Total Leads','Closed','Lost','Pending','Conversion Rate'],
+    ...Object.entries(agMap).sort((a,b)=>b[1].total-a[1].total).map(([name,s])=>[name,s.total,s.closed,s.lost,s.total-s.closed-s.lost,Math.round(s.closed/s.total*100)+'%'])
+  ]), 'Agent Performance');
+
+  // Sheet 3 — Products
+  const prdMap = {}; leads.forEach(l=>{ if(l.product) prdMap[l.product]=(prdMap[l.product]||0)+1; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Product','Leads','%'],
+    ...Object.entries(prdMap).sort((a,b)=>b[1]-a[1]).map(([v,n])=>[PRODUCT_OPTS.find(o=>o.v===v)?.l||v, n, leads.length?Math.round(n/leads.length*100)+'%':'0%'])
+  ]), 'Products');
+
+  // Sheet 4 — Sources
+  const srcMap = {}; leads.forEach(l=>{ if(l.source) srcMap[l.source]=(srcMap[l.source]||0)+1; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Source','Leads','%'],
+    ...Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).map(([s,n])=>[s,n,leads.length?Math.round(n/leads.length*100)+'%':'0%'])
+  ]), 'Sources');
+
+  // Sheet 5 — All Leads
+  const numMap = {}; [...leads].sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0)).forEach((l,i)=>numMap[l.id]=i+1);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Leads No.','Agent','Name','Phone','Gender','Age','DOB','Area','Product Interest','Source','Stage','Temperature','Muslim','Lead Date','Notes'],
+    ...leads.map(l=>['L-'+String(numMap[l.id]||0).padStart(4,'0'), l.agent||'', l.name||'', l.phone||'', l.gender||'', l.age_group||'', l.dob||'', l.area||'', PRODUCT_OPTS.find(o=>o.v===l.product)?.l||l.product||'', l.source||'', l.stage||'', l.temperature||'', l.is_muslim?'Yes':'No', l.lead_date||'', l.notes||''])
+  ]), 'All Leads');
+
+  XLSX.writeFile(wb, fname);
+  showToast('📥 Excel report downloaded!', 4000);
+}
+
+function exportPDF() {
+  const leads  = D.leads || [];
+  const today  = new Date();
+  const month  = today.toLocaleDateString('en-MY', { month:'long', year:'numeric' });
+  const closed = leads.filter(l=>l.stage==='Closed').length;
+  const rate   = leads.length ? Math.round(closed/leads.length*100) : 0;
+
+  // Agent table
+  const agMap = {};
+  leads.forEach(l=>{ const a=l.agent||'Unassigned'; if(!agMap[a]) agMap[a]={total:0,closed:0}; agMap[a].total++; if(l.stage==='Closed') agMap[a].closed++; });
+  const agRows = Object.entries(agMap).sort((a,b)=>b[1].total-a[1].total)
+    .map(([name,s])=>`<tr><td>${name}</td><td>${s.total}</td><td>${s.closed}</td><td>${Math.round(s.closed/s.total*100)}%</td></tr>`).join('');
+
+  // Product table
+  const prdMap = {}; leads.forEach(l=>{ if(l.product) prdMap[l.product]=(prdMap[l.product]||0)+1; });
+  const prdRows = Object.entries(prdMap).sort((a,b)=>b[1]-a[1]).slice(0,8)
+    .map(([v,n])=>`<tr><td>${PRODUCT_OPTS.find(o=>o.v===v)?.l||v}</td><td>${n}</td><td>${Math.round(n/leads.length*100)}%</td></tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><title>TEL Report - ${month}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:Arial,sans-serif;color:#1a1a1a;padding:40px;font-size:13px}
+    h1{color:#9B6B1A;font-size:22px;margin-bottom:4px} h2{font-size:14px;color:#666;font-weight:400;margin-bottom:24px}
+    h3{font-size:13px;font-weight:700;color:#1a1a1a;margin:20px 0 10px;border-bottom:2px solid #D4A535;padding-bottom:4px}
+    .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+    .kpi{border:1px solid #ddd;border-radius:8px;padding:12px 18px;text-align:center;min-width:110px}
+    .kpi-val{font-size:26px;font-weight:700;color:#9B6B1A} .kpi-lbl{font-size:11px;color:#888;margin-top:2px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px} th{background:#f5f5f5;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    td{padding:7px 10px;border-bottom:1px solid #eee;font-size:12px} tr:nth-child(even) td{background:#fafafa}
+    .print-btn{display:block;margin:24px auto 0;padding:10px 24px;background:#D4A535;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+    @media print{.print-btn{display:none}}
+  </style></head><body>
+    <h1>TEL Home Appliances</h1>
+    <h2>Monthly Performance Report — ${month}</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-val">${leads.length}</div><div class="kpi-lbl">Total Leads</div></div>
+      <div class="kpi"><div class="kpi-val">${closed}</div><div class="kpi-lbl">Closed</div></div>
+      <div class="kpi"><div class="kpi-val">${rate}%</div><div class="kpi-lbl">Conversion</div></div>
+      <div class="kpi"><div class="kpi-val">${leads.filter(l=>l.temperature==='hot').length}</div><div class="kpi-lbl">🔥 Hot</div></div>
+      <div class="kpi"><div class="kpi-val">${leads.filter(l=>l.is_muslim).length}</div><div class="kpi-lbl">☪️ Muslim</div></div>
+    </div>
+    <h3>Agent Performance</h3>
+    <table><thead><tr><th>Agent</th><th>Leads</th><th>Closed</th><th>Rate</th></tr></thead><tbody>${agRows||'<tr><td colspan=4>No data</td></tr>'}</tbody></table>
+    <h3>Top Products</h3>
+    <table><thead><tr><th>Product</th><th>Leads</th><th>%</th></tr></thead><tbody>${prdRows||'<tr><td colspan=3>No data</td></tr>'}</tbody></table>
+    <p style="color:#888;font-size:11px;margin-top:16px">Generated ${today.toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · TEL CRM</p>
+    <button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  if (w) { w.document.write(html); w.document.close(); w.focus(); }
+  else showToast('⚠ Allow pop-ups to open the PDF report');
 }
 
 /* ── Calendar ── */
