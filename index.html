@@ -2299,8 +2299,11 @@ function tempBadge(t) {
   return `<span class="${cfg[t][1]}">${cfg[t][0]}</span>`;
 }
 
-// Quick filter state
-let _leadsQF = 'all';
+// Quick filter + pagination state
+let _leadsQF       = 'all';
+let _leadsPage     = 1;
+let _leadsPerPage  = 50;
+let _filteredLeads = [];
 function setLeadsQF(btn, qf) {
   _leadsQF = qf;
   document.querySelectorAll('.leads-qf').forEach(b => b.classList.remove('active'));
@@ -2333,72 +2336,53 @@ function multiTriggerHTML(id, brands) {
   </div>`;
 }
 
+// Build stable num map for all leads
+function buildNumMap(leads) {
+  const m = {};
+  [...leads].sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0)).forEach((l,i)=>m[l.id]=i+1);
+  return m;
+}
+
+// Render a single lead row
+function renderLeadRow(l, numMap) {
+  const remark  = latestRemark(l);
+  const logDate = latestLogDate(l);
+  const stage   = l.stage || 'New';
+  const leadsNo = 'L-' + String(numMap[l.id]||0).padStart(4,'0');
+  const bdDays  = daysUntilBirthday(l.dob);
+  const muslimTag = l.is_muslim ? '<span title="Muslim lead" style="font-size:10px;margin-left:4px">☪️</span>' : '';
+  return `<tr data-temp="${l.temperature||''}" data-muslim="${l.is_muslim?'1':'0'}" data-bdays="${bdDays??999}">
+    <td><span class="sales-no-cell">${leadsNo}</span></td>
+    <td style="font-size:12px">${l.agent||'—'}</td>
+    <td style="font-size:12px;font-weight:500">${l.name}${muslimTag}</td>
+    <td style="font-size:12px;color:var(--text-secondary)">${l.gender?l.gender.charAt(0):'—'}</td>
+    <td style="font-size:12px;color:var(--text-secondary)">${l.age_group||'—'}</td>
+    <td style="text-align:center">${birthdayCell(l.dob)}</td>
+    <td><select class="inl-select" onchange="updateLeadField('${l.id}','area',this.value)">${areaOptsHTML(l.area)}</select></td>
+    <td style="font-family:monospace;font-size:11px">${l.phone||'—'}</td>
+    <td>${multiTriggerHTML(l.id, l.brands||[])}</td>
+    <td><select class="inl-select" onchange="updateLeadField('${l.id}','product',this.value)">${PRODUCT_OPTS_HTML.replace(`value="${l.product||''}"`,`value="${l.product||''}" selected`)}</select></td>
+    <td><select class="inl-select" onchange="updateLeadField('${l.id}','source',this.value)">${SRC_OPTS_HTML.replace(`<option>${l.source}</option>`,`<option selected>${l.source}</option>`)}</select></td>
+    <td style="font-size:11px;color:var(--text-secondary);white-space:nowrap">${l.lead_date||(l.created_at||'').slice(0,10)||'—'}</td>
+    <td><select class="inl-select" onchange="updateLeadStage('${l.id}',this.value)">${['New','Contacted','Pending','Closed','Lost'].map(s=>`<option${s===stage?' selected':''}>${s}</option>`).join('')}</select></td>
+    <td>${tempBadge(l.temperature)}</td>
+    <td><button class="log-btn" onclick="openLogModal('${l.id}')"><i class="ti ti-clock" style="font-size:11px"></i> ${logDate}</button></td>
+    <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
+    <td>
+      <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+        ${canEditLead(l)?`<button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
+        <button class="wa-btn" onclick="openWAModal('${l.id}')"><i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA</button>
+        ${l.dob && bdDays !== null && bdDays <= 7 ? `<button class="wa-btn" style="background:#ff4d4f22;color:#ff4d4f;border-color:#ff4d4f55" onclick="greetLead('${l.id}')">🎂 Greet</button>` : ''}
+      </div>
+    </td>
+  </tr>`;
+}
+
 function renderLeads() {
   const leads = D.leads || [];
   if ($('tc-leads')) $('tc-leads').textContent = leads.length;
 
-  // Stable number map: sort by created_at ASC → oldest = L-0001, newest = L-[N]
-  const _numMap = {};
-  [...leads].sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0))
-    .forEach((l, i) => { _numMap[l.id] = i + 1; });
-
-  const rows = leads.length === 0
-    ? `<tr><td colspan="17" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>No leads yet — use <strong>Leads → Add Lead</strong> to get started</td></tr>`
-    : leads.map((l, i) => {
-        const remark  = latestRemark(l);
-        const logDate = latestLogDate(l);
-        const stage   = l.stage || 'New';
-        const leadsNo = 'L-' + String(_numMap[l.id] || (leads.length - i)).padStart(4, '0');
-        const bdDays  = daysUntilBirthday(l.dob);
-        const muslimTag = l.is_muslim ? '<span title="Muslim lead" style="font-size:10px;margin-left:4px">☪️</span>' : '';
-        return `<tr data-temp="${l.temperature||''}" data-muslim="${l.is_muslim?'1':'0'}" data-bdays="${bdDays??999}">
-          <td><span class="sales-no-cell">${leadsNo}</span></td>
-          <td style="font-size:12px">${l.agent||'—'}</td>
-          <td style="font-size:12px;font-weight:500">${l.name}${muslimTag}</td>
-          <td style="font-size:12px;color:var(--text-secondary)">${l.gender?l.gender.charAt(0):'—'}</td>
-          <td style="font-size:12px;color:var(--text-secondary)">${l.age_group||'—'}</td>
-          <td style="text-align:center">${birthdayCell(l.dob)}</td>
-          <td>
-            <select class="inl-select" onchange="updateLeadField('${l.id}','area',this.value)">
-              ${areaOptsHTML(l.area)}
-            </select>
-          </td>
-          <td style="font-family:monospace;font-size:11px">${l.phone||'—'}</td>
-          <td>${multiTriggerHTML(l.id, l.brands||[])}</td>
-          <td>
-            <select class="inl-select" onchange="updateLeadField('${l.id}','product',this.value)">
-              ${PRODUCT_OPTS_HTML.replace(`value="${l.product||''}"`,`value="${l.product||''}" selected`)}
-            </select>
-          </td>
-          <td>
-            <select class="inl-select" onchange="updateLeadField('${l.id}','source',this.value)">
-              ${SRC_OPTS_HTML.replace(`<option>${l.source}</option>`,`<option selected>${l.source}</option>`)}
-            </select>
-          </td>
-          <td style="font-size:11px;color:var(--text-secondary);white-space:nowrap">${l.lead_date||(l.created_at||'').slice(0,10)||'—'}</td>
-          <td>
-            <select class="inl-select" onchange="updateLeadStage('${l.id}',this.value)">
-              ${['New','Contacted','Pending','Closed','Lost'].map(s=>`<option${s===stage?' selected':''}>${s}</option>`).join('')}
-            </select>
-          </td>
-          <td>${tempBadge(l.temperature)}</td>
-          <td>
-            <button class="log-btn" onclick="openLogModal('${l.id}')">
-              <i class="ti ti-clock" style="font-size:11px"></i> ${logDate}
-            </button>
-          </td>
-          <td>${remark?`<div class="remark-cell" title="${remark.replace(/"/g,'&quot;')}">${remark}</div>`:`<div class="remark-cell remark-empty">No remark</div>`}</td>
-          <td>
-            <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-              ${canEditLead(l)?`<button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
-              <button class="wa-btn" onclick="openWAModal('${l.id}')">
-                <i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA
-              </button>
-              ${l.dob && bdDays !== null && bdDays <= 7 ? `<button class="wa-btn" style="background:#ff4d4f22;color:#ff4d4f;border-color:#ff4d4f55" onclick="greetLead('${l.id}')">🎂 Greet</button>` : ''}
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
+  _filteredLeads = [...leads]; // initialize full set
 
   const hotCount  = leads.filter(l=>l.temperature==='hot').length;
   const warmCount = leads.filter(l=>l.temperature==='warm').length;
@@ -2469,11 +2453,13 @@ function renderLeads() {
           <thead><tr style="background:var(--bg-tertiary)">
             ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Product Interest','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
           </tr></thead>
-          <tbody id="leads-body">${rows}</tbody>
+          <tbody id="leads-body"></tbody>
         </table>
       </div>
-      <div id="leads-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No leads match your filters.</div>
+      <div id="leads-pagination" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;padding:0 2px"></div>
     </div>`;
+
+  renderLeadsTable(); // fill tbody + pagination
 
   // Close dropdowns when clicking outside
   document.addEventListener('click', function(e) {
@@ -2481,6 +2467,62 @@ function renderLeads() {
       document.querySelectorAll('.multi-dropdown.open').forEach(d=>d.classList.remove('open'));
   }, { once: false });
 }
+
+function renderLeadsTable() {
+  const numMap = buildNumMap(D.leads||[]);
+  const total  = _filteredLeads.length;
+  const pages  = Math.max(1, Math.ceil(total/_leadsPerPage));
+  _leadsPage   = Math.max(1, Math.min(_leadsPage, pages));
+  const start  = (_leadsPage-1)*_leadsPerPage;
+  const slice  = _filteredLeads.slice(start, start+_leadsPerPage);
+
+  // Update table body
+  const tbody = document.getElementById('leads-body');
+  if (tbody) {
+    tbody.innerHTML = total===0
+      ? `<tr><td colspan="17" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>${(D.leads||[]).length===0?'No leads yet — use <strong>Leads → Add Lead</strong> to get started':'No leads match your filters.'}</td></tr>`
+      : slice.map(l=>renderLeadRow(l,numMap)).join('');
+  }
+
+  // Update pagination
+  const pagi = document.getElementById('leads-pagination');
+  if (!pagi) return;
+  if (total <= _leadsPerPage) { pagi.innerHTML=''; return; }
+
+  const endNum = Math.min(start+_leadsPerPage, total);
+  const pageNums = [];
+  if (pages<=7) { for(let i=1;i<=pages;i++) pageNums.push(i); }
+  else {
+    pageNums.push(1);
+    if(_leadsPage>3) pageNums.push('…');
+    for(let i=Math.max(2,_leadsPage-1);i<=Math.min(pages-1,_leadsPage+1);i++) pageNums.push(i);
+    if(_leadsPage<pages-2) pageNums.push('…');
+    pageNums.push(pages);
+  }
+
+  pagi.innerHTML = `
+    <span style="font-size:12px;color:var(--text-muted)">Showing ${start+1}–${endNum} of ${total} leads</span>
+    <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+      <button class="btn-cancel" style="font-size:12px;padding:4px 10px" onclick="setLeadsPage(${_leadsPage-1})" ${_leadsPage===1?'disabled':''}>← Prev</button>
+      ${pageNums.map(p=>p==='…'
+        ?`<span style="color:var(--text-muted);padding:0 2px">…</span>`
+        :`<button onclick="setLeadsPage(${p})" style="font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid ${p===_leadsPage?'#7c3aed':'var(--border)'};background:${p===_leadsPage?'#7c3aed':'var(--bg-tertiary)'};color:${p===_leadsPage?'#fff':'var(--text-primary)'};cursor:pointer">${p}</button>`
+      ).join('')}
+      <button class="btn-cancel" style="font-size:12px;padding:4px 10px" onclick="setLeadsPage(${_leadsPage+1})" ${_leadsPage===pages?'disabled':''}>Next →</button>
+    </div>
+    <select onchange="setLeadsPerPage(+this.value)" class="inl-select" style="font-size:12px;width:auto">
+      ${[25,50,100,200].map(n=>`<option value="${n}"${n===_leadsPerPage?' selected':''}>${n} per page</option>`).join('')}
+    </select>`;
+}
+
+function setLeadsPage(n) {
+  const pages = Math.max(1, Math.ceil(_filteredLeads.length/_leadsPerPage));
+  _leadsPage = Math.max(1, Math.min(n, pages));
+  renderLeadsTable();
+  document.getElementById('leads-body')?.closest('.table-wrap')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function setLeadsPerPage(n) { _leadsPerPage=n; _leadsPage=1; renderLeadsTable(); }
 
 /* ── Members ── */
 function renderMembers() {
@@ -2562,26 +2604,23 @@ function filterLeads() {
   const fs  = document.getElementById('leads-f-stage')?.value||'';
   const fso = document.getElementById('leads-f-source')?.value||'';
   const fa  = document.getElementById('leads-f-area')?.value||'';
-  let shown = 0;
-  document.querySelectorAll('#leads-body tr').forEach(row => {
-    const txt    = row.textContent.toLowerCase();
-    const temp   = row.dataset.temp   || '';
-    const muslim = row.dataset.muslim === '1';
-    const bdays  = parseInt(row.dataset.bdays ?? '999');
-    const qfPass = _leadsQF === 'all'      ? true :
-                   _leadsQF === 'hot'      ? temp === 'hot' :
-                   _leadsQF === 'birthday' ? bdays <= 7 :
-                   _leadsQF === 'muslim'   ? muslim : true;
-    const show = qfPass &&
-                 (!q   || txt.includes(q)) &&
-                 (!fs  || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fs)) &&
-                 (!fso || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fso)) &&
-                 (!fa  || [...row.querySelectorAll('.inl-select')].some(s=>s.value===fa));
-    row.style.display = show ? '' : 'none';
-    if (show) shown++;
+
+  _filteredLeads = (D.leads||[]).filter(l => {
+    const txt    = (l.name+' '+(l.phone||'')+' '+(l.area||'')+' '+(l.agent||'')).toLowerCase();
+    const bdDays = daysUntilBirthday(l.dob);
+    const qfPass = _leadsQF==='all'      ? true :
+                   _leadsQF==='hot'      ? l.temperature==='hot' :
+                   _leadsQF==='birthday' ? bdDays!==null&&bdDays<=7 :
+                   _leadsQF==='muslim'   ? !!l.is_muslim : true;
+    return qfPass &&
+           (!q   || txt.includes(q)) &&
+           (!fs  || l.stage===fs) &&
+           (!fso || l.source===fso) &&
+           (!fa  || l.area===fa);
   });
-  const emptyEl = document.getElementById('leads-empty');
-  if (emptyEl) emptyEl.style.display = shown === 0 ? 'block' : 'none';
+
+  _leadsPage = 1;
+  renderLeadsTable();
 }
 
 function toggleBrandDrop(id) {
