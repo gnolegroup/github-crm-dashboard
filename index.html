@@ -4112,12 +4112,37 @@ function renderCalendar() {
     if (d.getFullYear()===_calYear && d.getMonth()===_calMonth) addEv(sd.date,'specials',sd);
   });
 
+  // Birthday reminders (pending greeting due within 14 days)
+  leads.forEach(l => {
+    if (!l.dob || getBirthdayState(l)!=='pending') return;
+    const days = daysUntilBirthday(l.dob);
+    if (days===null||days>14) return;
+    const d = new Date(l.dob);
+    const ds = `${_calYear}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!eventMap[ds]) eventMap[ds]={birthdays:[],followups:[],specials:[],reminders:[],events:[]};
+    eventMap[ds].reminders = eventMap[ds].reminders||[];
+    eventMap[ds].reminders.push(l);
+  });
+
+  // Events / Roadshows (from custom occasions)
+  _customOccasions.forEach(o => {
+    if (!o.date) return;
+    const d = new Date(o.date);
+    if (d.getFullYear()===_calYear && d.getMonth()===_calMonth) {
+      if (!eventMap[o.date]) eventMap[o.date]={birthdays:[],followups:[],specials:[],reminders:[],events:[]};
+      eventMap[o.date].events = eventMap[o.date].events||[];
+      eventMap[o.date].events.push(o);
+    }
+  });
+
   const monthStart = new Date(_calYear, _calMonth, 1);
   const monthEnd   = new Date(_calYear, _calMonth+1, 0);
   const startDay   = (monthStart.getDay()+6)%7;
   const totalBDs   = Object.values(eventMap).reduce((s,e)=>s+e.birthdays.length,0);
   const totalFUs   = Object.values(eventMap).reduce((s,e)=>s+e.followups.length,0);
   const totalSDs   = Object.values(eventMap).reduce((s,e)=>s+e.specials.length,0);
+  const totalRMs   = Object.values(eventMap).reduce((s,e)=>s+(e.reminders||[]).length,0);
+  const totalEVs   = Object.values(eventMap).reduce((s,e)=>s+(e.events||[]).length,0);
   const monthName  = monthStart.toLocaleDateString('en-MY',{month:'long',year:'numeric'});
 
   // Build cells
@@ -4135,10 +4160,12 @@ function renderCalendar() {
     const isT = ds===todayStr, isS = ds===_calSelected;
     return `<td onclick="selectCalDate('${ds}')" style="cursor:pointer;padding:8px 6px;text-align:center;vertical-align:top;border-radius:8px;min-width:60px;background:${isS?'#7c3aed33':isT?'#D4A53518':'transparent'};border:${isT?'1.5px solid #D4A535':'1px solid transparent'}">
       <div style="font-size:14px;font-weight:${isT?700:400};color:${isT?'#D4A535':isS?'#a78bfa':'var(--text-primary)'};margin-bottom:4px">${d}</div>
-      <div style="display:flex;gap:3px;justify-content:center">
-        ${ev.birthdays.length?`<span style="width:7px;height:7px;border-radius:50%;background:#ff4d4f;display:inline-block"></span>`:''}
-        ${ev.followups.length?`<span style="width:7px;height:7px;border-radius:50%;background:#7F77DD;display:inline-block"></span>`:''}
-        ${ev.specials.length?`<span style="width:7px;height:7px;border-radius:50%;background:#D4A535;display:inline-block"></span>`:''}
+      <div style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap">
+        ${ev.birthdays.length?`<span style="width:6px;height:6px;border-radius:50%;background:#ff4d4f;display:inline-block" title="Birthday"></span>`:''}
+        ${(ev.reminders||[]).length?`<span style="width:6px;height:6px;border-radius:50%;background:#fa8c16;display:inline-block" title="Birthday reminder"></span>`:''}
+        ${ev.followups.length?`<span style="width:6px;height:6px;border-radius:50%;background:#7F77DD;display:inline-block" title="Follow-up"></span>`:''}
+        ${ev.specials.length?`<span style="width:6px;height:6px;border-radius:50%;background:#D4A535;display:inline-block" title="Special day"></span>`:''}
+        ${(ev.events||[]).length?`<span style="width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block" title="Event/Roadshow"></span>`:''}
       </div>
     </td>`;
   }).join('')}</tr>`).join('');
@@ -4177,6 +4204,20 @@ function renderCalendar() {
           <button class="wa-btn" style="font-size:11px" onclick="fuWhatsApp('${l.id}')">📱</button>
           <button class="btn-save" style="font-size:11px;padding:3px 10px" onclick="markFollowUpDone('${l.id}','${fu.fid}');renderCalendar()">✅</button>
         </div>`).join('')}`:''}
+      ${(ev.reminders||[]).length?`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fa8c16;margin:12px 0 8px">🔔 Birthday Reminders (${ev.reminders.length})</div>
+        ${ev.reminders.map(l=>`<div style="padding:8px 12px;background:var(--bg-tertiary);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${l.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Greeting pending · ${l.area||'—'}</div></div>
+          <button class="wa-btn" style="font-size:11px" onclick="sendBirthdayGreeting('${l.id}')">🎂 Greet</button>
+        </div>`).join('')}`:''}
+      ${(ev.events||[]).length?`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1D9E75;margin:12px 0 8px">🚀 Events / Roadshows</div>
+        ${ev.events.map(o=>`<div style="padding:8px 12px;background:var(--bg-tertiary);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">${o.icon||'🚀'}</span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${o.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${o.type}</div></div>
+        </div>`).join('')}`:''}
     </div>`;
   }
 
@@ -4191,19 +4232,12 @@ function renderCalendar() {
         <button class="btn-save"   style="font-size:12px;padding:6px 14px" onclick="calToday()">Today</button>
       </div>
     </div>
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="background:var(--bg-secondary);border:0.5px solid #ff4d4f44;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#ff4d4f;display:inline-block"></span>
-        <span style="font-size:12px;color:#ff4d4f;font-weight:600">${totalBDs} Birthday${totalBDs!==1?'s':''}</span>
-      </div>
-      <div style="background:var(--bg-secondary);border:0.5px solid #7F77DD44;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#7F77DD;display:inline-block"></span>
-        <span style="font-size:12px;color:#7F77DD;font-weight:600">${totalFUs} Follow-up${totalFUs!==1?'s':''}</span>
-      </div>
-      <div style="background:var(--bg-secondary);border:0.5px solid #D4A53544;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#D4A535;display:inline-block"></span>
-        <span style="font-size:12px;color:#D4A535;font-weight:600">${totalSDs} Special Day${totalSDs!==1?'s':''}</span>
-      </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      ${[['#ff4d4f',totalBDs,'🎂 Birthday'],['#fa8c16',totalRMs,'🔔 Reminder'],['#7F77DD',totalFUs,'📋 Follow-up'],['#D4A535',totalSDs,'🎉 Special Day'],['#1D9E75',totalEVs,'🚀 Event']].map(([c,n,l])=>`
+      <div style="background:var(--bg-secondary);border:0.5px solid ${c}44;border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:6px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span>
+        <span style="font-size:12px;color:${c};font-weight:600">${n} ${l}</span>
+      </div>`).join('')}
     </div>
     <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto">
       <table style="width:100%;border-collapse:separate;border-spacing:4px;min-width:420px">
@@ -4211,10 +4245,8 @@ function renderCalendar() {
         <tbody>${dayGrid}</tbody>
       </table>
     </div>
-    <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ff4d4f;display:inline-block"></span> Birthday</span>
-      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#7F77DD;display:inline-block"></span> Follow-up</span>
-      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#D4A535;display:inline-block"></span> Special day</span>
+    <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+      ${[['#ff4d4f','🎂 Birthday'],['#fa8c16','🔔 Reminder'],['#7F77DD','📋 Follow-up'],['#D4A535','🎉 Special Day'],['#1D9E75','🚀 Event/Roadshow']].map(([c,l])=>`<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span>${l}</span>`).join('')}
     </div>
     ${detail}
   </div>`;
