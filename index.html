@@ -981,8 +981,8 @@
 
   <!-- Calendar -->
   <div class="nav-menu">
-    <button class="nav-menu-btn">📅 Calendar <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
+    <button class="nav-menu-btn" onclick="navTo('calendar')" style="cursor:pointer">📅 Calendar</button>
+    <div class="nav-dropdown" style="display:none">
       <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📅</span>Schedule</div>
       <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🤝</span>Meetings</div>
       <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🎉</span>Events</div>
@@ -1035,6 +1035,7 @@
   <div class="tab-panel"        id="panel-specialdays"></div>
   <div class="tab-panel"        id="panel-whasend"></div>
   <div class="tab-panel"        id="panel-manager"></div>
+  <div class="tab-panel"        id="panel-calendar"></div>
 
 </main>
 
@@ -1741,6 +1742,14 @@ async function navTo(name) {
       D.leads = filterLeadsByRole(sdData || []);
     }
     renderSpecialDaysPage();
+
+  } else if (name === 'calendar') {
+    if (!D.leads || D.leads.length === 0) {
+      $('panel-calendar').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+      const { data: calData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      D.leads = filterLeadsByRole(calData || []);
+    }
+    renderCalendar();
 
   } else if (name === 'manager') {
     if (!isAdmin()) { showToast('⚠ Manager View is for Admin & Manager only'); navTo('home'); return; }
@@ -3674,6 +3683,9 @@ const SPECIAL_DAYS_FULL = [
 
 let _sdFilter = 'all';
 let _customOccasions = JSON.parse(localStorage.getItem('crm-custom-occasions') || '[]');
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+let _calSelected = null;
 let _bulkSendSD = null;
 let _bulkSendLeads = [];
 let _bulkSendIdx = 0;
@@ -4064,6 +4076,160 @@ function renderManagerView() {
       ${tabContent}
     </div>
   </div>`;
+}
+
+/* ── Calendar ── */
+function renderCalendar() {
+  const leads   = D.leads || [];
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+  const eventMap = {};
+
+  const addEv = (ds, type, data) => {
+    if (!eventMap[ds]) eventMap[ds] = { birthdays:[], followups:[], specials:[] };
+    eventMap[ds][type].push(data);
+  };
+
+  // Birthdays
+  leads.forEach(l => {
+    if (!l.dob) return;
+    const d = new Date(l.dob);
+    const ds = `${_calYear}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (new Date(ds).getFullYear()===_calYear && new Date(ds).getMonth()===_calMonth) addEv(ds,'birthdays',l);
+  });
+
+  // Follow-ups
+  leads.forEach(l => (l.logs||[]).forEach(lg => {
+    if (lg.type!=='followup'||!lg.due_date||lg.status==='done'||lg.status==='skipped') return;
+    const d = new Date(lg.due_date);
+    if (d.getFullYear()===_calYear && d.getMonth()===_calMonth) addEv(lg.due_date,'followups',{lead:l,fu:lg});
+  }));
+
+  // Special days
+  SPECIAL_DAYS.forEach(sd => {
+    if (!sd.date) return;
+    const d = new Date(sd.date);
+    if (d.getFullYear()===_calYear && d.getMonth()===_calMonth) addEv(sd.date,'specials',sd);
+  });
+
+  const monthStart = new Date(_calYear, _calMonth, 1);
+  const monthEnd   = new Date(_calYear, _calMonth+1, 0);
+  const startDay   = (monthStart.getDay()+6)%7;
+  const totalBDs   = Object.values(eventMap).reduce((s,e)=>s+e.birthdays.length,0);
+  const totalFUs   = Object.values(eventMap).reduce((s,e)=>s+e.followups.length,0);
+  const totalSDs   = Object.values(eventMap).reduce((s,e)=>s+e.specials.length,0);
+  const monthName  = monthStart.toLocaleDateString('en-MY',{month:'long',year:'numeric'});
+
+  // Build cells
+  const cells = [];
+  for (let i=0;i<startDay;i++) cells.push(null);
+  for (let d=1;d<=monthEnd.getDate();d++) cells.push(d);
+  while (cells.length%7!==0) cells.push(null);
+  const weeks = [];
+  for (let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+
+  const dayGrid = weeks.map(week=>`<tr>${week.map(d=>{
+    if(!d) return '<td style="background:transparent;min-width:60px"></td>';
+    const ds  = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ev  = eventMap[ds]||{birthdays:[],followups:[],specials:[]};
+    const isT = ds===todayStr, isS = ds===_calSelected;
+    return `<td onclick="selectCalDate('${ds}')" style="cursor:pointer;padding:8px 6px;text-align:center;vertical-align:top;border-radius:8px;min-width:60px;background:${isS?'#7c3aed33':isT?'#D4A53518':'transparent'};border:${isT?'1.5px solid #D4A535':'1px solid transparent'}">
+      <div style="font-size:14px;font-weight:${isT?700:400};color:${isT?'#D4A535':isS?'#a78bfa':'var(--text-primary)'};margin-bottom:4px">${d}</div>
+      <div style="display:flex;gap:3px;justify-content:center">
+        ${ev.birthdays.length?`<span style="width:7px;height:7px;border-radius:50%;background:#ff4d4f;display:inline-block"></span>`:''}
+        ${ev.followups.length?`<span style="width:7px;height:7px;border-radius:50%;background:#7F77DD;display:inline-block"></span>`:''}
+        ${ev.specials.length?`<span style="width:7px;height:7px;border-radius:50%;background:#D4A535;display:inline-block"></span>`:''}
+      </div>
+    </td>`;
+  }).join('')}</tr>`).join('');
+
+  // Detail panel
+  let detail = '';
+  if (_calSelected) {
+    const ev  = eventMap[_calSelected]||{birthdays:[],followups:[],specials:[]};
+    const lbl = new Date(_calSelected+'T00:00:00').toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const tot = ev.birthdays.length+ev.followups.length+ev.specials.length;
+    detail = `
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:18px;margin-top:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:14px">📅 ${lbl}</div>
+      ${tot===0?'<div style="color:var(--text-muted);font-size:13px">No events on this day.</div>':''}
+      ${ev.specials.length?`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#D4A535;margin-bottom:8px">🎉 Special Days</div>
+        ${ev.specials.map(sd=>`<div style="padding:8px 12px;background:#D4A53511;border:0.5px solid #D4A53544;border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">${sd.icon}</span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${sd.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${sd.type}</div></div>
+          <button class="wa-btn" style="font-size:11px" onclick="navTo('specialdays')">View →</button>
+        </div>`).join('')}`:''}
+      ${ev.birthdays.length?`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ff4d4f;margin:12px 0 8px">🎂 Birthdays (${ev.birthdays.length})</div>
+        ${ev.birthdays.map(l=>{const p=calcBirthdayPriority(l);const pc=PRIO_CFG[p||2];return`<div style="padding:8px 12px;background:var(--bg-tertiary);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${l.name}${l.is_muslim?' ☪️':''}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${PRODUCT_OPTS.find(o=>o.v===l.product)?.l||'—'} · ${l.area||'—'} · ${l.agent||'—'}</div></div>
+          ${p!==null?`<span style="background:${pc.color}22;color:${pc.color};border-radius:20px;font-size:10px;font-weight:700;padding:2px 7px">${pc.label}</span>`:''}
+          <button class="wa-btn" style="font-size:11px" onclick="greetLead('${l.id}')">🎂 Greet</button>
+        </div>`}).join('')}`:''}
+      ${ev.followups.length?`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7F77DD;margin:12px 0 8px">📋 Follow-ups (${ev.followups.length})</div>
+        ${ev.followups.map(({lead:l,fu})=>`<div style="padding:8px 12px;background:var(--bg-tertiary);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${l.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${fu.title}</div></div>
+          <button class="wa-btn" style="font-size:11px" onclick="fuWhatsApp('${l.id}')">📱</button>
+          <button class="btn-save" style="font-size:11px;padding:3px 10px" onclick="markFollowUpDone('${l.id}','${fu.fid}');renderCalendar()">✅</button>
+        </div>`).join('')}`:''}
+    </div>`;
+  }
+
+  $('panel-calendar').innerHTML = `
+  <div style="padding:24px 28px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div style="font-size:20px;font-weight:700;color:var(--text-primary)">📅 Calendar</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn-cancel" style="font-size:13px;padding:6px 12px" onclick="calNav(-1)">← Prev</button>
+        <span style="font-size:15px;font-weight:700;color:var(--text-primary);min-width:155px;text-align:center">${monthName}</span>
+        <button class="btn-cancel" style="font-size:13px;padding:6px 12px" onclick="calNav(1)">Next →</button>
+        <button class="btn-save"   style="font-size:12px;padding:6px 14px" onclick="calToday()">Today</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:var(--bg-secondary);border:0.5px solid #ff4d4f44;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
+        <span style="width:8px;height:8px;border-radius:50%;background:#ff4d4f;display:inline-block"></span>
+        <span style="font-size:12px;color:#ff4d4f;font-weight:600">${totalBDs} Birthday${totalBDs!==1?'s':''}</span>
+      </div>
+      <div style="background:var(--bg-secondary);border:0.5px solid #7F77DD44;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
+        <span style="width:8px;height:8px;border-radius:50%;background:#7F77DD;display:inline-block"></span>
+        <span style="font-size:12px;color:#7F77DD;font-weight:600">${totalFUs} Follow-up${totalFUs!==1?'s':''}</span>
+      </div>
+      <div style="background:var(--bg-secondary);border:0.5px solid #D4A53544;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
+        <span style="width:8px;height:8px;border-radius:50%;background:#D4A535;display:inline-block"></span>
+        <span style="font-size:12px;color:#D4A535;font-weight:600">${totalSDs} Special Day${totalSDs!==1?'s':''}</span>
+      </div>
+    </div>
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto">
+      <table style="width:100%;border-collapse:separate;border-spacing:4px;min-width:420px">
+        <thead><tr>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<th style="text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);padding:4px;text-transform:uppercase;letter-spacing:.06em">${d}</th>`).join('')}</tr></thead>
+        <tbody>${dayGrid}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ff4d4f;display:inline-block"></span> Birthday</span>
+      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#7F77DD;display:inline-block"></span> Follow-up</span>
+      <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#D4A535;display:inline-block"></span> Special day</span>
+    </div>
+    ${detail}
+  </div>`;
+}
+
+function selectCalDate(ds) { _calSelected = _calSelected===ds?null:ds; renderCalendar(); }
+function calNav(dir) {
+  _calMonth+=dir;
+  if(_calMonth>11){_calMonth=0;_calYear++;}
+  if(_calMonth<0){_calMonth=11;_calYear--;}
+  _calSelected=null; renderCalendar();
+}
+function calToday() {
+  const t=new Date(); _calYear=t.getFullYear(); _calMonth=t.getMonth();
+  _calSelected=t.toISOString().slice(0,10); renderCalendar();
 }
 
 /* ── Toast ── */
