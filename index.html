@@ -4160,12 +4160,12 @@ function renderCalendar() {
     const isT = ds===todayStr, isS = ds===_calSelected;
     return `<td onclick="selectCalDate('${ds}')" style="cursor:pointer;padding:8px 6px;text-align:center;vertical-align:top;border-radius:8px;min-width:60px;background:${isS?'#7c3aed33':isT?'#D4A53518':'transparent'};border:${isT?'1.5px solid #D4A535':'1px solid transparent'}">
       <div style="font-size:14px;font-weight:${isT?700:400};color:${isT?'#D4A535':isS?'#a78bfa':'var(--text-primary)'};margin-bottom:4px">${d}</div>
-      <div style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap">
-        ${ev.birthdays.length?`<span style="width:6px;height:6px;border-radius:50%;background:#ff4d4f;display:inline-block" title="Birthday"></span>`:''}
-        ${(ev.reminders||[]).length?`<span style="width:6px;height:6px;border-radius:50%;background:#fa8c16;display:inline-block" title="Birthday reminder"></span>`:''}
-        ${ev.followups.length?`<span style="width:6px;height:6px;border-radius:50%;background:#7F77DD;display:inline-block" title="Follow-up"></span>`:''}
-        ${ev.specials.length?`<span style="width:6px;height:6px;border-radius:50%;background:#D4A535;display:inline-block" title="Special day"></span>`:''}
-        ${(ev.events||[]).length?`<span style="width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block" title="Event/Roadshow"></span>`:''}
+      <div style="display:flex;gap:1px;justify-content:center;flex-wrap:wrap;font-size:10px;line-height:1.2">
+        ${ev.birthdays.length?`<span title="${ev.birthdays.length} Birthday${ev.birthdays.length>1?'s':''}">🎂</span>`:''}
+        ${(ev.reminders||[]).length?`<span title="${ev.reminders.length} Reminder${ev.reminders.length>1?'s':''}">🔔</span>`:''}
+        ${ev.followups.length?`<span title="${ev.followups.length} Follow-up${ev.followups.length>1?'s':''}">📋</span>`:''}
+        ${ev.specials.length?`<span title="${ev.specials.length} Special Day${ev.specials.length>1?'s':''}">🎉</span>`:''}
+        ${(ev.events||[]).length?`<span title="${ev.events.length} Event${ev.events.length>1?'s':''}">🚀</span>`:''}
       </div>
     </td>`;
   }).join('')}</tr>`).join('');
@@ -4246,7 +4246,7 @@ function renderCalendar() {
       </table>
     </div>
     <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
-      ${[['#ff4d4f','🎂 Birthday'],['#fa8c16','🔔 Reminder'],['#7F77DD','📋 Follow-up'],['#D4A535','🎉 Special Day'],['#1D9E75','🚀 Event/Roadshow']].map(([c,l])=>`<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span>${l}</span>`).join('')}
+      ${[['🎂','Birthday'],['🔔','Reminder'],['📋','Follow-up'],['🎉','Special Day'],['🚀','Event/Roadshow']].map(([icon,l])=>`<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px">${icon} ${l}</span>`).join('')}
     </div>
     ${detail}
   </div>`;
