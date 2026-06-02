@@ -4160,7 +4160,7 @@ function renderCalendar() {
     const isT = ds===todayStr, isS = ds===_calSelected;
     return `<td onclick="selectCalDate('${ds}')" style="cursor:pointer;padding:8px 6px;text-align:center;vertical-align:top;border-radius:8px;min-width:60px;background:${isS?'#7c3aed33':isT?'#D4A53518':'transparent'};border:${isT?'1.5px solid #D4A535':'1px solid transparent'}">
       <div style="font-size:14px;font-weight:${isT?700:400};color:${isT?'#D4A535':isS?'#a78bfa':'var(--text-primary)'};margin-bottom:4px">${d}</div>
-      <div style="display:flex;gap:1px;justify-content:center;flex-wrap:wrap;font-size:10px;line-height:1.2">
+      <div style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;font-size:14px;line-height:1.2">
         ${ev.birthdays.length?`<span title="${ev.birthdays.length} Birthday${ev.birthdays.length>1?'s':''}">🎂</span>`:''}
         ${(ev.reminders||[]).length?`<span title="${ev.reminders.length} Reminder${ev.reminders.length>1?'s':''}">🔔</span>`:''}
         ${ev.followups.length?`<span title="${ev.followups.length} Follow-up${ev.followups.length>1?'s':''}">📋</span>`:''}
