@@ -925,11 +925,7 @@
 
   <!-- Dashboard -->
   <div class="nav-menu">
-    <button class="nav-menu-btn">🏠 Dashboard <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('home')"><span class="nav-dropdown-icon">🏠</span>Home</div>
-      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📊</span>Analytics</div>
-    </div>
+    <button class="nav-menu-btn" onclick="navTo('home')" style="cursor:pointer">🏠 Dashboard</button>
   </div>
 
   <!-- Member -->
@@ -970,13 +966,14 @@
     </div>
   </div>
 
-  <!-- Report -->
+  <!-- Analytics -->
   <div class="nav-menu">
-    <button class="nav-menu-btn">📊 Report <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('pipeline')"><span class="nav-dropdown-icon">📈</span>Statistics</div>
-      <div class="nav-dropdown-item" id="nav-manager-view" onclick="navTo('manager')"><span class="nav-dropdown-icon">🏆</span>Manager View</div>
-    </div>
+    <button class="nav-menu-btn" onclick="navTo('pipeline')" style="cursor:pointer">📈 Analytics</button>
+  </div>
+
+  <!-- Manager -->
+  <div class="nav-menu">
+    <button id="nav-manager-view" class="nav-menu-btn" onclick="navTo('manager')" style="cursor:pointer">🏆 Manager</button>
   </div>
 
   <!-- Calendar -->
