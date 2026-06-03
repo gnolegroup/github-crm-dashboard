@@ -1427,16 +1427,21 @@ let CRM_SETTINGS = {
     { day:14, title:'Final follow up — close or mark lost' },
     { day:30, title:'Re-engage — 1 month check-in' },
   ],
+  templates: {
+    birthday: 'Selamat Hari Jadi {name}! 🎂 Semoga panjang umur dan murah rezeki. — {signoff}',
+    followup: 'Hi {name}! 😊 This is {agent} from {company}. Just following up on your interest in {product}. Are you still interested? We\'d love to help! 🙏',
+  },
   specialDays: [
-    { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic',  icon:'🌙' },
-    { id:'sultans',   name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑' },
-    { id:'national',  name:'National Day 2027',   date:'2027-02-23', type:'national', icon:'🇧🇳' },
+    { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
+    { id:'sultans',   name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑', template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — {signoff}' },
+    { id:'national',  name:'National Day 2027',   date:'2027-02-23', type:'national', icon:'🇧🇳', template:'Selamat Hari Kebangsaan Brunei, {name}! Salam Brunei Darussalam. — {signoff}' },
   ]
 };
 function loadCRMSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('crm-settings')||'{}');
     if (s.company)    CRM_SETTINGS.company    = { ...CRM_SETTINGS.company,    ...s.company };
+    if (s.templates)  CRM_SETTINGS.templates  = { ...CRM_SETTINGS.templates,  ...s.templates };
     if (s.fuSequence && s.fuSequence.length) CRM_SETTINGS.fuSequence = s.fuSequence;
     if (s.specialDays && s.specialDays.length) CRM_SETTINGS.specialDays = s.specialDays;
   } catch(e) {}
@@ -1446,6 +1451,19 @@ function saveCRMSettings() {
   showToast('✅ Settings saved!');
 }
 loadCRMSettings();
+// Template resolver — replaces {name} {agent} {company} {product} {signoff}
+function resolveTemplate(tmpl, lead) {
+  const first   = (lead.name||'').split(' ')[0];
+  const prod    = PRODUCT_OPTS.find(o=>o.v===lead.product)?.l || lead.product || 'our products';
+  return (tmpl||'')
+    .replace(/{name}/g,     first)
+    .replace(/{fullname}/g, lead.name||'')
+    .replace(/{agent}/g,    lead.agent||CRM_SETTINGS.company.signoff)
+    .replace(/{company}/g,  CRM_SETTINGS.company.name)
+    .replace(/{product}/g,  prod)
+    .replace(/{signoff}/g,  CRM_SETTINGS.company.signoff);
+}
+
 const ADMIN_ROLES = ['Admin','Manager'];
 function isAdmin()        { return ADMIN_ROLES.includes(D.currentRole); }
 function canEditLead(l)   { return isAdmin() || !l.agent || l.agent === D.currentAgentName; }
@@ -2336,8 +2354,7 @@ function greetLead(id) {
   if (!l || !l.phone) { showToast('⚠ No phone number for this lead'); return; }
   const clean = (l.phone||'').replace(/[^0-9]/g,'');
   const num = clean.startsWith('673') ? clean : '673' + clean;
-  const first = (l.name||'').split(' ')[0];
-  const msg = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+  const msg = resolveTemplate(CRM_SETTINGS.templates.birthday, l);
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -3234,8 +3251,7 @@ async function skipFollowUp(leadId, fid) {
 function fuWhatsApp(leadId) {
   const l = D.leads.find(x=>x.id===leadId); if(!l||!l.phone) { showToast('⚠ No phone number'); return; }
   const clean=(l.phone||'').replace(/[^0-9]/g,''); const num=clean.startsWith('673')?clean:'673'+clean;
-  const prod = PRODUCT_OPTS.find(o=>o.v===l.product)?.l||l.product||'our product';
-  const msg  = `Hi ${(l.name||'').split(' ')[0]}! 😊 This is ${l.agent||'the TEL team'} from TEL Home Appliances. Just following up on your interest in ${prod}. Are you still interested? We'd love to help! 🙏`;
+  const msg = resolveTemplate(CRM_SETTINGS.templates.followup, l);
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
@@ -3600,7 +3616,7 @@ function renderBirthdayPage() {
   const cards = visible.map(({l, p, state, days, lc}) => {
     const pc    = PRIO_CFG[p];
     const first = (l.name||'').split(' ')[0];
-    const msg   = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+    const msg   = resolveTemplate(CRM_SETTINGS.templates.birthday, l);
     const lcCol = lc === null || lc >= 90 ? '#ff4d4f' : lc >= 31 ? '#fa8c16' : 'var(--text-muted)';
     const prodLabel = PRODUCT_OPTS.find(o=>o.v===l.product)?.l || l.product || '—';
     return `
@@ -3700,7 +3716,7 @@ function renderWhasendPage() {
 
   const cards = items.map(l => {
     const first = (l.name||'').split(' ')[0];
-    const msg   = `Selamat Hari Jadi ${first}! 🎂 Semoga panjang umur dan murah rezeki. — ${l.agent||'TEL Team'}`;
+    const msg   = resolveTemplate(CRM_SETTINGS.templates.birthday, l);
     const p     = calcBirthdayPriority(l);
     const pc    = PRIO_CFG[p||2];
     return `
@@ -4290,6 +4306,25 @@ function renderSettingsPage() {
       <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveCompanyInfo()">Save Company Info</button>
     `)}
 
+    ${card('📱','Message Templates', `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+        Available variables: <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">{name}</code>
+        <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">{agent}</code>
+        <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">{company}</code>
+        <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">{product}</code>
+        <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">{signoff}</code>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);display:block;margin-bottom:5px">🎂 Birthday Greeting</label>
+        <textarea id="tmpl-birthday" class="modal-input" style="height:70px;resize:vertical;font-size:13px">${CRM_SETTINGS.templates.birthday}</textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);display:block;margin-bottom:5px">📋 Follow-up WhatsApp</label>
+        <textarea id="tmpl-followup" class="modal-input" style="height:70px;resize:vertical;font-size:13px">${CRM_SETTINGS.templates.followup}</textarea>
+      </div>
+      <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveTemplates()">Save Templates</button>
+    `)}
+
     ${card('🎉','Special Days Manager', `
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <span style="font-size:12px;color:var(--text-muted)">Load all Brunei public holidays:</span>
@@ -4302,6 +4337,7 @@ function renderSettingsPage() {
           <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Name</th>
           <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Date</th>
           <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Type</th>
+          <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">WhatsApp Message</th>
           <th style="padding:6px 10px;background:var(--bg-tertiary)"></th>
         </tr></thead>
         <tbody id="sd-settings-body">
@@ -4315,6 +4351,9 @@ function renderSettingsPage() {
                 <option${s.type==='national'?' selected':''}>national</option>
                 <option${s.type==='personal'?' selected':''}>personal</option>
               </select>
+            </td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)">
+              <textarea class="inl-select" style="width:260px;height:52px;resize:vertical;font-size:11px" oninput="CRM_SETTINGS.specialDays[${i}].template=this.value">${s.template||''}</textarea>
             </td>
             <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)">
               <button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f44" onclick="removeSpecialDay(${i})">Remove</button>
@@ -4365,32 +4404,38 @@ function renderSettingsPage() {
   </div>`;
 }
 
+const _sdTemplates = {
+  islamic:  'Selamat {holiday}, {name}! Semoga diberkati. — {signoff}',
+  national: 'Sempena {holiday}, {name}! Semoga Brunei terus makmur. — {signoff}',
+};
+function _sdTmpl(name, type) { return _sdTemplates[type]?.replace(/{holiday}/g,name) || `Salam {name}! Sempena ${name}. — {signoff}`; }
+
 const BRUNEI_HOLIDAYS = {
   2026: [
-    { name:"New Year's Day",                  date:'2026-01-01', type:'national', icon:'🎆' },
-    { name:'Chinese New Year',                date:'2026-01-29', type:'national', icon:'🧧' },
-    { name:'National Day',                    date:'2026-02-23', type:'national', icon:'🇧🇳' },
-    { name:'Hari Raya Aidilfitri',            date:'2026-03-20', type:'islamic',  icon:'🌙' },
-    { name:'Hari Raya Aidilfitri (2nd Day)',  date:'2026-03-21', type:'islamic',  icon:'🌙' },
-    { name:'Hari Raya Aidiladha',             date:'2026-05-27', type:'islamic',  icon:'🌙' },
-    { name:'RBMR Anniversary',                date:'2026-05-31', type:'national', icon:'🎖️' },
-    { name:'Awal Muharram',                   date:'2026-06-16', type:'islamic',  icon:'🌙' },
-    { name:"Sultan's Birthday",               date:'2026-07-15', type:'national', icon:'👑' },
-    { name:'Maulidur Rasul',                  date:'2026-09-04', type:'islamic',  icon:'🌙' },
-    { name:'Christmas Day',                   date:'2026-12-25', type:'national', icon:'🎄' },
+    { name:"New Year's Day",                 date:'2026-01-01', type:'national', icon:'🎆', template:_sdTmpl("New Year's Day",'national') },
+    { name:'Chinese New Year',               date:'2026-01-29', type:'national', icon:'🧧', template:_sdTmpl('Chinese New Year','national') },
+    { name:'National Day',                   date:'2026-02-23', type:'national', icon:'🇧🇳', template:'Selamat Hari Kebangsaan Brunei ke-42, {name}! Salam Brunei Darussalam. — {signoff}' },
+    { name:'Hari Raya Aidilfitri',           date:'2026-03-20', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidilfitri, {name}! Maaf zahir dan batin dari {company}. — {signoff}' },
+    { name:'Hari Raya Aidilfitri (2nd Day)', date:'2026-03-21', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidilfitri, {name}! Semoga kegembiraan berterusan. — {signoff}' },
+    { name:'Hari Raya Aidiladha',            date:'2026-05-27', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
+    { name:'RBMR Anniversary',               date:'2026-05-31', type:'national', icon:'🎖️', template:_sdTmpl('RBMR Anniversary','national') },
+    { name:'Awal Muharram',                  date:'2026-06-16', type:'islamic',  icon:'🌙', template:'Selamat Tahun Baru Islam 1448H, {name}! Semoga diberkati. — {signoff}' },
+    { name:"Sultan's Birthday",              date:'2026-07-15', type:'national', icon:'👑', template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — {signoff}' },
+    { name:'Maulidur Rasul',                 date:'2026-09-04', type:'islamic',  icon:'🌙', template:'Selamat Maulidur Rasul, {name}! Semoga kita sentiasa mengikuti sunah Nabi. — {signoff}' },
+    { name:'Christmas Day',                  date:'2026-12-25', type:'national', icon:'🎄', template:'Merry Christmas, {name}! Wishing you joy and happiness. — {signoff}' },
   ],
   2027: [
-    { name:"New Year's Day",                  date:'2027-01-01', type:'national', icon:'🎆' },
-    { name:'Chinese New Year',                date:'2027-02-17', type:'national', icon:'🧧' },
-    { name:'National Day',                    date:'2027-02-23', type:'national', icon:'🇧🇳' },
-    { name:'Hari Raya Aidilfitri',            date:'2027-03-10', type:'islamic',  icon:'🌙' },
-    { name:'Hari Raya Aidilfitri (2nd Day)',  date:'2027-03-11', type:'islamic',  icon:'🌙' },
-    { name:'Hari Raya Aidiladha',             date:'2027-05-17', type:'islamic',  icon:'🌙' },
-    { name:'RBMR Anniversary',                date:'2027-05-31', type:'national', icon:'🎖️' },
-    { name:'Awal Muharram',                   date:'2027-06-06', type:'islamic',  icon:'🌙' },
-    { name:"Sultan's Birthday",               date:'2027-07-15', type:'national', icon:'👑' },
-    { name:'Maulidur Rasul',                  date:'2027-08-24', type:'islamic',  icon:'🌙' },
-    { name:'Christmas Day',                   date:'2027-12-25', type:'national', icon:'🎄' },
+    { name:"New Year's Day",                 date:'2027-01-01', type:'national', icon:'🎆', template:_sdTmpl("New Year's Day",'national') },
+    { name:'Chinese New Year',               date:'2027-02-17', type:'national', icon:'🧧', template:_sdTmpl('Chinese New Year','national') },
+    { name:'National Day',                   date:'2027-02-23', type:'national', icon:'🇧🇳', template:'Selamat Hari Kebangsaan Brunei ke-43, {name}! Salam Brunei Darussalam. — {signoff}' },
+    { name:'Hari Raya Aidilfitri',           date:'2027-03-10', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidilfitri, {name}! Maaf zahir dan batin dari {company}. — {signoff}' },
+    { name:'Hari Raya Aidilfitri (2nd Day)', date:'2027-03-11', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidilfitri, {name}! Semoga kegembiraan berterusan. — {signoff}' },
+    { name:'Hari Raya Aidiladha',            date:'2027-05-17', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
+    { name:'RBMR Anniversary',               date:'2027-05-31', type:'national', icon:'🎖️', template:_sdTmpl('RBMR Anniversary','national') },
+    { name:'Awal Muharram',                  date:'2027-06-06', type:'islamic',  icon:'🌙', template:'Selamat Tahun Baru Islam 1449H, {name}! Semoga diberkati. — {signoff}' },
+    { name:"Sultan's Birthday",              date:'2027-07-15', type:'national', icon:'👑', template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — {signoff}' },
+    { name:'Maulidur Rasul',                 date:'2027-08-24', type:'islamic',  icon:'🌙', template:'Selamat Maulidur Rasul, {name}! Semoga kita sentiasa mengikuti sunah Nabi. — {signoff}' },
+    { name:'Christmas Day',                  date:'2027-12-25', type:'national', icon:'🎄', template:'Merry Christmas, {name}! Wishing you joy and happiness. — {signoff}' },
   ]
 };
 
@@ -4408,6 +4453,12 @@ function loadBruneiHolidays(year) {
   CRM_SETTINGS.specialDays.sort((a,b)=>a.date.localeCompare(b.date));
   showToast(added>0 ? `✅ Loaded ${added} Brunei ${year} holidays!` : `All ${year} holidays already loaded`, 3000);
   renderSettingsPage();
+}
+
+function saveTemplates() {
+  CRM_SETTINGS.templates.birthday = document.getElementById('tmpl-birthday').value.trim() || CRM_SETTINGS.templates.birthday;
+  CRM_SETTINGS.templates.followup = document.getElementById('tmpl-followup').value.trim() || CRM_SETTINGS.templates.followup;
+  saveCRMSettings();
 }
 
 function saveCompanyInfo() {
