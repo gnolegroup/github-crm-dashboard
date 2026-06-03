@@ -983,14 +983,7 @@
 
   <!-- Settings -->
   <div class="nav-menu">
-    <button class="nav-menu-btn">⚙ Settings <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🛠</span>General</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🔗</span>Integrations</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">👥</span>Team</div>
-      <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">💳</span>Billing</div>
-    </div>
+    <button class="nav-menu-btn" onclick="navTo('settings')" style="cursor:pointer">⚙ Settings</button>
   </div>
 
   <!-- Right side: clock + user -->
@@ -1028,6 +1021,7 @@
   <div class="tab-panel"        id="panel-whasend"></div>
   <div class="tab-panel"        id="panel-manager"></div>
   <div class="tab-panel"        id="panel-calendar"></div>
+  <div class="tab-panel"        id="panel-settings"></div>
 
 </main>
 
@@ -1422,6 +1416,36 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let D = { currentRole:'Admin', currentAgentName:'', currentEmail:'' };
+
+// CRM Settings (localStorage)
+let CRM_SETTINGS = {
+  company:    { name:'TEL Home Appliances', whatsapp:'', signoff:'TEL Team' },
+  fuSequence: [
+    { day:1,  title:'First contact — call or WhatsApp' },
+    { day:3,  title:'Follow up — no response yet?' },
+    { day:7,  title:'Send product info & quotation' },
+    { day:14, title:'Final follow up — close or mark lost' },
+    { day:30, title:'Re-engage — 1 month check-in' },
+  ],
+  specialDays: [
+    { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic',  icon:'🌙' },
+    { id:'sultans',   name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑' },
+    { id:'national',  name:'National Day 2027',   date:'2027-02-23', type:'national', icon:'🇧🇳' },
+  ]
+};
+function loadCRMSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('crm-settings')||'{}');
+    if (s.company)    CRM_SETTINGS.company    = { ...CRM_SETTINGS.company,    ...s.company };
+    if (s.fuSequence && s.fuSequence.length) CRM_SETTINGS.fuSequence = s.fuSequence;
+    if (s.specialDays && s.specialDays.length) CRM_SETTINGS.specialDays = s.specialDays;
+  } catch(e) {}
+}
+function saveCRMSettings() {
+  localStorage.setItem('crm-settings', JSON.stringify(CRM_SETTINGS));
+  showToast('✅ Settings saved!');
+}
+loadCRMSettings();
 const ADMIN_ROLES = ['Admin','Manager'];
 function isAdmin()        { return ADMIN_ROLES.includes(D.currentRole); }
 function canEditLead(l)   { return isAdmin() || !l.agent || l.agent === D.currentAgentName; }
@@ -1734,6 +1758,9 @@ async function navTo(name) {
       D.leads = filterLeadsByRole(sdData || []);
     }
     renderSpecialDaysPage();
+
+  } else if (name === 'settings') {
+    renderSettingsPage();
 
   } else if (name === 'calendar') {
     if (!D.leads || D.leads.length === 0) {
@@ -3128,17 +3155,11 @@ async function confirmDeleteDup(id, name) {
 }
 
 /* ── Follow-Up Reminder System ── */
-const FU_SEQUENCE = [
-  { day:1,  title:'First contact — call or WhatsApp' },
-  { day:3,  title:'Follow up — no response yet?' },
-  { day:7,  title:'Send product info & quotation' },
-  { day:14, title:'Final follow up — close or mark lost' },
-  { day:30, title:'Re-engage — 1 month check-in' },
-];
+// FU_SEQUENCE now comes from CRM_SETTINGS (editable in Settings page)
 
 function createFollowUpLogs(leadDate) {
   const base = new Date(leadDate + 'T00:00:00');
-  return FU_SEQUENCE.map(s => {
+  return CRM_SETTINGS.fuSequence.map(s => {
     const due = new Date(base);
     due.setDate(due.getDate() + s.day);
     return { type:'followup', fid:'fu'+s.day+'_'+Math.random().toString(36).slice(2,7), title:s.title, due_date:due.toISOString().slice(0,10), status:'pending', seq:s.day };
@@ -3332,11 +3353,8 @@ function renderFollowUpPage() {
 }
 
 /* ── Home Dashboard ── */
-const SPECIAL_DAYS = [
-  { name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic', icon:'🌙' },
-  { name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑' },
-  { name:'National Day',        date:'2027-02-23', type:'national', icon:'🇧🇳' },
-];
+// SPECIAL_DAYS now comes from CRM_SETTINGS.specialDays (editable in Settings)
+const SPECIAL_DAYS = CRM_SETTINGS.specialDays;
 
 function renderHomeDashboard() {
   const leads   = D.leads || [];
@@ -4240,6 +4258,152 @@ function exportPDF() {
   const w = window.open('','_blank');
   if (w) { w.document.write(html); w.document.close(); w.focus(); }
   else showToast('⚠ Allow pop-ups to open the PDF report');
+}
+
+/* ── Settings Page ── */
+function renderSettingsPage() {
+  const c  = CRM_SETTINGS.company;
+  const fu = CRM_SETTINGS.fuSequence;
+  const sd = CRM_SETTINGS.specialDays;
+
+  const card = (icon, title, content) => `
+    <div style="background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:16px">${icon} ${title}</div>
+      ${content}
+    </div>`;
+
+  const field = (label, id, val, placeholder='', type='text') => `
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);display:block;margin-bottom:5px">${label}</label>
+      <input id="${id}" class="modal-input" type="${type}" value="${val||''}" placeholder="${placeholder}" style="max-width:420px">
+    </div>`;
+
+  $('panel-settings').innerHTML = `
+  <div style="padding:24px 28px">
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:20px">⚙️ Settings</div>
+
+    ${card('🏢','Company Info', `
+      ${field('Company Name','set-name', c.name, 'e.g. TEL Home Appliances')}
+      ${field('WhatsApp Business Number','set-wa', c.whatsapp, 'e.g. 6738651109')}
+      ${field('Message Sign-off','set-signoff', c.signoff, 'e.g. TEL Team')}
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Sign-off appears in birthday greetings, bulk messages and PDF reports.</div>
+      <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveCompanyInfo()">Save Company Info</button>
+    `)}
+
+    ${card('🎉','Special Days Manager', `
+      <table style="width:100%;border-collapse:collapse;margin-bottom:14px">
+        <thead><tr>
+          <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Icon</th>
+          <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Name</th>
+          <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Date</th>
+          <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Type</th>
+          <th style="padding:6px 10px;background:var(--bg-tertiary)"></th>
+        </tr></thead>
+        <tbody id="sd-settings-body">
+          ${sd.map((s,i)=>`<tr>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border);font-size:18px">${s.icon}</td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)"><input class="inl-select" value="${s.name}" oninput="CRM_SETTINGS.specialDays[${i}].name=this.value" style="width:180px"></td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)"><input class="inl-select" type="date" value="${s.date}" oninput="CRM_SETTINGS.specialDays[${i}].date=this.value"></td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)">
+              <select class="inl-select" onchange="CRM_SETTINGS.specialDays[${i}].type=this.value">
+                <option${s.type==='islamic'?' selected':''}>islamic</option>
+                <option${s.type==='national'?' selected':''}>national</option>
+                <option${s.type==='personal'?' selected':''}>personal</option>
+              </select>
+            </td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid var(--border)">
+              <button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f44" onclick="removeSpecialDay(${i})">Remove</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Name</label>
+          <input id="new-sd-name" class="modal-input" placeholder="e.g. Hari Raya Aidilfitri">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Date</label>
+          <input id="new-sd-date" class="modal-input" type="date">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Type</label>
+          <select id="new-sd-type" class="modal-select">
+            <option value="islamic">Islamic</option>
+            <option value="national">National</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+        <button class="btn-save" style="font-size:12px;padding:7px 14px" onclick="addSpecialDaySetting()">+ Add</button>
+      </div>
+      <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveSpecialDays()">Save Special Days</button>
+    `)}
+
+    ${card('📋','Follow-Up Sequence', `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">These reminders are auto-created when a new lead is added.</div>
+      <div id="fu-seq-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        ${fu.map((s,i)=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;color:var(--text-secondary);white-space:nowrap;width:14px;text-align:right">Day</span>
+          <input class="modal-input" type="number" min="1" value="${s.day}" oninput="CRM_SETTINGS.fuSequence[${i}].day=+this.value" style="width:70px;padding:6px 8px">
+          <input class="modal-input" value="${s.title}" oninput="CRM_SETTINGS.fuSequence[${i}].title=this.value" style="flex:1;padding:6px 10px">
+          <button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f44" onclick="removeFUStep(${i})">Remove</button>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn-cancel" style="font-size:12px;padding:6px 14px" onclick="addFUStep()">+ Add Step</button>
+        <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveFUSequence()">Save Sequence</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">⚠️ Changes apply to new leads only. Existing leads keep their current reminders.</div>
+    `)}
+
+  </div>`;
+}
+
+function saveCompanyInfo() {
+  CRM_SETTINGS.company.name    = document.getElementById('set-name').value.trim()    || 'TEL Home Appliances';
+  CRM_SETTINGS.company.whatsapp= document.getElementById('set-wa').value.trim();
+  CRM_SETTINGS.company.signoff = document.getElementById('set-signoff').value.trim() || 'TEL Team';
+  saveCRMSettings();
+}
+
+function addSpecialDaySetting() {
+  const name = document.getElementById('new-sd-name').value.trim();
+  const date = document.getElementById('new-sd-date').value;
+  const type = document.getElementById('new-sd-type').value;
+  if (!name || !date) { showToast('⚠ Please enter name and date'); return; }
+  const icons = { islamic:'🌙', national:'👑', personal:'🎊' };
+  CRM_SETTINGS.specialDays.push({ id:'sd_'+Date.now(), name, date, type, icon:icons[type]||'🎉' });
+  renderSettingsPage();
+}
+
+function removeSpecialDay(i) {
+  CRM_SETTINGS.specialDays.splice(i, 1);
+  renderSettingsPage();
+}
+
+function saveSpecialDays() {
+  saveCRMSettings();
+  // Sync SPECIAL_DAYS reference
+  SPECIAL_DAYS.length = 0;
+  CRM_SETTINGS.specialDays.forEach(s => SPECIAL_DAYS.push(s));
+}
+
+function addFUStep() {
+  const maxDay = Math.max(...CRM_SETTINGS.fuSequence.map(s=>s.day), 0);
+  CRM_SETTINGS.fuSequence.push({ day: maxDay+7, title:'New follow-up step' });
+  renderSettingsPage();
+}
+
+function removeFUStep(i) {
+  if (CRM_SETTINGS.fuSequence.length <= 1) { showToast('⚠ Must have at least 1 step'); return; }
+  CRM_SETTINGS.fuSequence.splice(i, 1);
+  renderSettingsPage();
+}
+
+function saveFUSequence() {
+  CRM_SETTINGS.fuSequence.sort((a,b)=>a.day-b.day);
+  saveCRMSettings();
 }
 
 /* ── Calendar ── */
