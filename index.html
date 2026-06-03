@@ -928,31 +928,9 @@
     <button class="nav-menu-btn" onclick="navTo('home')" style="cursor:pointer">🏠 Dashboard</button>
   </div>
 
-  <!-- Member -->
+  <!-- Analytics -->
   <div class="nav-menu">
-    <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('members')"><span class="nav-dropdown-icon">👥</span>All Members</div>
-      <div class="nav-dropdown-item" id="nav-add-member" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
-      <div class="nav-dropdown-divider"></div>
-      <div class="nav-dropdown-item" id="nav-roles" onclick="navTo('members')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
-    </div>
-  </div>
-
-  <!-- Survey -->
-  <div class="nav-menu">
-    <button class="nav-menu-btn" onclick="navTo('survey')" style="cursor:pointer">📱 Survey</button>
-  </div>
-
-  <!-- Reminders -->
-  <div class="nav-menu">
-    <button class="nav-menu-btn">🔔 Reminders <span id="bd-nav-badge" style="display:none;background:#ff4d4f;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;vertical-align:middle"></span> <span class="chevron">▾</span></button>
-    <div class="nav-dropdown">
-      <div class="nav-dropdown-item" onclick="navTo('followups')"><span class="nav-dropdown-icon">📋</span>Follow-ups</div>
-      <div class="nav-dropdown-item" onclick="navTo('birthday')"><span class="nav-dropdown-icon">🎂</span>Birthdays</div>
-      <div class="nav-dropdown-item" onclick="navTo('specialdays')"><span class="nav-dropdown-icon">🎉</span>Special days</div>
-      <div class="nav-dropdown-item" onclick="navTo('whasend')"><span class="nav-dropdown-icon">💬</span>WhatsApp send</div>
-    </div>
+    <button class="nav-menu-btn" onclick="navTo('pipeline')" style="cursor:pointer">📈 Analytics</button>
   </div>
 
   <!-- Leads -->
@@ -966,9 +944,20 @@
     </div>
   </div>
 
-  <!-- Analytics -->
+  <!-- Reminders -->
   <div class="nav-menu">
-    <button class="nav-menu-btn" onclick="navTo('pipeline')" style="cursor:pointer">📈 Analytics</button>
+    <button class="nav-menu-btn">🔔 Reminders <span id="bd-nav-badge" style="display:none;background:#ff4d4f;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;vertical-align:middle"></span> <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item" onclick="navTo('followups')"><span class="nav-dropdown-icon">📋</span>Follow-ups</div>
+      <div class="nav-dropdown-item" onclick="navTo('birthday')"><span class="nav-dropdown-icon">🎂</span>Birthdays</div>
+      <div class="nav-dropdown-item" onclick="navTo('specialdays')"><span class="nav-dropdown-icon">🎉</span>Special days</div>
+      <div class="nav-dropdown-item" onclick="navTo('whasend')"><span class="nav-dropdown-icon">💬</span>WhatsApp send</div>
+    </div>
+  </div>
+
+  <!-- Survey -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn" onclick="navTo('survey')" style="cursor:pointer">📱 Survey</button>
   </div>
 
   <!-- Manager -->
@@ -979,10 +968,16 @@
   <!-- Calendar -->
   <div class="nav-menu">
     <button class="nav-menu-btn" onclick="navTo('calendar')" style="cursor:pointer">📅 Calendar</button>
-    <div class="nav-dropdown" style="display:none">
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">📅</span>Schedule</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🤝</span>Meetings</div>
-      <div class="nav-dropdown-item"><span class="nav-dropdown-icon">🎉</span>Events</div>
+  </div>
+
+  <!-- Member -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
+    <div class="nav-dropdown">
+      <div class="nav-dropdown-item" onclick="navTo('members')"><span class="nav-dropdown-icon">👥</span>All Members</div>
+      <div class="nav-dropdown-item" id="nav-add-member" onclick="openMemberModal()"><span class="nav-dropdown-icon">➕</span>Add Member</div>
+      <div class="nav-dropdown-divider"></div>
+      <div class="nav-dropdown-item" id="nav-roles" onclick="navTo('members')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
     </div>
   </div>
 
