@@ -4291,6 +4291,11 @@ function renderSettingsPage() {
     `)}
 
     ${card('🎉','Special Days Manager', `
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:12px;color:var(--text-muted)">Load all Brunei public holidays:</span>
+        <button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="loadBruneiHolidays(2026)">📅 Load 2026 Holidays</button>
+        <button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="loadBruneiHolidays(2027)">📅 Load 2027 Holidays</button>
+      </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:14px">
         <thead><tr>
           <th style="text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;background:var(--bg-tertiary)">Icon</th>
@@ -4358,6 +4363,51 @@ function renderSettingsPage() {
     `)}
 
   </div>`;
+}
+
+const BRUNEI_HOLIDAYS = {
+  2026: [
+    { name:"New Year's Day",                  date:'2026-01-01', type:'national', icon:'🎆' },
+    { name:'Chinese New Year',                date:'2026-01-29', type:'national', icon:'🧧' },
+    { name:'National Day',                    date:'2026-02-23', type:'national', icon:'🇧🇳' },
+    { name:'Hari Raya Aidilfitri',            date:'2026-03-20', type:'islamic',  icon:'🌙' },
+    { name:'Hari Raya Aidilfitri (2nd Day)',  date:'2026-03-21', type:'islamic',  icon:'🌙' },
+    { name:'Hari Raya Aidiladha',             date:'2026-05-27', type:'islamic',  icon:'🌙' },
+    { name:'RBMR Anniversary',                date:'2026-05-31', type:'national', icon:'🎖️' },
+    { name:'Awal Muharram',                   date:'2026-06-16', type:'islamic',  icon:'🌙' },
+    { name:"Sultan's Birthday",               date:'2026-07-15', type:'national', icon:'👑' },
+    { name:'Maulidur Rasul',                  date:'2026-09-04', type:'islamic',  icon:'🌙' },
+    { name:'Christmas Day',                   date:'2026-12-25', type:'national', icon:'🎄' },
+  ],
+  2027: [
+    { name:"New Year's Day",                  date:'2027-01-01', type:'national', icon:'🎆' },
+    { name:'Chinese New Year',                date:'2027-02-17', type:'national', icon:'🧧' },
+    { name:'National Day',                    date:'2027-02-23', type:'national', icon:'🇧🇳' },
+    { name:'Hari Raya Aidilfitri',            date:'2027-03-10', type:'islamic',  icon:'🌙' },
+    { name:'Hari Raya Aidilfitri (2nd Day)',  date:'2027-03-11', type:'islamic',  icon:'🌙' },
+    { name:'Hari Raya Aidiladha',             date:'2027-05-17', type:'islamic',  icon:'🌙' },
+    { name:'RBMR Anniversary',                date:'2027-05-31', type:'national', icon:'🎖️' },
+    { name:'Awal Muharram',                   date:'2027-06-06', type:'islamic',  icon:'🌙' },
+    { name:"Sultan's Birthday",               date:'2027-07-15', type:'national', icon:'👑' },
+    { name:'Maulidur Rasul',                  date:'2027-08-24', type:'islamic',  icon:'🌙' },
+    { name:'Christmas Day',                   date:'2027-12-25', type:'national', icon:'🎄' },
+  ]
+};
+
+function loadBruneiHolidays(year) {
+  const holidays = BRUNEI_HOLIDAYS[year];
+  if (!holidays) { showToast('⚠ No holiday data for '+year); return; }
+  const existing = new Set(CRM_SETTINGS.specialDays.map(s=>s.date));
+  let added = 0;
+  holidays.forEach(h => {
+    if (!existing.has(h.date)) {
+      CRM_SETTINGS.specialDays.push({ ...h, id:'bh_'+h.date });
+      added++;
+    }
+  });
+  CRM_SETTINGS.specialDays.sort((a,b)=>a.date.localeCompare(b.date));
+  showToast(added>0 ? `✅ Loaded ${added} Brunei ${year} holidays!` : `All ${year} holidays already loaded`, 3000);
+  renderSettingsPage();
 }
 
 function saveCompanyInfo() {
