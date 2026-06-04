@@ -1065,9 +1065,10 @@
       </div>
       <div class="modal-field">
         <label class="modal-label">Area</label>
-        <select id="lf-area" class="modal-select">
+        <select id="lf-area" class="modal-select" onchange="onOtherSelect(this,'lf-area-other')">
           <option value="">— select district first —</option>
         </select>
+        <input id="lf-area-other" class="modal-input" placeholder="Type area name…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Phone</label>
@@ -1086,7 +1087,7 @@
       </div>
       <div class="modal-field">
         <label class="modal-label">Product Interest</label>
-        <select id="lf-product" class="modal-select">
+        <select id="lf-product" class="modal-select" onchange="onOtherSelect(this,'lf-product-other')">
           <option value="">— select —</option>
           <option value="air">Air Purifier</option>
           <option value="aircon">Aircon</option>
@@ -1109,15 +1110,18 @@
           <option value="washer">Washer Dryer</option>
           <option value="washing">Washing Machine</option>
           <option value="water">Water Purifier</option>
+          <option value="other">Other — specify</option>
         </select>
+        <input id="lf-product-other" class="modal-input" placeholder="Type product name…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Source</label>
-        <select id="lf-source" class="modal-select">
+        <select id="lf-source" class="modal-select" onchange="onOtherSelect(this,'lf-source-other')">
           <option value="">Select source</option>
           <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
-          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option><option value="other">Other — specify</option></optgroup>
         </select>
+        <input id="lf-source-other" class="modal-input" placeholder="Type source…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Stage</label>
@@ -1193,9 +1197,10 @@
       </div>
       <div class="modal-field">
         <label class="modal-label">Area</label>
-        <select id="ef-area" class="modal-select">
+        <select id="ef-area" class="modal-select" onchange="onOtherSelect(this,'ef-area-other')">
           <option value="">— select district first —</option>
         </select>
+        <input id="ef-area-other" class="modal-input" placeholder="Type area name…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Phone</label>
@@ -1213,7 +1218,7 @@
       </div>
       <div class="modal-field">
         <label class="modal-label">Product Interest</label>
-        <select id="ef-product" class="modal-select">
+        <select id="ef-product" class="modal-select" onchange="onOtherSelect(this,'ef-product-other')">
           <option value="">— select —</option>
           <option value="air">Air Purifier</option>
           <option value="aircon">Aircon</option>
@@ -1236,15 +1241,18 @@
           <option value="washer">Washer Dryer</option>
           <option value="washing">Washing Machine</option>
           <option value="water">Water Purifier</option>
+          <option value="other">Other — specify</option>
         </select>
+        <input id="ef-product-other" class="modal-input" placeholder="Type product name…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Source</label>
-        <select id="ef-source" class="modal-select">
+        <select id="ef-source" class="modal-select" onchange="onOtherSelect(this,'ef-source-other')">
           <option value="">Select source</option>
           <optgroup label="Online"><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>WhatsApp</option></optgroup>
-          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option></optgroup>
+          <optgroup label="Offline"><option>CF</option><option>Roadshow</option><option>Walk-in</option><option>Referral</option><option>Database</option><option value="other">Other — specify</option></optgroup>
         </select>
+        <input id="ef-source-other" class="modal-input" placeholder="Type source…" style="display:none;margin-top:6px">
       </div>
       <div class="modal-field">
         <label class="modal-label">Lead Date</label>
@@ -1927,8 +1935,30 @@ function areaOptsHTML(sel) {
 function updateAreaOpts(areaId, districtId) {
   const areaSel=document.getElementById(areaId), dk=document.getElementById(districtId).value;
   areaSel.innerHTML = dk && AREA_BY_DISTRICT[dk]
-    ? '<option value="">— select area —</option>'+AREA_BY_DISTRICT[dk].areas.map(a=>`<option>${a}</option>`).join('')
+    ? '<option value="">— select area —</option>'+AREA_BY_DISTRICT[dk].areas.map(a=>`<option>${a}</option>`).join('')+'<option value="other">Other — type below</option>'
     : '<option value="">— select district first —</option>';
+  toggleOtherInput(areaId+'-other', false);
+}
+
+// Show/hide "Other" text input based on select value
+function toggleOtherInput(otherId, show) {
+  const el = document.getElementById(otherId);
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+
+function onOtherSelect(selectEl, otherId) {
+  toggleOtherInput(otherId, selectEl.value === 'other');
+}
+
+// Get field value — returns typed text if "Other" selected
+function getOtherVal(selectId, otherId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return null;
+  if (sel.value === 'other') {
+    const oth = document.getElementById(otherId);
+    return oth ? oth.value.trim() || null : null;
+  }
+  return sel.value || null;
 }
 const SRC_ONLINE = ['TikTok','Instagram','Facebook','WhatsApp'];
 const SRC_ALL = ['TikTok','Instagram','Facebook','WhatsApp','CF','Roadshow','Walk-in','Referral','Database'];
@@ -2717,11 +2747,11 @@ async function submitLead() {
     gender:    document.getElementById('lf-gender').value || null,
     age_group: (() => { const d=document.getElementById('lf-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1 ? null : String(age); })(),
     dob:       document.getElementById('lf-dob').value || null,
-    area:      document.getElementById('lf-area').value || null,
+    area:      getOtherVal('lf-area','lf-area-other'),
     phone:     document.getElementById('lf-phone').value.trim() || null,
     brands,
-    product:   document.getElementById('lf-product').value || null,
-    source:    document.getElementById('lf-source').value || null,
+    product:   getOtherVal('lf-product','lf-product-other'),
+    source:    getOtherVal('lf-source','lf-source-other'),
     temperature: document.getElementById('lf-temperature').value || null,
     is_muslim:   document.getElementById('lf-muslim').checked,
     stage,
@@ -2824,11 +2854,11 @@ async function saveEditLead() {
     gender:    document.getElementById('ef-gender').value           || null,
     age_group: (() => { const d=document.getElementById('ef-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
     dob:       document.getElementById('ef-dob').value              || null,
-    area:      document.getElementById('ef-area').value             || null,
+    area:      getOtherVal('ef-area','ef-area-other'),
     phone:     document.getElementById('ef-phone').value.trim()     || null,
     brands,
-    product:   document.getElementById('ef-product').value          || null,
-    source:    document.getElementById('ef-source').value           || null,
+    product:   getOtherVal('ef-product','ef-product-other'),
+    source:    getOtherVal('ef-source','ef-source-other'),
     temperature: document.getElementById('ef-temperature').value    || null,
     is_muslim:   document.getElementById('ef-muslim').checked,
     lead_date: document.getElementById('ef-lead-date').value        || null,

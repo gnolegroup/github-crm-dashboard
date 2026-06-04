@@ -150,9 +150,12 @@
         <span class="en">Area / Location <span class="req">*</span></span>
         <span class="ms">Kawasan / Lokasi</span>
       </label>
-      <select id="i-area">
+      <select id="i-area" onchange="document.getElementById('i-area-other-wrap').style.display=this.value==='other'?'block':'none'">
         <option value="">-- Select district first / Pilih daerah dahulu --</option>
       </select>
+      <div id="i-area-other-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="i-area-other" placeholder="Please type your area / Sila taip kawasan anda">
+      </div>
       <div class="err-hint">Please select your area &middot; Sila pilih kawasan anda</div>
     </div>
   </div>
@@ -218,6 +221,10 @@
         <div class="pill" data-value="WhatsApp"  onclick="pickPill('pg-source','WhatsApp')">&#128172; WhatsApp</div>
         <div class="pill" data-value="Roadshow"  onclick="pickPill('pg-source','Roadshow')">&#127914; Roadshow</div>
         <div class="pill" data-value="Flyer"     onclick="pickPill('pg-source','Flyer')">&#128196; Flyer / Risalah</div>
+        <div class="pill" data-value="other"     onclick="pickPill('pg-source','other');document.getElementById('i-source-other-wrap').style.display='block'">&#10067; Other / Lain-lain</div>
+      </div>
+      <div id="i-source-other-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="i-source-other" placeholder="Please specify / Sila nyatakan">
       </div>
     </div>
     <div class="field">
@@ -290,8 +297,9 @@ function updateSurveyArea() {
   const dk = document.getElementById('i-district').value;
   const sel = document.getElementById('i-area');
   sel.innerHTML = dk && SURVEY_AREAS[dk]
-    ? '<option value="">-- Select area / Pilih kawasan --</option>' + SURVEY_AREAS[dk].map(a=>`<option value="${a}">${a}</option>`).join('')
+    ? '<option value="">-- Select area / Pilih kawasan --</option>' + SURVEY_AREAS[dk].map(a=>`<option value="${a}">${a}</option>`).join('') + '<option value="other">Other / Lain-lain — please specify</option>'
     : '<option value="">-- Select district first / Pilih daerah dahulu --</option>';
+  document.getElementById('i-area-other-wrap').style.display = 'none';
   updateProgress();
 }
 
@@ -375,10 +383,10 @@ document.getElementById('survey-form').addEventListener('submit', async function
     gender:    getPill('pg-gender') || null,
     age_group: (() => { const d=document.getElementById('i-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
     dob:       document.getElementById('i-dob').value || null,
-    area:      document.getElementById('i-area').value || null,
+    area:      (document.getElementById('i-area').value==='other' ? document.getElementById('i-area-other').value.trim() : document.getElementById('i-area').value) || null,
     product:   getPill('pg-product') || null,
     agent:         agentVal,
-    source:        source,
+    source:        (getPill('pg-source')==='other' ? (document.getElementById('i-source-other').value.trim()||'Other') : source),
     activity_type: _actType   || null,
     event_name:    _eventName || null,
     stage:         'New',
