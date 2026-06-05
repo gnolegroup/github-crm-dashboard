@@ -657,6 +657,54 @@
       .kanban { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
     }
 
+    /* ── Mobile Hamburger ── */
+    #nav-hamburger { display:none; background:none; border:none; color:var(--text-secondary); font-size:22px; cursor:pointer; padding:6px 10px; margin-left:auto; line-height:1; }
+    #nav-mobile-menu { display:none; position:fixed; top:96px; left:0; right:0; background:var(--bg-secondary); border-bottom:1px solid var(--border); z-index:300; padding:8px 0; max-height:70vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+    #nav-mobile-menu.open { display:block; }
+    .mob-nav-item { display:block; width:100%; text-align:left; background:none; border:none; color:var(--text-secondary); font-size:15px; font-weight:500; padding:13px 20px; cursor:pointer; border-bottom:0.5px solid var(--border); }
+    .mob-nav-item:hover, .mob-nav-item:active { background:var(--bg-tertiary); color:var(--text-primary); }
+    .mob-nav-section { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); padding:10px 20px 4px; }
+
+    /* ── Mobile Layout ── */
+    @media (max-width: 768px) {
+      /* Header */
+      .app-header { padding:0 14px; }
+      .header-subtitle { display:none; }
+      #nav-date, #nav-clock { display:none; }
+
+      /* Nav — hide desktop items, show hamburger */
+      .nav-bar { padding:0 12px; overflow:hidden; justify-content:space-between; }
+      .nav-menu { display:none !important; }
+      #nav-hamburger { display:block; }
+      #nav-mobile-menu { top:96px; }
+
+      /* Content padding */
+      .table-wrap { padding:0; }
+
+      /* Stat cards 2 col */
+      .leads-stat-bar { grid-template-columns:repeat(2,1fr) !important; }
+      .ana-kpi-grid   { grid-template-columns:repeat(2,1fr) !important; }
+
+      /* Home dashboard 1 col */
+      div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr !important; }
+      div[style*="grid-template-columns:repeat(4,1fr)"] { grid-template-columns:repeat(2,1fr) !important; }
+
+      /* Modals full width */
+      .modal-box { width:95vw !important; max-height:88vh; overflow-y:auto; margin:0; }
+      .modal-grid { grid-template-columns:1fr !important; }
+      .modal-field.full { grid-column:1 !important; }
+
+      /* Tables scroll */
+      div[style*="overflow-x:auto"] { -webkit-overflow-scrolling:touch; }
+
+      /* Analytics 1 col */
+      .ana-grid-2 { grid-template-columns:1fr !important; }
+
+      /* Survey card padding */
+      .survey-card { padding:18px 14px; }
+      .mode-toggle-wrap { padding:10px 12px; }
+    }
+
     @media (max-width: 640px) {
       main { padding: 14px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
@@ -986,6 +1034,9 @@
     <button class="nav-menu-btn" onclick="navTo('settings')" style="cursor:pointer">⚙ Settings</button>
   </div>
 
+  <!-- Hamburger (mobile only) -->
+  <button id="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
+
   <!-- Right side: clock + user -->
   <div style="margin-left:auto;display:flex;align-items:center;gap:14px;padding-right:4px">
     <div style="display:flex;align-items:center;gap:6px">
@@ -1001,6 +1052,31 @@
   </div>
 
 </nav>
+
+<!-- ── Mobile Nav Menu ─────────────────────── -->
+<div id="nav-mobile-menu">
+  <div class="mob-nav-section">Main</div>
+  <button class="mob-nav-item" onclick="navTo('home');toggleMobileNav()">🏠 Dashboard</button>
+  <button class="mob-nav-item" onclick="navTo('pipeline');toggleMobileNav()">📈 Analytics</button>
+  <div class="mob-nav-section">Leads</div>
+  <button class="mob-nav-item" onclick="navTo('leads');toggleMobileNav()">📋 All Leads</button>
+  <button class="mob-nav-item" onclick="openLeadModal();toggleMobileNav()">➕ Add Lead</button>
+  <button class="mob-nav-item" id="mob-nav-import" onclick="openImportModal();toggleMobileNav()">📥 Import Excel / CSV</button>
+  <div class="mob-nav-section">Reminders</div>
+  <button class="mob-nav-item" onclick="navTo('followups');toggleMobileNav()">📋 Follow-ups</button>
+  <button class="mob-nav-item" onclick="navTo('birthday');toggleMobileNav()">🎂 Birthdays</button>
+  <button class="mob-nav-item" onclick="navTo('specialdays');toggleMobileNav()">🎉 Special Days</button>
+  <button class="mob-nav-item" onclick="navTo('whasend');toggleMobileNav()">💬 WhatsApp Send</button>
+  <div class="mob-nav-section">More</div>
+  <button class="mob-nav-item" onclick="navTo('survey');toggleMobileNav()">📱 Survey</button>
+  <button class="mob-nav-item" id="mob-nav-manager" onclick="navTo('manager');toggleMobileNav()">🏆 Manager View</button>
+  <button class="mob-nav-item" onclick="navTo('calendar');toggleMobileNav()">📅 Calendar</button>
+  <button class="mob-nav-item" onclick="navTo('members');toggleMobileNav()">👤 Member</button>
+  <button class="mob-nav-item" onclick="navTo('settings');toggleMobileNav()">⚙ Settings</button>
+  <div style="padding:8px 20px 12px">
+    <button class="signout-btn" style="width:100%;text-align:center;justify-content:center" onclick="signOut()">Sign out</button>
+  </div>
+</div>
 
 <!-- ── Main ────────────────────────────────── -->
 <main id="app-main" style="display:none">
@@ -1490,11 +1566,29 @@ function applyPermissions() {
   const importNav = document.getElementById('nav-import');
   const addMemNav = document.getElementById('nav-add-member');
   const rolesNav  = document.getElementById('nav-roles');
-  if (mgNav)     mgNav.style.display     = isAdmin()        ? '' : 'none';
-  if (importNav) importNav.style.display = canImport()      ? '' : 'none';
-  if (addMemNav) addMemNav.style.display = canAddMember()   ? '' : 'none';
-  if (rolesNav)  rolesNav.style.display  = canAddMember()   ? '' : 'none';
+  const mobMgr    = document.getElementById('mob-nav-manager');
+  const mobImp    = document.getElementById('mob-nav-import');
+  if (mgNav)     mgNav.style.display     = isAdmin()      ? '' : 'none';
+  if (importNav) importNav.style.display = canImport()    ? '' : 'none';
+  if (addMemNav) addMemNav.style.display = canAddMember() ? '' : 'none';
+  if (rolesNav)  rolesNav.style.display  = canAddMember() ? '' : 'none';
+  if (mobMgr)    mobMgr.style.display    = isAdmin()      ? '' : 'none';
+  if (mobImp)    mobImp.style.display    = canImport()    ? '' : 'none';
 }
+
+function toggleMobileNav() {
+  const menu = document.getElementById('nav-mobile-menu');
+  if (menu) menu.classList.toggle('open');
+}
+
+// Close mobile menu when tapping outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('nav-mobile-menu');
+  const hamb = document.getElementById('nav-hamburger');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== hamb) {
+    menu.classList.remove('open');
+  }
+});
 
 /* ── Auth ── */
 async function signInWithEmail() {
