@@ -188,6 +188,10 @@
         <div class="pill" data-value="washer"    onclick="pickPill('pg-product','washer')">&#129527; Washer Dryer</div>
         <div class="pill" data-value="washing"   onclick="pickPill('pg-product','washing')">🫧 Washing Machine</div>
         <div class="pill" data-value="water"     onclick="pickPill('pg-product','water')">&#128167; Water Purifier</div>
+        <div class="pill" data-value="other"     onclick="pickPill('pg-product','other');document.getElementById('i-product-other-wrap').style.display='block'">&#10067; Other / Lain-lain</div>
+      </div>
+      <div id="i-product-other-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="i-product-other" placeholder="Please specify product / Sila nyatakan produk">
       </div>
       <div class="err-hint">Please select a product &middot; Sila pilih produk</div>
     </div>
@@ -307,6 +311,15 @@ function pickPill(groupId, value) {
   document.querySelectorAll('#' + groupId + ' .pill').forEach(p => {
     p.classList.toggle('selected', p.dataset.value === value);
   });
+  // Hide Other inputs when non-other pill selected
+  if (groupId === 'pg-product' && value !== 'other') {
+    const w = document.getElementById('i-product-other-wrap');
+    if (w) w.style.display = 'none';
+  }
+  if (groupId === 'pg-source' && value !== 'other') {
+    const w = document.getElementById('i-source-other-wrap');
+    if (w) w.style.display = 'none';
+  }
   updateProgress();
 }
 
@@ -384,7 +397,7 @@ document.getElementById('survey-form').addEventListener('submit', async function
     age_group: (() => { const d=document.getElementById('i-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
     dob:       document.getElementById('i-dob').value || null,
     area:      (document.getElementById('i-area').value==='other' ? document.getElementById('i-area-other').value.trim() : document.getElementById('i-area').value) || null,
-    product:   getPill('pg-product') || null,
+    product:   (getPill('pg-product')==='other' ? (document.getElementById('i-product-other').value.trim()||'Other') : getPill('pg-product')) || null,
     agent:         agentVal,
     source:        (getPill('pg-source')==='other' ? (document.getElementById('i-source-other').value.trim()||'Other') : source),
     activity_type: _actType   || null,
