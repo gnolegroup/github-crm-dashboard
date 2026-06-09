@@ -1648,6 +1648,59 @@ async function signOut() {
   showLogin();
 }
 
+// ── Follow-up Push Notifications ───────────────────────────
+async function checkTodayFollowUps() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: leadsData } = await db.from('leads').select('id,name,agent,logs');
+    if (!leadsData?.length) return;
+
+    const due = [], overdue = [];
+    leadsData.forEach(l => {
+      // Agents only see their own leads
+      if (D.currentRole === 'Agent' && l.agent !== D.currentAgentName) return;
+      (l.logs || []).forEach(lg => {
+        if (lg.type !== 'followup' || lg.status === 'done' || lg.status === 'skipped') return;
+        if (lg.due_date === today) due.push({ name: l.name, fu: lg });
+        else if (lg.due_date < today) overdue.push({ name: l.name, fu: lg });
+      });
+    });
+
+    const total = due.length + overdue.length;
+    if (total === 0) return;
+
+    // In-app toast
+    const msg = [
+      due.length    ? `📋 ${due.length} follow-up${due.length>1?'s':''} due today`    : '',
+      overdue.length ? `⚠️ ${overdue.length} overdue` : ''
+    ].filter(Boolean).join('  ·  ');
+    showToast(msg, 8000);
+
+    // Browser push notification
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      _sendFUNotif(due.length, overdue.length);
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') _sendFUNotif(due.length, overdue.length);
+      });
+    }
+  } catch(e) { /* silent — don't break the app */ }
+}
+
+function _sendFUNotif(dueCount, overdueCount) {
+  const lines = [];
+  if (dueCount)    lines.push(`${dueCount} follow-up${dueCount>1?'s':''} due today`);
+  if (overdueCount) lines.push(`${overdueCount} overdue`);
+  const n = new Notification('📋 TEL CRM — Action Needed', {
+    body:      lines.join('\n') + '\nTap to open Follow-ups.',
+    tag:       'crm-followups-today',
+    renotify:  false,
+  });
+  n.onclick = () => { window.focus(); navTo('followups'); n.close(); };
+}
+// ────────────────────────────────────────────────────────────
+
 // ── Auto-logout after 3 minutes of inactivity ──────────────
 const AUTO_LOGOUT_MS = 3 * 60 * 1000;   // 3 minutes
 const WARN_BEFORE_MS = 30 * 1000;        // show warning 30s before logout
@@ -1741,6 +1794,7 @@ async function showApp(user) {
   applyPermissions();
   startClock();
   startInactivityTimer();   // begin 3-minute auto-logout countdown
+  setTimeout(checkTodayFollowUps, 2000); // check follow-ups after data settles
 }
 
 function startClock() {
@@ -2677,6 +2731,8 @@ function renderLeads() {
       <div class="leads-filters">
         <input type="text" placeholder="Search name, L-, phone…" id="leads-srch" style="width:200px" oninput="filterLeads()">
         <button class="btn-cancel" style="font-size:12px;padding:5px 12px;white-space:nowrap" onclick="scanDuplicates()">🔍 Scan duplicates</button>
+        <button class="btn-cancel" style="font-size:12px;padding:5px 12px;white-space:nowrap" onclick="exportExcel()">📥 Excel</button>
+        <button class="btn-cancel" style="font-size:12px;padding:5px 12px;white-space:nowrap" onclick="exportPDF()">🖨 PDF</button>
         <select id="leads-f-stage" onchange="filterLeads()">
           <option value="">All stages</option>
           <option>New</option><option>Contacted</option><option>Pending</option><option>Closed</option><option>Lost</option>
@@ -4786,6 +4842,19 @@ function renderCalendar() {
   const totalEVs   = Object.values(eventMap).reduce((s,e)=>s+(e.events||[]).length,0);
   const monthName  = monthStart.toLocaleDateString('en-MY',{month:'long',year:'numeric'});
 
+  // Today's follow-up summary
+  const todayFUs      = (eventMap[todayStr]?.followups||[]);
+  const overdueFUs    = Object.entries(eventMap).filter(([ds])=>ds<todayStr).reduce((a,[,e])=>a+e.followups.length,0);
+  const todaySummary  = (_calYear===new Date().getFullYear()&&_calMonth===new Date().getMonth()) ? `
+    ${(todayFUs.length||overdueFUs) ? `<div style="background:#7F77DD18;border:1px solid #7F77DD44;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        ${todayFUs.length?`<span style="background:#7F77DD;color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700">📋 ${todayFUs.length} due today</span>`:''}
+        ${overdueFUs?`<span style="background:#ff4d4f;color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700">⚠️ ${overdueFUs} overdue</span>`:''}
+      </div>
+      <button class="btn-save" style="font-size:12px;padding:5px 14px" onclick="navTo('followups')">View Follow-ups →</button>
+    </div>` : `<div style="background:#1D9E7518;border:1px solid #1D9E7544;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#1D9E75;font-weight:600">✅ No follow-ups due today</div>`}
+  ` : '';
+
   // Build cells
   const cells = [];
   for (let i=0;i<startDay;i++) cells.push(null);
@@ -4864,6 +4933,7 @@ function renderCalendar() {
 
   $('panel-calendar').innerHTML = `
   <div style="padding:24px 28px">
+    ${todaySummary}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
       <div style="font-size:20px;font-weight:700;color:var(--text-primary)">📅 Calendar</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
