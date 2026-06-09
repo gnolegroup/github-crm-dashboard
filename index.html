@@ -1042,11 +1042,6 @@
     <button id="nav-manager-view" class="nav-menu-btn" onclick="navTo('manager')" style="cursor:pointer">🏆 Manager</button>
   </div>
 
-  <!-- Calendar -->
-  <div class="nav-menu">
-    <button class="nav-menu-btn" onclick="navTo('calendar')" style="cursor:pointer">📅 Calendar</button>
-  </div>
-
   <!-- Member -->
   <div class="nav-menu">
     <button class="nav-menu-btn">👤 Member <span class="chevron">▾</span></button>
@@ -1056,6 +1051,11 @@
       <div class="nav-dropdown-divider"></div>
       <div class="nav-dropdown-item" id="nav-roles" onclick="navTo('members')"><span class="nav-dropdown-icon">🔑</span>Roles & Permissions</div>
     </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="nav-menu">
+    <button class="nav-menu-btn" onclick="navTo('calendar')" style="cursor:pointer">📅 Calendar</button>
   </div>
 
   <!-- Settings -->
@@ -1099,8 +1099,8 @@
   <div class="mob-nav-section">More</div>
   <button class="mob-nav-item" onclick="navTo('survey');toggleMobileNav()">📱 Survey</button>
   <button class="mob-nav-item" id="mob-nav-manager" onclick="navTo('manager');toggleMobileNav()">🏆 Manager View</button>
-  <button class="mob-nav-item" onclick="navTo('calendar');toggleMobileNav()">📅 Calendar</button>
   <button class="mob-nav-item" onclick="navTo('members');toggleMobileNav()">👤 Member</button>
+  <button class="mob-nav-item" onclick="navTo('calendar');toggleMobileNav()">📅 Calendar</button>
   <button class="mob-nav-item" onclick="navTo('settings');toggleMobileNav()">⚙ Settings</button>
   <div style="padding:8px 20px 12px">
     <button class="signout-btn" style="width:100%;text-align:center;justify-content:center" onclick="signOut()">Sign out</button>
