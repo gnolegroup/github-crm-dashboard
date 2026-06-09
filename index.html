@@ -703,12 +703,39 @@
       /* Survey card padding */
       .survey-card { padding:18px 14px; }
       .mode-toggle-wrap { padding:10px 12px; }
+
+      /* Leads: hide table, show cards */
+      .leads-table-view { display:none !important; }
+      .leads-card-view  { display:flex !important; flex-direction:column; gap:8px; }
+
+      /* Leads filters full-width on mobile */
+      .leads-filters { flex-direction:column; }
+      .leads-filters input,
+      .leads-filters select,
+      .leads-filters button { width:100% !important; box-sizing:border-box; }
+      #leads-srch { width:100% !important; }
     }
 
     @media (max-width: 640px) {
       main { padding: 14px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Leads Mobile Card View ── */
+    .leads-table-view { display:block; }
+    .leads-card-view  { display:none; }
+    .lead-card { background:var(--bg-secondary); border:0.5px solid var(--border); border-left:3px solid transparent; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+    .lead-card[data-temp="hot"]  { border-left-color:#ff4d4f; }
+    .lead-card[data-temp="warm"] { border-left-color:#fa8c16; }
+    .lead-card[data-temp="cold"] { border-left-color:#4096ff; }
+    .lead-card-toprow { display:flex; align-items:center; gap:8px; min-width:0; }
+    .lead-card-no { font-size:11px; font-weight:600; color:var(--text-muted); background:var(--bg-tertiary); border-radius:4px; padding:2px 6px; flex-shrink:0; font-family:monospace; }
+    .lead-card-name { font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .lead-card-meta { display:flex; flex-wrap:wrap; gap:4px 14px; }
+    .lead-card-meta-item { font-size:12px; color:var(--text-secondary); }
+    .lead-card-phone { font-family:monospace; font-size:13px; font-weight:500; color:var(--text-primary); text-decoration:none; }
+    .lead-card-remark { font-size:12px; color:var(--text-secondary); background:var(--bg-tertiary); border-radius:6px; padding:6px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-style:italic; }
+    .lead-card-actions { display:flex; gap:6px; flex-wrap:wrap; }
 
     /* ── CRM Analytics ── */
     .ana-section { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
@@ -2680,6 +2707,40 @@ function renderLeadRow(l, numMap) {
   </tr>`;
 }
 
+// Mobile card renderer — mirrors renderLeadRow but as a compact card
+function renderLeadCard(l, numMap) {
+  const remark  = latestRemark(l);
+  const logDate = latestLogDate(l);
+  const stage   = l.stage || 'New';
+  const leadsNo = 'L-' + String(numMap[l.id]||0).padStart(4,'0');
+  const bdDays  = daysUntilBirthday(l.dob);
+  const muslimTag = l.is_muslim ? ' ☪️' : '';
+  const stageColors = { New:'#3fb950', Contacted:'#58a6ff', Pending:'#fa8c16', Closed:'#52c41a', Lost:'#ff4d4f' };
+  const sc = stageColors[stage] || 'var(--text-secondary)';
+  return `<div class="lead-card" data-temp="${l.temperature||''}" data-id="${l.id}">
+    <div class="lead-card-toprow">
+      <span class="lead-card-no">${leadsNo}</span>
+      <span class="lead-card-name">${l.name}${muslimTag}</span>
+      ${tempBadge(l.temperature)}
+    </div>
+    <div class="lead-card-meta">
+      ${l.phone?`<span class="lead-card-meta-item">📞 <a href="tel:${l.phone}" class="lead-card-phone">${l.phone}</a></span>`:''}
+      <span class="lead-card-meta-item">📍 ${l.area||'—'}</span>
+      <span class="lead-card-meta-item">👤 ${l.agent||'—'}</span>
+      <span class="lead-card-meta-item" style="color:${sc};font-weight:600">● ${stage}</span>
+      ${l.product?`<span class="lead-card-meta-item">💼 ${l.product}</span>`:''}
+      ${l.source?`<span class="lead-card-meta-item">📣 ${l.source}</span>`:''}
+    </div>
+    ${remark?`<div class="lead-card-remark">"${remark.replace(/"/g,'&quot;')}"</div>`:''}
+    <div class="lead-card-actions">
+      ${canEditLead(l)?`<button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" style="font-size:12px;padding:5px 12px"><i class="ti ti-pencil" style="font-size:11px"></i> Edit</button>`:''}
+      <button class="wa-btn" onclick="openWAModal('${l.id}')" style="font-size:12px;padding:5px 12px"><i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA</button>
+      <button class="log-btn" onclick="openLogModal('${l.id}')" style="font-size:12px;padding:5px 12px"><i class="ti ti-clock" style="font-size:11px"></i> ${logDate}</button>
+      ${l.dob&&bdDays!==null&&bdDays<=7?`<button class="wa-btn" style="background:#ff4d4f22;color:#ff4d4f;border-color:#ff4d4f55;font-size:12px;padding:5px 12px" onclick="greetLead('${l.id}')">🎂 Greet</button>`:''}
+    </div>
+  </div>`;
+}
+
 function renderLeads() {
   const leads = D.leads || [];
   if ($('tc-leads')) $('tc-leads').textContent = leads.length;
@@ -2747,19 +2808,22 @@ function renderLeads() {
           ${Object.entries(AREA_BY_DISTRICT).map(([k,v])=>`<optgroup label="${v.label}">${v.areas.map(a=>`<option>${a}</option>`).join('')}</optgroup>`).join('')}
         </select>
       </div>
-      <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
-        <table style="width:100%;border-collapse:collapse;min-width:1775px">
-          <colgroup>
-            <col style="width:95px"><col style="width:110px"><col style="width:155px"><col style="width:65px"><col style="width:55px"><col style="width:90px">
-            <col style="width:120px"><col style="width:120px"><col style="width:155px"><col style="width:125px">
-            <col style="width:115px"><col style="width:100px"><col style="width:105px"><col style="width:90px"><col style="width:105px"><col style="width:160px"><col style="width:130px">
-          </colgroup>
-          <thead><tr style="background:var(--bg-tertiary)">
-            ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Product Interest','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
-          </tr></thead>
-          <tbody id="leads-body"></tbody>
-        </table>
+      <div class="leads-table-view">
+        <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
+          <table style="width:100%;border-collapse:collapse;min-width:1775px">
+            <colgroup>
+              <col style="width:95px"><col style="width:110px"><col style="width:155px"><col style="width:65px"><col style="width:55px"><col style="width:90px">
+              <col style="width:120px"><col style="width:120px"><col style="width:155px"><col style="width:125px">
+              <col style="width:115px"><col style="width:100px"><col style="width:105px"><col style="width:90px"><col style="width:105px"><col style="width:160px"><col style="width:130px">
+            </colgroup>
+            <thead><tr style="background:var(--bg-tertiary)">
+              ${['Leads No.','Agent','Name','Gender','Age','🎂 Birthday','Area','Phone','Existing User','Product Interest','Source','Lead Date','Stage','Status','Action Date','Latest Remark','Action'].map(h=>`<th style="padding:8px 10px;font-size:11px;font-weight:500;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
+            </tr></thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
       </div>
+      <div id="leads-cards" class="leads-card-view"></div>
       <div id="leads-pagination" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;padding:0 2px"></div>
     </div>`;
 
@@ -2780,12 +2844,19 @@ function renderLeadsTable() {
   const start  = (_leadsPage-1)*_leadsPerPage;
   const slice  = _filteredLeads.slice(start, start+_leadsPerPage);
 
-  // Update table body
+  // Update table body (desktop)
   const tbody = document.getElementById('leads-body');
   if (tbody) {
     tbody.innerHTML = total===0
       ? `<tr><td colspan="17" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>${(D.leads||[]).length===0?'No leads yet — use <strong>Leads → Add Lead</strong> to get started':'No leads match your filters.'}</td></tr>`
       : slice.map(l=>renderLeadRow(l,numMap)).join('');
+  }
+  // Update card list (mobile)
+  const cards = document.getElementById('leads-cards');
+  if (cards) {
+    cards.innerHTML = total===0
+      ? `<div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="ti ti-users" style="font-size:28px;display:block;margin-bottom:8px"></i>${(D.leads||[]).length===0?'No leads yet — tap <strong>Add Lead</strong> to get started':'No leads match your filters.'}</div>`
+      : slice.map(l=>renderLeadCard(l,numMap)).join('');
   }
 
   // Update pagination
