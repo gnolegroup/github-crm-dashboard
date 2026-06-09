@@ -926,6 +926,35 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* ── Auto-logout warning banner ── */
+    #auto-logout-warning {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10000;
+      background: #b91c1c;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.5);
+    }
+    #auto-logout-warning button {
+      background: #fff;
+      color: #b91c1c;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    #auto-logout-warning button:hover { opacity: .85; }
+
     /* ── Member status badge ── */
     .ms-active   { background:#0d2a0d; color:var(--green); border:1px solid #1f4a1f; }
     .ms-inactive { background:#2a1212; color:var(--red);   border:1px solid #4a1f1f; }
@@ -1619,7 +1648,65 @@ async function signOut() {
   showLogin();
 }
 
+// ── Auto-logout after 3 minutes of inactivity ──────────────
+const AUTO_LOGOUT_MS = 3 * 60 * 1000;   // 3 minutes
+const WARN_BEFORE_MS = 30 * 1000;        // show warning 30s before logout
+
+let _inactiveTimer, _warnTimer, _countdownInterval;
+
+function resetInactivityTimer() {
+  clearTimeout(_inactiveTimer);
+  clearTimeout(_warnTimer);
+  clearInterval(_countdownInterval);
+  hideLogoutWarning();
+
+  // Show warning 30 seconds before logout
+  _warnTimer = setTimeout(showLogoutWarning, AUTO_LOGOUT_MS - WARN_BEFORE_MS);
+
+  // Auto sign-out after full timeout
+  _inactiveTimer = setTimeout(async () => {
+    hideLogoutWarning();
+    await signOut();
+  }, AUTO_LOGOUT_MS);
+}
+
+function startInactivityTimer() {
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
+    .forEach(e => document.addEventListener(e, resetInactivityTimer, { passive: true, capture: true }));
+  resetInactivityTimer();
+}
+
+function clearInactivityTimer() {
+  clearTimeout(_inactiveTimer);
+  clearTimeout(_warnTimer);
+  clearInterval(_countdownInterval);
+  hideLogoutWarning();
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
+    .forEach(e => document.removeEventListener(e, resetInactivityTimer, true));
+}
+
+function showLogoutWarning() {
+  let secs = 30;
+  const banner  = document.getElementById('auto-logout-warning');
+  const secsEl  = document.getElementById('auto-logout-secs');
+  if (banner) banner.style.display = 'flex';
+  if (secsEl) secsEl.textContent = secs;
+  _countdownInterval = setInterval(() => {
+    secs--;
+    if (secsEl) secsEl.textContent = Math.max(secs, 0);
+    if (secs <= 0) clearInterval(_countdownInterval);
+  }, 1000);
+}
+
+function hideLogoutWarning() {
+  const banner = document.getElementById('auto-logout-warning');
+  if (banner) banner.style.display = 'none';
+  clearInterval(_countdownInterval);
+}
+// ────────────────────────────────────────────────────────────
+
 function showLogin() {
+  clearInactivityTimer();   // stop the auto-logout timer when logged out
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('app-header').style.display = 'none';
   document.getElementById('app-nav').style.display = 'none';
@@ -1653,6 +1740,7 @@ async function showApp(user) {
 
   applyPermissions();
   startClock();
+  startInactivityTimer();   // begin 3-minute auto-logout countdown
 }
 
 function startClock() {
@@ -4878,5 +4966,12 @@ async function submitMember() {
 /* ── Boot ── */
 init();
 </script>
+
+<!-- Auto-logout warning banner -->
+<div id="auto-logout-warning">
+  ⚠️ You'll be logged out in <strong><span id="auto-logout-secs">30</span>s</strong> due to inactivity &nbsp;
+  <button onclick="resetInactivityTimer()">Stay logged in</button>
+</div>
+
 </body>
 </html>
