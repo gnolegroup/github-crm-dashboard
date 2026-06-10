@@ -1476,10 +1476,13 @@
       <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
 
-    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">
-      Supports <strong>Excel (.xlsx)</strong> and CSV files. First row must be column headers:<br>
-      <code style="background:var(--bg-tertiary);padding:1px 5px;border-radius:4px">sales_no, agent, name, phone, gender, age_group, area, source, stage, lead_date, notes</code>
-    </p>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <p style="font-size:12px;color:var(--text-secondary);margin:0;flex:1">
+        Supports <strong>Excel (.xlsx)</strong> and CSV. Column names are flexible — common variations are auto-recognised.<br>
+        <span style="color:var(--text-muted)">Required: <strong>name</strong> + <strong>phone</strong>. All other columns optional.</span>
+      </p>
+      <button onclick="downloadImportTemplate()" class="btn-cancel" style="font-size:11px;padding:5px 11px;white-space:nowrap;flex-shrink:0">📄 Download Template</button>
+    </div>
 
     <div class="import-drop" id="import-drop" onclick="document.getElementById('import-file').click()"
          ondragover="event.preventDefault();this.classList.add('drag-over')"
@@ -3323,6 +3326,18 @@ function closeImportModal() {
   document.getElementById('import-modal').style.display = 'none';
 }
 
+function downloadImportTemplate() {
+  const headers = ['name','phone','agent','gender','age_group','area','source','stage','lead_date','product','temperature','dob','is_muslim','notes'];
+  const sample1 = ['Ahmad bin Ali','0712345678','Sarah','M','25-34','Bandar BSB','Roadshow','New','2026-06-10','CUCKOO Water','hot','1990-03-15','yes','Interested in water purifier'];
+  const sample2 = ['Siti Rahayu','0871234567','James','F','35-44','Kuala Belait','Facebook','Contacted','2026-06-09','CUCKOO Air','warm','','no','Follow up next week'];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, sample1, sample2]);
+  // Column widths
+  ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 2, 14) }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads Import');
+  XLSX.writeFile(wb, 'TEL_Leads_Import_Template.xlsx');
+}
+
 function handleImportFile(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
@@ -3360,19 +3375,71 @@ function handleImportFile(file) {
       return;
     }
 
-    const headers = rows[0].map(h => String(h||'').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
-    const VALID_COLS = ['sales_no','agent','name','phone','gender','age_group','area','source','stage','lead_date','notes'];
+    // Normalise raw header → canonical field name
+    const COL_ALIASES = {
+      // name
+      name:'name', full_name:'name', fullname:'name', customer_name:'name', lead_name:'name', nama:'name',
+      // phone
+      phone:'phone', phone_number:'phone', phonenumber:'phone', mobile:'phone', mobile_number:'phone',
+      contact:'phone', handphone:'phone', hp:'phone', no_telefon:'phone', no_phone:'phone', tel:'phone',
+      // agent
+      agent:'agent', agent_name:'agent', salesperson:'agent', pic:'agent',
+      // gender
+      gender:'gender', sex:'gender', jantina:'gender',
+      // age / age group
+      age_group:'age_group', age:'age_group', umur:'age_group', age_range:'age_group',
+      // area
+      area:'area', kawasan:'area', location:'area', lokasi:'area', district:'area', daerah:'area',
+      // source
+      source:'source', lead_source:'source', platform:'platform', sumber:'source', channel:'source',
+      // stage
+      stage:'stage', status:'stage', lead_stage:'stage',
+      // lead date
+      lead_date:'lead_date', date:'lead_date', tarikh:'lead_date', created:'lead_date', reg_date:'lead_date', registration_date:'lead_date',
+      // product
+      product:'product', product_interest:'product', produk:'product', interest:'product', interested_in:'product',
+      // temperature
+      temperature:'temperature', temp:'temperature', priority:'temperature', suhu:'temperature',
+      // date of birth
+      dob:'dob', date_of_birth:'dob', birthday:'dob', birth_date:'dob', tarikh_lahir:'dob',
+      // muslim flag
+      is_muslim:'is_muslim', muslim:'is_muslim', agama:'is_muslim', religion:'is_muslim',
+      // notes / remarks
+      notes:'notes', remark:'notes', remarks:'notes', catatan:'notes', note:'notes', comment:'notes', comments:'notes',
+      // sales no
+      sales_no:'sales_no', lead_no:'sales_no', id:'sales_no', ref:'sales_no',
+    };
+    const VALID_COLS = ['sales_no','agent','name','phone','gender','age_group','area','source','stage',
+                        'lead_date','notes','product','temperature','dob','is_muslim'];
+
+    const headers = rows[0].map(h => {
+      const raw = String(h||'').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+      return COL_ALIASES[raw] || raw;
+    });
 
     _importRows = [];
     for (let i = 1; i < rows.length; i++) {
       const vals = rows[i];
       const row = {};
-      headers.forEach((h, idx) => { if (VALID_COLS.includes(h)) row[h] = (vals[idx]!==undefined && vals[idx]!==null && vals[idx]!=='') ? String(vals[idx]) : null; });
+      headers.forEach((h, idx) => {
+        if (!VALID_COLS.includes(h)) return;
+        const raw = (vals[idx]!==undefined && vals[idx]!==null && vals[idx]!=='') ? String(vals[idx]).trim() : null;
+        if (raw === null) return;
+        if (h === 'is_muslim') {
+          row[h] = /^(yes|true|1|islam|muslim)$/i.test(raw);
+        } else if (h === 'temperature') {
+          const t = raw.toLowerCase();
+          row[h] = t === 'hot' || t === 'panas' ? 'hot' : t === 'warm' || t === 'sederhana' ? 'warm' : t === 'cold' || t === 'sejuk' ? 'cold' : null;
+        } else {
+          row[h] = raw;
+        }
+      });
       if (row.name) { row.brands = []; row.logs = []; _importRows.push(row); }
     }
 
-    // Preview first 5 rows
-    const previewCols = ['sales_no','agent','name','phone','gender','age_group','area','source','stage','lead_date'];
+    // Preview first 5 rows — only show columns that actually exist in the file
+    const allPreviewCols = ['sales_no','agent','name','phone','gender','age_group','area','source','stage','lead_date','product','temperature','dob','is_muslim','notes'];
+    const previewCols = allPreviewCols.filter(c => _importRows.some(r => r[c] !== undefined && r[c] !== null));
     const preview = _importRows.slice(0, 5);
     document.getElementById('import-preview').innerHTML = `
       <div class="import-preview">
