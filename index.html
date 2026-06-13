@@ -1168,7 +1168,7 @@
     <div class="modal-grid">
       <div class="modal-field">
         <label class="modal-label">Sales Agent</label>
-        <input id="lf-agent" class="modal-input" type="text" placeholder="Agent name">
+        <select id="lf-agent" class="modal-select"><option value="">— select agent —</option></select>
       </div>
       <div class="modal-field">
         <label class="modal-label">Full Name *</label>
@@ -1300,7 +1300,7 @@
     <div class="modal-grid">
       <div class="modal-field">
         <label class="modal-label">Sales Agent</label>
-        <input id="ef-agent" class="modal-input" type="text" placeholder="Agent name">
+        <select id="ef-agent" class="modal-select"><option value="">— select agent —</option></select>
       </div>
       <div class="modal-field">
         <label class="modal-label">Full Name *</label>
@@ -1558,7 +1558,7 @@ const SUPABASE_URL = 'https://zpvmqbvwmftkrkfxsblm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zRea1WXqOBJ8HjYBFZ_fFg_BW8wpCLV';
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let D = { currentRole:'Admin', currentAgentName:'', currentEmail:'' };
+let D = { currentRole:'Admin', currentAgentName:'', currentMemberId:null, currentEmail:'' };
 
 // CRM Settings (localStorage)
 let CRM_SETTINGS = {
@@ -1609,15 +1609,22 @@ function resolveTemplate(tmpl, lead) {
 
 const ADMIN_ROLES = ['Admin','Manager'];
 function isAdmin()        { return ADMIN_ROLES.includes(D.currentRole); }
-function canEditLead(l)   { return isAdmin() || !l.agent || l.agent === D.currentAgentName; }
 function canDeleteLead()  { return isAdmin(); }
 function canImport()      { return ['Admin','Manager','Senior Agent'].includes(D.currentRole); }
 function canAddMember()   { return D.currentRole === 'Admin'; }
 
+// Returns true if lead belongs to the currently logged-in agent.
+// Prefers agent_id (UUID) match; falls back to name for legacy leads without agent_id.
+function matchesCurrentAgent(l) {
+  if (D.currentMemberId && l.agent_id) return l.agent_id === D.currentMemberId;
+  return l.agent === D.currentAgentName;
+}
+function canEditLead(l)   { return isAdmin() || !l.agent || matchesCurrentAgent(l); }
+
 function filterLeadsByRole(leads) {
-  if (isAdmin() || D.currentRole === 'Senior Agent') return leads; // Admin/Manager/Sr.Agent see all
-  if (!D.currentAgentName) return leads;
-  return leads.filter(l => l.agent === D.currentAgentName); // Agent sees own only
+  if (isAdmin() || D.currentRole === 'Senior Agent') return leads;
+  if (!D.currentMemberId && !D.currentAgentName) return leads;
+  return leads.filter(matchesCurrentAgent);
 }
 
 function applyPermissions() {
@@ -1688,7 +1695,7 @@ async function checkTodayFollowUps() {
     const due = [], overdue = [];
     leadsData.forEach(l => {
       // Agents only see their own leads
-      if (D.currentRole === 'Agent' && l.agent !== D.currentAgentName) return;
+      if (D.currentRole === 'Agent' && !matchesCurrentAgent(l)) return;
       (l.logs || []).forEach(lg => {
         if (lg.type !== 'followup' || lg.status === 'done' || lg.status === 'skipped') return;
         if (lg.due_date === today) due.push({ name: l.name, fu: lg });
@@ -1807,6 +1814,7 @@ async function showApp(user) {
   const { data: member } = await db.from('members').select('*').eq('email', user.email).maybeSingle();
   D.currentRole      = member?.role  || 'Agent';
   D.currentAgentName = member?.name  || '';
+  D.currentMemberId  = member?.id    || null;
   D.currentEmail     = user.email;
 
   // Nav bar user + clock
@@ -2099,7 +2107,7 @@ async function loadAll() {
     if (e1) console.error('leads fetch error:', e1);
     if (e2) console.error('members fetch error:', e2);
 
-    D = { leads: filterLeadsByRole(leads||[]), members: members||[], currentRole:D.currentRole, currentAgentName:D.currentAgentName, currentEmail:D.currentEmail };
+    D = { leads: filterLeadsByRole(leads||[]), members: members||[], currentRole:D.currentRole, currentAgentName:D.currentAgentName, currentMemberId:D.currentMemberId, currentEmail:D.currentEmail };
 
     renderStats();
     renderLeads();
@@ -3039,6 +3047,13 @@ async function updateMemberField(id, field, value) {
   if (error) { showToast('⚠ ' + error.message, 4000); return; }
   const m = D.members.find(x => x.id === id);
   if (m) m[field] = value;
+  // If name changed, cascade the display name to all linked leads using agent_id
+  if (field === 'name') {
+    await db.from('leads').update({ agent: value }).eq('agent_id', id);
+    (D.leads||[]).forEach(l => { if (l.agent_id === id) l.agent = value; });
+    renderLeads();
+    renderMembers();
+  }
   showToast(`✅ ${field.charAt(0).toUpperCase()+field.slice(1)} updated to "${value}"`);
 }
 
@@ -3101,7 +3116,15 @@ async function openLeadModal() {
   // Reset brand chips
   document.querySelectorAll('#lf-brands .bchk').forEach(b => b.classList.remove('on'));
   // Clear text fields
-  ['lf-agent','lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['lf-name','lf-phone','lf-remark'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // Populate + pre-select agent dropdown
+  const lfAgentSel = document.getElementById('lf-agent');
+  if (lfAgentSel) {
+    lfAgentSel.innerHTML = '<option value="">— select agent —</option>' +
+      (D.members||[]).map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+    lfAgentSel.value = D.currentMemberId || '';
+    lfAgentSel.disabled = !isAdmin() && D.currentRole !== 'Senior Agent';
+  }
   // Reset selects
   ['lf-gender','lf-district','lf-product','lf-source','lf-temperature'].forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
   updateAreaOpts('lf-area','lf-district');
@@ -3136,7 +3159,8 @@ async function submitLead() {
 
   const payload = {
     sales_no:  telNo || null,
-    agent:     document.getElementById('lf-agent').value.trim() || null,
+    agent_id:  document.getElementById('lf-agent').value || null,
+    agent:     (() => { const id=document.getElementById('lf-agent').value; return id?(D.members||[]).find(m=>m.id===id)?.name||null:null; })(),
     name,
     gender:    document.getElementById('lf-gender').value || null,
     age_group: (() => { const d=document.getElementById('lf-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1 ? null : String(age); })(),
@@ -3183,7 +3207,13 @@ function openEditLeadModal(id) {
   document.getElementById('ef-tel-display').textContent = l.sales_no ? `📋 ${l.sales_no}` : '';
 
   // Pre-fill text fields
-  document.getElementById('ef-agent').value     = l.agent     || '';
+  const efAgentSel = document.getElementById('ef-agent');
+  if (efAgentSel) {
+    efAgentSel.innerHTML = '<option value="">— select agent —</option>' +
+      (D.members||[]).map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+    efAgentSel.value    = l.agent_id || '';
+    efAgentSel.disabled = !isAdmin() && D.currentRole !== 'Senior Agent';
+  }
   document.getElementById('ef-name').value      = l.name      || '';
   document.getElementById('ef-phone').value     = l.phone     || '';
   document.getElementById('ef-lead-date').value = l.lead_date || '';
@@ -3243,7 +3273,8 @@ async function saveEditLead() {
   }
 
   const payload = {
-    agent:     document.getElementById('ef-agent').value.trim()     || null,
+    agent_id:  document.getElementById('ef-agent').value || null,
+    agent:     (() => { const id=document.getElementById('ef-agent').value; return id?(D.members||[]).find(m=>m.id===id)?.name||null:null; })(),
     name,
     gender:    document.getElementById('ef-gender').value           || null,
     age_group: (() => { const d=document.getElementById('ef-dob').value; if(!d) return null; const age=Math.floor((new Date()-new Date(d))/31557600000); return isNaN(age)||age<1?null:String(age); })(),
@@ -3563,6 +3594,15 @@ async function submitImport(skipDups=false) {
     rowsToInsert = rowsToInsert.filter(r => !existingPhones.has(normalizePhone(r.phone||'')));
     showToast(`⏭ Skipped ${before-rowsToInsert.length} duplicates`, 3000);
   }
+
+  // Resolve agent names to agent_ids before inserting
+  rowsToInsert = rowsToInsert.map(r => {
+    if (r.agent && !r.agent_id) {
+      const m = (D.members||[]).find(m => m.name.toLowerCase() === (r.agent||'').toLowerCase().trim());
+      if (m) r.agent_id = m.id;
+    }
+    return r;
+  });
 
   btn.textContent = 'Importing…';
   document.getElementById('import-status').textContent = `Saving ${rowsToInsert.length} leads to Supabase…`;
