@@ -2306,6 +2306,8 @@ function buildAnaShell() {
     <div class="ana-chart-wrap ana-chart-tall"><canvas id="ana-trend-chart"></canvas></div>
   </div>
 
+  <div class="ana-card" id="ana-agent-perf"></div>
+
   <div class="ana-filter-card">
     <div class="ana-filter-label">Brand</div>
     <div class="ana-pill-row" id="ana-fprod">
@@ -2572,6 +2574,55 @@ function refreshAna() {
   AC.trend.data.datasets[0].data = trendNew;
   AC.trend.data.datasets[1].data = trendConv;
   AC.trend.update('none');
+
+  // Agent performance table
+  const agentMap = {};
+  filtered.forEach(l => {
+    const a = l.agent || '(Unassigned)';
+    if (!agentMap[a]) agentMap[a] = { name:a, total:0, closed:0, hot:0, warm:0 };
+    agentMap[a].total++;
+    if (l.stage === 'Closed')       agentMap[a].closed++;
+    if (l.temperature === 'hot')    agentMap[a].hot++;
+    if (l.temperature === 'warm')   agentMap[a].warm++;
+  });
+  const agentRows = Object.values(agentMap).sort((a,b) => b.total - a.total);
+  const maxAgt = Math.max(...agentRows.map(a => a.total), 1);
+  const agentPerf = document.getElementById('ana-agent-perf');
+  if (agentPerf) {
+    agentPerf.innerHTML = agentRows.length === 0
+      ? `<div class="ana-card-header">Agent Performance</div><div style="color:var(--text-muted);font-size:13px;padding:12px 0">No data.</div>`
+      : `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+           <div class="ana-card-header" style="margin:0">Agent Performance</div>
+           <span style="font-size:11px;color:var(--text-muted)">${agentRows.length} agent${agentRows.length!==1?'s':''} · ${total} leads shown</span>
+         </div>
+         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+           ${agentRows.map((a,i) => {
+             const rate  = a.total > 0 ? Math.round(a.closed/a.total*100) : 0;
+             const barW  = Math.round(a.total/maxAgt*100);
+             const barC  = rate>=60?'#52c41a':rate>=30?'#fa8c16':'#4096ff';
+             const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+             const avatarColors = ['#7F77DD','#378ADD','#1D9E75','#BA7517','#D4537E','#D85A30'];
+             const aCol  = avatarColors[i % avatarColors.length];
+             const init  = a.name.split(' ').map(w=>w[0]?.toUpperCase()||'').join('').slice(0,2);
+             return `<div style="background:var(--bg-tertiary);border-radius:10px;padding:12px 14px">
+               <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                 <div style="width:36px;height:36px;border-radius:50%;background:${aCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">${init}</div>
+                 <div style="flex:1;min-width:0">
+                   <div style="font-size:13px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${medal} ${a.name}</div>
+                   <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${a.closed} closed · ${a.hot} 🔥 · ${a.warm} ☀️</div>
+                 </div>
+                 <div style="text-align:right;flex-shrink:0">
+                   <div style="font-size:20px;font-weight:700;color:var(--text-primary);line-height:1">${a.total}</div>
+                   <div style="font-size:10px;color:${barC};font-weight:600">${rate}% closed</div>
+                 </div>
+               </div>
+               <div style="height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden">
+                 <div style="height:100%;width:${barW}%;background:${aCol};border-radius:3px;opacity:.8"></div>
+               </div>
+             </div>`;
+           }).join('')}
+         </div>`;
+  }
 }
 
 /* ── Leads Table ── */
@@ -2909,8 +2960,38 @@ function renderMembers() {
 
   const roleColors = { Admin:'#D4A535', Manager:'#52c41a', 'Senior Agent':'#7F77DD', Agent:'#378ADD' };
 
+  // Build per-agent lead counts from cached leads
+  const allLeads = D.leads || [];
+  const leadCount   = {};
+  const closedCount = {};
+  const hotCount    = {};
+  allLeads.forEach(l => {
+    const a = l.agent || '(unassigned)';
+    leadCount[a]   = (leadCount[a]   || 0) + 1;
+    if (l.stage === 'Closed')      closedCount[a] = (closedCount[a] || 0) + 1;
+    if (l.temperature === 'hot')   hotCount[a]    = (hotCount[a]    || 0) + 1;
+  });
+
+  const leadsCell = m => {
+    const total  = leadCount[m.name]   || 0;
+    const closed = closedCount[m.name] || 0;
+    const hot    = hotCount[m.name]    || 0;
+    const rate   = total > 0 ? Math.round(closed / total * 100) : 0;
+    if (total === 0) return `<td style="color:var(--text-muted);font-size:12px">—</td>`;
+    return `<td>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:15px;font-weight:700;color:var(--text-primary)">${total}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${closed} closed · ${hot} 🔥</span>
+        <div style="flex:1;min-width:60px;height:4px;background:var(--bg-tertiary);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${rate}%;background:${rate>=60?'#52c41a':rate>=30?'#fa8c16':'#ff4d4f'};border-radius:2px"></div>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted)">${rate}%</span>
+      </div>
+    </td>`;
+  };
+
   const rows = members.length === 0
-    ? `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">No members yet — click <strong>+ Add Member</strong> to get started</td></tr>`
+    ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">No members yet — click <strong>+ Add Member</strong> to get started</td></tr>`
     : members.map(m => `
       <tr>
         <td><strong>${m.name}</strong></td>
@@ -2931,6 +3012,7 @@ function renderMembers() {
                </select>`
             : `<span class="leads-status ms-${m.status||'active'}">${m.status||'active'}</span>`}
         </td>
+        ${leadsCell(m)}
         ${canAddMember()?`<td><button class="btn-cancel" style="font-size:11px;padding:3px 10px;color:#ff4d4f;border-color:#ff4d4f44" onclick="deleteMember('${m.id}','${m.name.replace(/'/g,'')}')">Remove</button></td>`:'<td></td>'}
       </tr>`).join('');
 
@@ -2945,7 +3027,7 @@ function renderMembers() {
       </div>
       <table>
         <thead>
-          <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+          <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Status</th><th>Leads (closed · 🔥 · rate)</th><th></th></tr>
         </thead>
         <tbody id="members-body">${rows}</tbody>
       </table>
