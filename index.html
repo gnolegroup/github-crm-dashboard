@@ -2762,6 +2762,7 @@ function renderLeadRow(l, numMap) {
     <td>
       <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
         ${canEditLead(l)?`<button class="edit-lead-btn" onclick="openEditLeadModal('${l.id}')" title="Edit lead"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
+        ${isAdmin()?`<button class="edit-lead-btn" onclick="confirmDeleteDup('${l.id}','${l.name.replace(/'/g,"\\'")}')" title="Delete lead" style="color:#ff4d4f;border-color:#ff4d4f44"><i class="ti ti-trash" style="font-size:11px"></i></button>`:''}
         <button class="wa-btn" onclick="openWAModal('${l.id}')"><i class="ti ti-brand-whatsapp" style="font-size:12px"></i> WA</button>
         ${l.dob && bdDays !== null && bdDays <= 7 ? `<button class="wa-btn" style="background:#ff4d4f22;color:#ff4d4f;border-color:#ff4d4f55" onclick="greetLead('${l.id}')">🎂 Greet</button>` : ''}
       </div>
