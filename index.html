@@ -3092,7 +3092,7 @@ function filterLeads() {
            (!fs  || l.stage===fs) &&
            (!fso || l.source===fso) &&
            (!fa  || l.area===fa);
-  });
+  }).sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0));
 
   _leadsPage = 1;
   renderLeadsTable();
