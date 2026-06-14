@@ -2807,7 +2807,7 @@ function renderLeads() {
   const leads = D.leads || [];
   if ($('tc-leads')) $('tc-leads').textContent = leads.length;
 
-  _filteredLeads = [...leads].sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0));
+  _filteredLeads = [...leads].sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
 
   const hotCount  = leads.filter(l=>l.temperature==='hot').length;
   const warmCount = leads.filter(l=>l.temperature==='warm').length;
@@ -3092,7 +3092,7 @@ function filterLeads() {
            (!fs  || l.stage===fs) &&
            (!fso || l.source===fso) &&
            (!fa  || l.area===fa);
-  }).sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0));
+  }).sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
 
   _leadsPage = 1;
   renderLeadsTable();
