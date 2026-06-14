@@ -3441,8 +3441,8 @@ function closeImportModal() {
 
 function downloadImportTemplate() {
   const headers = ['name','phone','agent','gender','age_group','area','source','stage','lead_date','product','temperature','dob','is_muslim','notes'];
-  const sample1 = ['Ahmad bin Ali','0712345678','Sarah','M','25-34','Bandar BSB','Roadshow','New','2026-06-10','CUCKOO Water','hot','1990-03-15','yes','Interested in water purifier'];
-  const sample2 = ['Siti Rahayu','0871234567','James','F','35-44','Kuala Belait','Facebook','Contacted','2026-06-09','CUCKOO Air','warm','','no','Follow up next week'];
+  const sample1 = ['Ahmad bin Ali','0712345678','Sarah','male','25-34','Bandar BSB','Roadshow','New','2026-06-10','CUCKOO Water','hot','1990-03-15','yes','Interested in water purifier'];
+  const sample2 = ['Siti Rahayu','0871234567','James','female','35-44','Kuala Belait','Facebook','Contacted','2026-06-09','CUCKOO Air','warm','','no','Follow up next week'];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([headers, sample1, sample2]);
   // Column widths
@@ -3543,6 +3543,9 @@ function handleImportFile(file) {
         } else if (h === 'temperature') {
           const t = raw.toLowerCase();
           row[h] = t === 'hot' || t === 'panas' ? 'hot' : t === 'warm' || t === 'sederhana' ? 'warm' : t === 'cold' || t === 'sejuk' ? 'cold' : null;
+        } else if (h === 'gender') {
+          const g = raw.toLowerCase();
+          row[h] = g === 'm' || g === 'male' || g === 'lelaki' ? 'male' : g === 'f' || g === 'female' || g === 'perempuan' ? 'female' : null;
         } else {
           row[h] = raw;
         }
