@@ -2739,7 +2739,7 @@ function renderLeadRow(l, numMap) {
   const remark  = latestRemark(l);
   const logDate = latestLogDate(l);
   const stage   = l.stage || 'New';
-  const leadsNo = l.sales_no || ('L-' + String(numMap[l.id]||0).padStart(4,'0'));
+  const leadsNo = 'L-' + String(numMap[l.id]||0).padStart(4,'0');
   const bdDays  = daysUntilBirthday(l.dob);
   const muslimTag = l.is_muslim ? '<span title="Muslim lead" style="font-size:10px;margin-left:4px">☪️</span>' : '';
   return `<tr data-temp="${l.temperature||''}" data-muslim="${l.is_muslim?'1':'0'}" data-bdays="${bdDays??999}">
@@ -2774,7 +2774,7 @@ function renderLeadCard(l, numMap) {
   const remark  = latestRemark(l);
   const logDate = latestLogDate(l);
   const stage   = l.stage || 'New';
-  const leadsNo = l.sales_no || ('L-' + String(numMap[l.id]||0).padStart(4,'0'));
+  const leadsNo = 'L-' + String(numMap[l.id]||0).padStart(4,'0');
   const bdDays  = daysUntilBirthday(l.dob);
   const muslimTag = l.is_muslim ? ' ☪️' : '';
   const stageColors = { New:'#3fb950', Contacted:'#58a6ff', Pending:'#fa8c16', Closed:'#52c41a', Lost:'#ff4d4f' };
