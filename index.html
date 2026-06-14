@@ -2807,7 +2807,7 @@ function renderLeads() {
   const leads = D.leads || [];
   if ($('tc-leads')) $('tc-leads').textContent = leads.length;
 
-  _filteredLeads = [...leads]; // initialize full set
+  _filteredLeads = [...leads].sort((a,b) => new Date(a.created_at||0) - new Date(b.created_at||0));
 
   const hotCount  = leads.filter(l=>l.temperature==='hot').length;
   const warmCount = leads.filter(l=>l.temperature==='warm').length;
