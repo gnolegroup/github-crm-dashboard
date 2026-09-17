@@ -1003,6 +1003,9 @@
         <input id="login-password" class="login-input" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')signInWithEmail()">
         <button id="login-submit" class="login-btn" onclick="signInWithEmail()">Sign In</button>
         <div id="login-error" class="login-error"></div>
+        <div style="text-align:center;margin-top:6px">
+          <a href="#" onclick="showForgotPassword();return false;" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-muted)'">Forgot password?</a>
+        </div>
       </div>
       <p class="login-note">Protected by Supabase RLS · Only authenticated users can view data</p>
     </div>
@@ -1575,8 +1578,8 @@ let CRM_SETTINGS = {
     followup: 'Hi {name}! 😊 This is {agent} from {company}. Just following up on your interest in {product}. Are you still interested? We\'d love to help! 🙏',
   },
   specialDays: [
-    { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2026-06-06', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
-    { id:'sultans',   name:"Sultan's Birthday",   date:'2026-07-15', type:'national', icon:'👑', template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — {signoff}' },
+    { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2027-05-17', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
+    { id:'sultans',   name:"Sultan's Birthday",   date:'2027-07-15', type:'national', icon:'👑', template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — {signoff}' },
     { id:'national',  name:'National Day 2027',   date:'2027-02-23', type:'national', icon:'🇧🇳', template:'Selamat Hari Kebangsaan Brunei, {name}! Salam Brunei Darussalam. — {signoff}' },
   ]
 };
@@ -1683,6 +1686,24 @@ async function signInWithEmail() {
 async function signOut() {
   await db.auth.signOut();
   showLogin();
+}
+
+async function showForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  const errEl = document.getElementById('login-error');
+  const prompted = email || prompt('Enter your email address:');
+  if (!prompted) return;
+  errEl.textContent = '';
+  const { error } = await db.auth.resetPasswordForEmail(prompted, {
+    redirectTo: window.location.href
+  });
+  if (error) {
+    errEl.textContent = error.message;
+  } else {
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = 'Password reset email sent! Check your inbox.';
+    setTimeout(() => { errEl.style.color = 'var(--red)'; errEl.textContent = ''; }, 6000);
+  }
 }
 
 // ── Follow-up Push Notifications ───────────────────────────
@@ -4281,8 +4302,8 @@ function renderWhasendPage() {
 
 /* ── Special Days ── */
 const SPECIAL_DAYS_FULL = [
-  { id:'aidiladha', name:'Hari Raya Aidiladha',  date:'2026-06-06', type:'islamic',  icon:'🌙', audienceType:'muslim', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — TEL Team' },
-  { id:'sultans',   name:"Sultan's Birthday",     date:'2026-07-15', type:'national', icon:'👑', audienceType:'all',    template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — TEL Team' },
+  { id:'aidiladha', name:'Hari Raya Aidiladha',  date:'2027-05-17', type:'islamic',  icon:'🌙', audienceType:'muslim', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — TEL Team' },
+  { id:'sultans',   name:"Sultan's Birthday",     date:'2027-07-15', type:'national', icon:'👑', audienceType:'all',    template:'Sempena Hari Keputeraan KDYMM Sultan Brunei, {name}! Semoga Brunei terus makmur. — TEL Team' },
   { id:'national',  name:'National Day 2027',     date:'2027-02-23', type:'national', icon:'🇧🇳', audienceType:'all',  template:'Selamat Hari Kebangsaan Brunei ke-43, {name}! Salam Brunei Darussalam. — TEL Team' },
 ];
 
