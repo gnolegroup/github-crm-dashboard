@@ -752,14 +752,27 @@ code {
         <h2>Follow-Ups</h2>
       </div>
 
-      <p style="color:var(--text-2);margin-bottom:20px">The Follow-Ups page shows you which leads need to be followed up today. The CRM automatically schedules follow-up reminders on Day 1, Day 3, and Day 7 after a lead is created.</p>
+      <p style="color:var(--text-2);margin-bottom:20px">The Follow-Ups page shows you which leads need to be followed up today. The CRM automatically schedules <strong>5 follow-up reminders</strong> for every new lead:</p>
 
       <table class="guide-table">
-        <thead><tr><th>Column</th><th>What it means</th></tr></thead>
+        <thead><tr><th>Step</th><th>When</th><th>Task</th></tr></thead>
         <tbody>
-          <tr><td>Due Today</td><td>Leads whose follow-up falls on today's date</td></tr>
-          <tr><td>Overdue</td><td>Follow-ups you missed from previous days</td></tr>
-          <tr><td>Upcoming</td><td>Scheduled for the next few days</td></tr>
+          <tr><td>Step 1</td><td>Day 1</td><td>First contact — call or WhatsApp</td></tr>
+          <tr><td>Step 2</td><td>Day 3</td><td>Follow up — no response yet?</td></tr>
+          <tr><td>Step 3</td><td>Day 7</td><td>Send product info &amp; quotation</td></tr>
+          <tr><td>Step 4</td><td>Day 14</td><td>Final follow up — close or mark lost</td></tr>
+          <tr><td>Step 5</td><td>Day 30</td><td>Re-engage — 1 month check-in</td></tr>
+        </tbody>
+      </table>
+
+      <p style="color:var(--text-2);font-size:14px;margin-top:14px;margin-bottom:20px">These dates are counted from the day the lead was created. You will see each step appear automatically on the Due tab when its day arrives.</p>
+
+      <table class="guide-table">
+        <thead><tr><th>Tab</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td>Due</td><td>Follow-ups that fall on today's date (including overdue ones)</td></tr>
+          <tr><td>Upcoming</td><td>Scheduled for the next few days — so you can plan ahead</td></tr>
+          <tr><td>Done</td><td>Follow-ups you have already completed</td></tr>
         </tbody>
       </table>
 
@@ -1009,7 +1022,7 @@ code {
         <tbody>
           <tr><td>Company Info</td><td>Company name and WhatsApp sign-off name shown in messages</td></tr>
           <tr><td>WhatsApp Templates</td><td>The default follow-up and birthday message templates. Use <code>{name}</code>, <code>{product}</code>, <code>{agent}</code> as placeholders</td></tr>
-          <tr><td>Follow-Up Sequence</td><td>Which days follow-up reminders are sent (default: Day 1, Day 3, Day 7)</td></tr>
+          <tr><td>Follow-Up Sequence</td><td>Which days follow-up reminders are sent (default: Day 1, 3, 7, 14, 30). Admin can add, remove, or change steps here</td></tr>
           <tr><td>Special Days</td><td>Manage the holiday list for bulk WhatsApp sends. Load 2026 or 2027 Brunei holidays with one click</td></tr>
           <tr><td>Team Members</td><td>Add, edit, or view all staff accounts. Assign roles to each member</td></tr>
         </tbody>
