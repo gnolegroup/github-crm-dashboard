@@ -1,0 +1,1200 @@
+<title>TEL CRM Staff Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:           #fdfcff;
+  --surface:      #ffffff;
+  --surface-2:    #f7f4ff;
+  --border:       #e8e2f5;
+  --border-2:     #d4cbe8;
+  --accent:       #7c3aed;
+  --accent-mid:   #9d6cf0;
+  --accent-light: #f0ebff;
+  --accent-dim:   #ede8fb;
+  --text:         #1a1330;
+  --text-2:       #5f566e;
+  --text-3:       #9589a8;
+  --green:        #1a7a4a;
+  --green-bg:     #edfaf4;
+  --yellow:       #8a6000;
+  --yellow-bg:    #fff8e1;
+  --red:          #b91c3a;
+  --red-bg:       #fff0f3;
+  --blue:         #1a56a8;
+  --blue-bg:      #eff6ff;
+  --sidebar-w:    230px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:           #100e1a;
+    --surface:      #181424;
+    --surface-2:    #211d30;
+    --border:       #2e2848;
+    --border-2:     #3d3660;
+    --accent:       #9d6cf0;
+    --accent-mid:   #b48ef5;
+    --accent-light: #1e1836;
+    --accent-dim:   #261f40;
+    --text:         #ede8ff;
+    --text-2:       #9d96b8;
+    --text-3:       #645e80;
+    --green:        #4ade80;
+    --green-bg:     #0d2318;
+    --yellow:       #fbbf24;
+    --yellow-bg:    #1f1800;
+    --red:          #f87171;
+    --red-bg:       #200a10;
+    --blue:         #60a5fa;
+    --blue-bg:      #0c1f38;
+  }
+}
+:root[data-theme="dark"] {
+    --bg:           #100e1a;
+    --surface:      #181424;
+    --surface-2:    #211d30;
+    --border:       #2e2848;
+    --border-2:     #3d3660;
+    --accent:       #9d6cf0;
+    --accent-mid:   #b48ef5;
+    --accent-light: #1e1836;
+    --accent-dim:   #261f40;
+    --text:         #ede8ff;
+    --text-2:       #9d96b8;
+    --text-3:       #645e80;
+    --green:        #4ade80;
+    --green-bg:     #0d2318;
+    --yellow:       #fbbf24;
+    --yellow-bg:    #1f1800;
+    --red:          #f87171;
+    --red-bg:       #200a10;
+    --blue:         #60a5fa;
+    --blue-bg:      #0c1f38;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Layout ── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 32px 0 32px 20px;
+  border-right: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+  padding-right: 20px;
+}
+.sidebar-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 28px;
+}
+
+.nav-group { margin-bottom: 6px; }
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  padding: 8px 12px 4px 0;
+  display: block;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 0;
+  font-size: 13px;
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: 6px 0 0 6px;
+  transition: color .15s, background .15s;
+  cursor: pointer;
+}
+.nav-link:hover { color: var(--accent); }
+.nav-link.active {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-light);
+}
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+
+/* ── Content ── */
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 48px 48px 80px 52px;
+}
+
+/* ── Hero ── */
+.hero {
+  margin-bottom: 52px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.hero h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  text-wrap: balance;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--text-2);
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+.hero-url {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  background: var(--accent-light);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ── Sections ── */
+.section {
+  margin-bottom: 60px;
+  scroll-margin-top: 32px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.section h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* ── Steps ── */
+.steps { display: flex; flex-direction: column; gap: 16px; }
+
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.step-body { flex: 1; min-width: 0; }
+
+.step-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+
+/* ── Callout boxes ── */
+.tip, .warn, .info {
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.tip  { background: var(--green-bg);  color: var(--green);  border: 1px solid color-mix(in srgb, var(--green) 20%, transparent); }
+.warn { background: var(--yellow-bg); color: var(--yellow); border: 1px solid color-mix(in srgb, var(--yellow) 20%, transparent); }
+.info { background: var(--blue-bg);   color: var(--blue);   border: 1px solid color-mix(in srgb, var(--blue) 20%, transparent); }
+
+.tip-icon, .warn-icon, .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.tip-body, .warn-body, .info-body { color: var(--text); }
+.tip-body strong, .warn-body strong, .info-body strong { color: inherit; }
+
+/* ── Role badges ── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  vertical-align: middle;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  white-space: nowrap;
+}
+
+.badge-admin   { background: #f3e8ff; color: #7c3aed; border: 1px solid #d8b4fe; }
+.badge-manager { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.badge-senior  { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.badge-agent   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+/* ── Stage pills ── */
+.stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.stage-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.stage-new        { background: #eff6ff; color: #1d4ed8; }  .stage-new .stage-dot        { background: #3b82f6; }
+.stage-contacted  { background: #f5f3ff; color: #6d28d9; }  .stage-contacted .stage-dot  { background: #8b5cf6; }
+.stage-pending    { background: #fffbeb; color: #92400e; }  .stage-pending .stage-dot    { background: #f59e0b; }
+.stage-closed     { background: #f0fdf4; color: #166534; }  .stage-closed .stage-dot     { background: #22c55e; }
+.stage-lost       { background: #fff1f2; color: #9f1239; }  .stage-lost .stage-dot       { background: #f43f5e; }
+
+/* ── Priority ── */
+.prio { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
+.prio-hot  { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+.prio-warm { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+.prio-cold { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; }
+
+/* ── Table ── */
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin: 16px 0;
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.guide-table th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  padding: 10px 16px;
+  text-align: left;
+}
+.guide-table td {
+  padding: 11px 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.guide-table tr:hover td { background: var(--surface-2); }
+.guide-table td:first-child { color: var(--text); font-weight: 500; }
+
+/* ── Feature grid ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.feature-card-icon { font-size: 22px; margin-bottom: 8px; }
+.feature-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.feature-card-desc  { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ── Inline code ── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Flow diagram ── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.flow-item {
+  display: flex;
+  align-items: center;
+}
+.flow-box {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.flow-arrow {
+  color: var(--text-3);
+  font-size: 18px;
+  padding: 0 4px;
+}
+
+/* ── Mobile ── */
+.mob-nav {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+}
+.mob-nav select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+@media (max-width: 760px) {
+  .sidebar { display: none; }
+  .mob-nav { display: block; }
+  .layout { display: block; }
+  .content { padding: 28px 20px 60px; }
+  .hero h1 { font-size: 28px; }
+  .guide-table { font-size: 12.5px; }
+  .guide-table th, .guide-table td { padding: 9px 12px; }
+}
+</style>
+
+<!-- Mobile nav -->
+<div class="mob-nav">
+  <select onchange="document.getElementById(this.value).scrollIntoView({behavior:'smooth'})">
+    <option value="s-start">🔑 Getting Started</option>
+    <option value="s-home">🏠 Home Dashboard</option>
+    <option value="s-leads">👥 Leads</option>
+    <option value="s-followups">📋 Follow-Ups</option>
+    <option value="s-birthday">🎂 Birthdays</option>
+    <option value="s-whasend">💬 WhatsApp Queue</option>
+    <option value="s-analytics">📈 Analytics</option>
+    <option value="s-calendar">📅 Calendar & Special Days</option>
+    <option value="s-survey">📱 Survey</option>
+    <option value="s-manager">🏆 Manager View</option>
+    <option value="s-settings">⚙️ Settings</option>
+    <option value="s-import">📤 Import & Export</option>
+    <option value="s-roles">👤 Roles & Permissions</option>
+    <option value="s-trouble">🔧 Troubleshooting</option>
+  </select>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">TEL CRM</div>
+    <div class="sidebar-sub">Staff Guide</div>
+
+    <div class="nav-group">
+      <span class="nav-label">Basics</span>
+      <a class="nav-link" data-target="s-start"><span class="nav-icon">🔑</span>Getting Started</a>
+      <a class="nav-link" data-target="s-home"><span class="nav-icon">🏠</span>Home Dashboard</a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-label">Daily Work</span>
+      <a class="nav-link" data-target="s-leads"><span class="nav-icon">👥</span>Leads</a>
+      <a class="nav-link" data-target="s-followups"><span class="nav-icon">📋</span>Follow-Ups</a>
+      <a class="nav-link" data-target="s-birthday"><span class="nav-icon">🎂</span>Birthdays</a>
+      <a class="nav-link" data-target="s-whasend"><span class="nav-icon">💬</span>WhatsApp Queue</a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-label">Reports</span>
+      <a class="nav-link" data-target="s-analytics"><span class="nav-icon">📈</span>Analytics</a>
+      <a class="nav-link" data-target="s-calendar"><span class="nav-icon">📅</span>Calendar</a>
+      <a class="nav-link" data-target="s-survey"><span class="nav-icon">📱</span>Survey</a>
+      <a class="nav-link" data-target="s-manager"><span class="nav-icon">🏆</span>Manager View</a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-label">System</span>
+      <a class="nav-link" data-target="s-settings"><span class="nav-icon">⚙️</span>Settings</a>
+      <a class="nav-link" data-target="s-import"><span class="nav-icon">📤</span>Import & Export</a>
+      <a class="nav-link" data-target="s-roles"><span class="nav-icon">👤</span>Roles</a>
+      <a class="nav-link" data-target="s-trouble"><span class="nav-icon">🔧</span>Troubleshooting</a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="content">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">TEL Home Appliances · Staff Handbook</div>
+      <h1>How to Use the<br>TEL CRM Dashboard</h1>
+      <p class="hero-desc">This guide walks you through every part of the CRM — from logging in for the first time to managing leads, sending WhatsApp follow-ups, and reading your performance data.</p>
+      <a class="hero-url" href="https://gnolegroup.github.io/github-crm-dashboard/" target="_blank">
+        🌐 gnolegroup.github.io/github-crm-dashboard
+      </a>
+    </div>
+
+    <!-- ── SECTION: Getting Started ── -->
+    <section class="section" id="s-start">
+      <div class="section-header">
+        <div class="section-icon">🔑</div>
+        <h2>Getting Started</h2>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Open the CRM in your browser</div>
+            <div class="step-desc">Go to <code>gnolegroup.github.io/github-crm-dashboard</code> — bookmark it so you can find it quickly every day. Works on Chrome, Edge, and phone browsers.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Enter your email and password</div>
+            <div class="step-desc">Your login details will be given to you by your Admin. Type your email address and password, then click <strong>Sign In</strong> — or press Enter after typing your password.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Forgot your password?</div>
+            <div class="step-desc">Click the <strong>Forgot password?</strong> link below the Sign In button. Type your email when prompted — you will receive a reset link in your inbox within a few minutes.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">You are now inside the CRM</div>
+            <div class="step-desc">You will see the Home Dashboard with your leads summary. The navigation bar at the top lets you switch between all the sections of the CRM.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip" style="margin-top:24px">
+        <span class="tip-icon">✅</span>
+        <div class="tip-body"><strong>Stay logged in.</strong> The CRM automatically logs you out after 30 minutes of inactivity to keep your data secure. Just log back in when that happens.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Home Dashboard ── -->
+    <section class="section" id="s-home">
+      <div class="section-header">
+        <div class="section-icon">🏠</div>
+        <h2>Home Dashboard</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">The home screen gives you a quick snapshot of your leads the moment you log in.</p>
+
+      <table class="guide-table">
+        <thead><tr><th>Tile</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td>Total Leads</td><td>All leads you can see (your own leads, or all leads if you are Senior Agent or above)</td></tr>
+          <tr><td>New</td><td>Leads that have not been contacted yet</td></tr>
+          <tr><td>Converted</td><td>Leads marked as <em>Closed</em> (sold)</td></tr>
+          <tr><td>Conversion Rate</td><td>Percentage of your leads that became sales</td></tr>
+          <tr><td>Hot Leads</td><td>High-priority leads needing urgent attention</td></tr>
+          <tr><td>Birthday This Week</td><td>Customers with birthdays in the next 7 days</td></tr>
+        </tbody>
+      </table>
+
+      <p style="color:var(--text-2);margin-top:16px;font-size:14px">Below the tiles you will also see a <strong>Recent Leads</strong> table showing your latest 10 leads at a glance.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Leads ── -->
+    <section class="section" id="s-leads">
+      <div class="section-header">
+        <div class="section-icon">👥</div>
+        <h2>Leads</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:24px">Leads are potential customers. This is the most important section — you will spend most of your time here.</p>
+
+      <!-- Stages -->
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text)">Lead Stages</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:14px">Every lead moves through these stages as you work on them:</p>
+
+      <div class="flow" style="gap:0;margin-bottom:8px">
+        <div class="flow-item"><div class="flow-box stage-new">New</div><span class="flow-arrow">→</span></div>
+        <div class="flow-item"><div class="flow-box stage-contacted">Contacted</div><span class="flow-arrow">→</span></div>
+        <div class="flow-item"><div class="flow-box stage-pending">Pending</div><span class="flow-arrow">→</span></div>
+        <div class="flow-item"><div class="flow-box stage-closed">Closed ✓</div></div>
+        <span style="padding:0 8px;color:var(--text-3);font-size:13px">or</span>
+        <div class="flow-item"><div class="flow-box stage-lost">Lost</div></div>
+      </div>
+
+      <table class="guide-table" style="margin-top:16px">
+        <thead><tr><th>Stage</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="stage stage-new"><span class="stage-dot"></span>New</span></td><td>Fresh lead — not yet called or messaged</td></tr>
+          <tr><td><span class="stage stage-contacted"><span class="stage-dot"></span>Contacted</span></td><td>You have reached out — waiting for response</td></tr>
+          <tr><td><span class="stage stage-pending"><span class="stage-dot"></span>Pending</span></td><td>Interested but decision not made yet; following up</td></tr>
+          <tr><td><span class="stage stage-closed"><span class="stage-dot"></span>Closed</span></td><td>Sale completed — customer purchased</td></tr>
+          <tr><td><span class="stage stage-lost"><span class="stage-dot"></span>Lost</span></td><td>Customer no longer interested; archived</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Priority -->
+      <h3 style="font-size:16px;font-weight:600;margin:28px 0 12px;color:var(--text)">Priority Levels</h3>
+      <table class="guide-table">
+        <thead><tr><th>Priority</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="prio prio-hot">🔴 Hot</span></td><td>Very interested — contact immediately, do not delay</td></tr>
+          <tr><td><span class="prio prio-warm">🟡 Warm</span></td><td>Somewhat interested — follow up within a day or two</td></tr>
+          <tr><td><span class="prio prio-cold">🔵 Cold</span></td><td>Low interest — follow up when you have time</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Adding a lead -->
+      <h3 style="font-size:16px;font-weight:600;margin:28px 0 14px;color:var(--text)">Adding a New Lead</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Click <strong>+ Add Lead</strong></div>
+            <div class="step-desc">Find the green button at the top of the Leads page.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Fill in the lead's details</div>
+            <div class="step-desc">
+              <strong>Name</strong> — customer's full name<br>
+              <strong>Phone</strong> — local number only, e.g. <code>8123456</code> (no +673)<br>
+              <strong>Assigned Agent</strong> — select yourself or the agent handling this lead<br>
+              <strong>Gender</strong> — male or female<br>
+              <strong>Age Group</strong> — select the range (e.g. 25–34)<br>
+              <strong>District & Area</strong> — select district first, then the area will appear<br>
+              <strong>Source</strong> — where the lead came from (Roadshow, Facebook, TikTok, etc.)<br>
+              <strong>Product</strong> — what product they are interested in<br>
+              <strong>Priority</strong> — hot / warm / cold<br>
+              <strong>Stage</strong> — usually <em>New</em> when first adding<br>
+              <strong>Date</strong> — when this lead was generated<br>
+              <strong>Date of Birth</strong> — optional, used for birthday reminders<br>
+              <strong>Notes / Remarks</strong> — anything important to remember
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Click <strong>Save Lead</strong></div>
+            <div class="step-desc">The lead is saved immediately to the database. It will appear in your leads list with a lead number (L-0001, L-0002, etc.).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editing a lead -->
+      <h3 style="font-size:16px;font-weight:600;margin:28px 0 14px;color:var(--text)">Editing a Lead</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Find the lead</div>
+            <div class="step-desc">Use the <strong>Search</strong> box to search by name or phone, or use the filter dropdowns to narrow by stage, priority, or product.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Click the pencil (✏️) icon</div>
+            <div class="step-desc">Each lead row has an edit button on the right side. Click it to open the edit panel.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Update the details and save</div>
+            <div class="step-desc">Change the stage, add a remark, update priority — anything you need. Every edit is recorded in the lead's activity log.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp button -->
+      <h3 style="font-size:16px;font-weight:600;margin:28px 0 12px;color:var(--text)">Sending a WhatsApp Message from a Lead</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:14px">Each lead has a <strong>WhatsApp button (💬)</strong>. Clicking it opens WhatsApp Web with the customer's number and a pre-filled message already written. You just need to press <strong>Send</strong> in WhatsApp — the CRM never sends anything automatically.</p>
+
+      <div class="info">
+        <span class="info-icon">ℹ️</span>
+        <div class="info-body"><strong>Lead numbering:</strong> Leads are numbered from oldest (L-0001) to newest (highest number). The newest lead always appears at the top of the list. Your lead numbers never change.</div>
+      </div>
+
+      <!-- Filtering -->
+      <h3 style="font-size:16px;font-weight:600;margin:28px 0 12px;color:var(--text)">Searching & Filtering</h3>
+      <table class="guide-table">
+        <thead><tr><th>Filter</th><th>How to use</th></tr></thead>
+        <tbody>
+          <tr><td>Search box</td><td>Type a name or phone number to find a specific lead instantly</td></tr>
+          <tr><td>Stage</td><td>Show only New, Contacted, Pending, Closed, or Lost leads</td></tr>
+          <tr><td>Priority</td><td>Filter by Hot, Warm, or Cold</td></tr>
+          <tr><td>Product</td><td>See all leads interested in a specific product</td></tr>
+          <tr><td>Source</td><td>Filter by where leads came from (Roadshow, Facebook, etc.)</td></tr>
+          <tr><td>Month</td><td>Show leads generated in a specific month</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Follow-Ups ── -->
+    <section class="section" id="s-followups">
+      <div class="section-header">
+        <div class="section-icon">📋</div>
+        <h2>Follow-Ups</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">The Follow-Ups page shows you which leads need to be followed up today. The CRM automatically schedules follow-up reminders on Day 1, Day 3, and Day 7 after a lead is created.</p>
+
+      <table class="guide-table">
+        <thead><tr><th>Column</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td>Due Today</td><td>Leads whose follow-up falls on today's date</td></tr>
+          <tr><td>Overdue</td><td>Follow-ups you missed from previous days</td></tr>
+          <tr><td>Upcoming</td><td>Scheduled for the next few days</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size:16px;font-weight:600;margin:24px 0 14px;color:var(--text)">How to complete a follow-up</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Open the Follow-Ups page from the top navigation</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Find the lead that is due</div>
+            <div class="step-desc">Leads are sorted so the most urgent appear first.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Click <strong>Send WhatsApp</strong></div>
+            <div class="step-desc">This opens WhatsApp Web with a pre-written follow-up message. Send it to the customer.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Mark it as Done or Snooze</div>
+            <div class="step-desc"><strong>Done</strong> — follow-up completed, move to the next one.<br><strong>Snooze</strong> — not ready yet, remind me again later.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn">
+        <span class="warn-icon">⚠️</span>
+        <div class="warn-body"><strong>Do not ignore overdue follow-ups.</strong> Hot leads that are not followed up quickly may lose interest. Check this page every morning when you start work.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Birthdays ── -->
+    <section class="section" id="s-birthday">
+      <div class="section-header">
+        <div class="section-icon">🎂</div>
+        <h2>Birthday Reminders</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">The Birthdays page shows you customers whose birthdays are coming up in the next 7 days. Sending a birthday greeting is a great way to stay connected and build loyalty.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Go to <strong>Tools → Birthdays</strong> from the top navigation</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Check the list of upcoming birthdays</div>
+            <div class="step-desc">Each card shows the customer's name, birthday, and a pre-written birthday message.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Edit the message if needed, then click <strong>Send WhatsApp</strong></div>
+            <div class="step-desc">The message opens in WhatsApp Web, ready to send. You can personalise it before sending.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">The birthday card is marked as sent</div>
+            <div class="step-desc">It will disappear from the pending list so you don't send it twice.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip">
+        <span class="tip-icon">✅</span>
+        <div class="tip-body">For birthday reminders to work, the customer's <strong>Date of Birth</strong> must be saved in their lead profile. Make sure to fill it in when adding new leads.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: WhatsApp Queue ── -->
+    <section class="section" id="s-whasend">
+      <div class="section-header">
+        <div class="section-icon">💬</div>
+        <h2>WhatsApp Send Queue</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Found under <strong>Tools → WhatsApp Send</strong>. This page collects all pending birthday messages in one place, sorted by how soon the birthday is. It works the same as the Birthdays page but is designed for batch sending — useful when you have many birthdays in a week.</p>
+
+      <table class="guide-table">
+        <thead><tr><th>Label</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Today 🎂</td><td>Birthday is today — send immediately</td></tr>
+          <tr><td>Tomorrow</td><td>Birthday is tomorrow</td></tr>
+          <tr><td>In X days</td><td>Birthday is coming up in a few days</td></tr>
+        </tbody>
+      </table>
+
+      <p style="color:var(--text-2);font-size:14px;margin-top:16px">Priority colours (red = very important, orange = important, grey = standard) help you know which customers to reach first.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Analytics ── -->
+    <section class="section" id="s-analytics">
+      <div class="section-header">
+        <div class="section-icon">📈</div>
+        <h2>Analytics</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Click <strong>Analytics</strong> in the top navigation to see your performance data — charts and breakdowns to understand how leads are moving.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">📊</div>
+          <div class="feature-card-title">Stage Breakdown</div>
+          <div class="feature-card-desc">Shows how many leads are at each stage (New, Contacted, Pending, Closed, Lost)</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">📦</div>
+          <div class="feature-card-title">Product Breakdown</div>
+          <div class="feature-card-desc">Which products are most popular among your leads</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">📍</div>
+          <div class="feature-card-title">Area / District</div>
+          <div class="feature-card-desc">Where most of your leads come from geographically</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">📣</div>
+          <div class="feature-card-title">Source Breakdown</div>
+          <div class="feature-card-desc">Which channel (Facebook, Roadshow, TikTok, etc.) brings the most leads</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">👫</div>
+          <div class="feature-card-title">Gender Split</div>
+          <div class="feature-card-desc">Percentage of male vs female customers</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🗓️</div>
+          <div class="feature-card-title">Monthly Trend</div>
+          <div class="feature-card-desc">New leads per month over the year — useful to spot your busiest months</div>
+        </div>
+      </div>
+
+      <div class="info" style="margin-top:8px">
+        <span class="info-icon">ℹ️</span>
+        <div class="info-body">Use the filter buttons (by brand, month, district, source, gender) at the top of the Analytics page to narrow down what you see. Filters apply to all charts at once.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Calendar ── -->
+    <section class="section" id="s-calendar">
+      <div class="section-header">
+        <div class="section-icon">📅</div>
+        <h2>Calendar & Special Days</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Found in the top navigation under <strong>Calendar</strong>. Two sub-sections:</p>
+
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text)">Calendar</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">A monthly calendar view showing Brunei public holidays. You can also load in the holidays for 2026 or 2027 from Settings if they are not showing.</p>
+
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text)">Special Days</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:16px">Shows upcoming national and Islamic holidays — Hari Raya, Sultan's Birthday, National Day, and more. You can send a bulk WhatsApp greeting to all your customers for each occasion.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Go to <strong>Calendar → Special Days</strong></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Select a holiday and click <strong>Send to all</strong></div>
+            <div class="step-desc">The CRM will open WhatsApp for each customer one by one with a pre-filled greeting message.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Press Send in WhatsApp for each one</div>
+            <div class="step-desc">After sending, click <strong>Next</strong> in the CRM to move to the following customer. Repeat until all are done.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Survey ── -->
+    <section class="section" id="s-survey">
+      <div class="section-header">
+        <div class="section-icon">📱</div>
+        <h2>Survey</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">The <strong>Survey</strong> section in the top navigation is used to record customer satisfaction or feedback responses. When a customer gives you feedback after a sale or follow-up, you can log it here so it is attached to their lead record.</p>
+
+      <p style="color:var(--text-2);font-size:14px">Fill in the customer's name, select their lead, choose the rating or response, and save. The survey response will appear in the lead's activity history.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Manager View ── -->
+    <section class="section" id="s-manager">
+      <div class="section-header">
+        <div class="section-icon">🏆</div>
+        <h2>Manager View <span class="badge badge-admin">Admin</span> <span class="badge badge-manager">Manager</span></h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Only visible to Admin and Manager roles. Click <strong>Manager</strong> in the top navigation bar.</p>
+
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)">Leaderboard tab</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Ranks all agents by their birthday follow-up performance this month. Shows how many birthday messages each agent has sent, snoozed, or missed. Colour-coded as <strong style="color:var(--green)">Good</strong> (≥80%), <strong style="color:var(--yellow)">Fair</strong> (60–79%), or <strong style="color:var(--red)">Needs coaching</strong> (&lt;60%).</p>
+
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)">Snooze & Missed tabs</h3>
+      <p style="color:var(--text-2);font-size:14px">Lists leads whose birthday messages were snoozed or missed — useful for a manager to follow up with the agent and make sure the customer was still reached.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Settings ── -->
+    <section class="section" id="s-settings">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <h2>Settings <span class="badge badge-admin">Admin</span></h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Accessible from the top navigation. Only Admin can change these settings.</p>
+
+      <table class="guide-table">
+        <thead><tr><th>Setting</th><th>What to configure</th></tr></thead>
+        <tbody>
+          <tr><td>Company Info</td><td>Company name and WhatsApp sign-off name shown in messages</td></tr>
+          <tr><td>WhatsApp Templates</td><td>The default follow-up and birthday message templates. Use <code>{name}</code>, <code>{product}</code>, <code>{agent}</code> as placeholders</td></tr>
+          <tr><td>Follow-Up Sequence</td><td>Which days follow-up reminders are sent (default: Day 1, Day 3, Day 7)</td></tr>
+          <tr><td>Special Days</td><td>Manage the holiday list for bulk WhatsApp sends. Load 2026 or 2027 Brunei holidays with one click</td></tr>
+          <tr><td>Team Members</td><td>Add, edit, or view all staff accounts. Assign roles to each member</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Import & Export ── -->
+    <section class="section" id="s-import">
+      <div class="section-header">
+        <div class="section-icon">📤</div>
+        <h2>Import & Export <span class="badge badge-admin">Admin</span> <span class="badge badge-manager">Manager</span> <span class="badge badge-senior">Senior Agent</span></h2>
+      </div>
+
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:14px;color:var(--text)">Exporting leads</h3>
+      <p style="color:var(--text-2);font-size:14px;margin-bottom:8px">On the Leads page, click the <strong>Export</strong> button (top right). Choose:</p>
+      <table class="guide-table">
+        <thead><tr><th>Format</th><th>Use it when</th></tr></thead>
+        <tbody>
+          <tr><td>Excel (.xlsx)</td><td>You want to open and edit the data in Microsoft Excel or Google Sheets</td></tr>
+          <tr><td>PDF</td><td>You want to print or share a formatted report</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-2);font-size:14px;margin-top:12px">The export respects your current filters — if you have filtered by stage or product, only those leads will be exported.</p>
+
+      <h3 style="font-size:15px;font-weight:600;margin:28px 0 14px;color:var(--text)">Importing leads from Excel</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Download the import template</div>
+            <div class="step-desc">Click <strong>Import</strong> in the top navigation, then click <strong>Download Template</strong>. This gives you an Excel file with the correct column headings.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Fill in the template</div>
+            <div class="step-desc">
+              Keep the column headers exactly as they are. Fill in one row per lead.<br>
+              <strong>Phone:</strong> local digits only (e.g. <code>8123456</code>)<br>
+              <strong>Gender:</strong> <code>male</code> or <code>female</code> (lowercase)<br>
+              <strong>Date:</strong> format as <code>YYYY-MM-DD</code> (e.g. <code>2026-09-17</code>)<br>
+              <strong>Stage:</strong> New / Contacted / Pending / Closed / Lost
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Upload the file</div>
+            <div class="step-desc">On the Import page, click <strong>Choose File</strong>, select your filled Excel file, then click <strong>Import</strong>. The CRM will tell you how many leads were added.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn">
+        <span class="warn-icon">⚠️</span>
+        <div class="warn-body"><strong>Check before importing.</strong> Duplicate phone numbers may cause errors. Review your file first and remove any rows that already exist in the CRM.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Roles ── -->
+    <section class="section" id="s-roles">
+      <div class="section-header">
+        <div class="section-icon">👤</div>
+        <h2>Roles & Permissions</h2>
+      </div>
+
+      <p style="color:var(--text-2);margin-bottom:20px">Every staff member is assigned a role. Your role determines what you can see and do inside the CRM.</p>
+
+      <table class="guide-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th><span class="badge badge-agent">Agent</span></th>
+            <th><span class="badge badge-senior">Senior</span></th>
+            <th><span class="badge badge-manager">Manager</span></th>
+            <th><span class="badge badge-admin">Admin</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>View own leads</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>View all agents' leads</td><td>—</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Add / edit leads</td><td>✅ (own)</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Delete leads</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Import leads from Excel</td><td>—</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Export leads</td><td>—</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>View Manager leaderboard</td><td>—</td><td>—</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Add team members</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Change settings</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info" style="margin-top:20px">
+        <span class="info-icon">ℹ️</span>
+        <div class="info-body">Menu items you do not have permission for are automatically hidden — you will not see them. If you think you need access to a feature, ask your Admin to update your role.</div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ── SECTION: Troubleshooting ── -->
+    <section class="section" id="s-trouble">
+      <div class="section-header">
+        <div class="section-icon">🔧</div>
+        <h2>Troubleshooting</h2>
+      </div>
+
+      <table class="guide-table">
+        <thead><tr><th>Problem</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>"Failed to fetch" on login</td>
+            <td>The database has gone to sleep (this can happen after several days of no activity). Contact your Admin — they can wake it up in about 1 minute.</td>
+          </tr>
+          <tr>
+            <td>Page looks broken or outdated</td>
+            <td>Press <strong>Ctrl + Shift + R</strong> (Windows) or <strong>Cmd + Shift + R</strong> (Mac) to hard-refresh and load the latest version.</td>
+          </tr>
+          <tr>
+            <td>Cannot see my leads</td>
+            <td>Check that you are logged in with the correct email. If your leads were assigned by name and not by your account, ask Admin to reassign them.</td>
+          </tr>
+          <tr>
+            <td>Forgot password</td>
+            <td>Click <strong>Forgot password?</strong> on the login page and enter your email. A reset link will be sent to your inbox.</td>
+          </tr>
+          <tr>
+            <td>WhatsApp not opening</td>
+            <td>Make sure WhatsApp Web is set up in your browser at <code>web.whatsapp.com</code> and you are logged in.</td>
+          </tr>
+          <tr>
+            <td>Lead not saving</td>
+            <td>Check your internet connection. If offline, wait to reconnect and try again.</td>
+          </tr>
+          <tr>
+            <td>Something else is wrong</td>
+            <td>Take a screenshot and send it to your Admin or IT support.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip" style="margin-top:24px">
+        <span class="tip-icon">✅</span>
+        <div class="tip-body"><strong>Best practice:</strong> Log in every day even if briefly. Regular use keeps the database active and prevents it from going to sleep.</div>
+      </div>
+
+      <div style="margin-top:48px;padding:20px 24px;background:var(--accent-light);border:1px solid var(--border-2);border-radius:12px">
+        <div style="font-family:'Fraunces',Georgia,serif;font-size:19px;font-weight:600;color:var(--accent);margin-bottom:8px">Quick Reference</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13.5px;color:var(--text-2)">
+          <div>🌐 <strong style="color:var(--text)">CRM URL</strong><br><code style="font-size:11.5px">gnolegroup.github.io/github-crm-dashboard</code></div>
+          <div>🏁 <strong style="color:var(--text)">Start of day</strong><br>Check Follow-Ups & Birthday pages first</div>
+          <div>🔴 <strong style="color:var(--text)">Hot leads</strong><br>Contact same day — do not wait</div>
+          <div>💬 <strong style="color:var(--text)">WhatsApp</strong><br>CRM opens it for you — you press Send</div>
+          <div>🎂 <strong style="color:var(--text)">Birthday required</strong><br>Always fill DOB when adding a lead</div>
+          <div>📞 <strong style="color:var(--text)">Phone format</strong><br>Local digits only, e.g. <code>8123456</code></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// Sidebar active highlight via IntersectionObserver
+const links = document.querySelectorAll('.nav-link[data-target]');
+links.forEach(l => {
+  l.addEventListener('click', () => {
+    const el = document.getElementById(l.dataset.target);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+const sections = document.querySelectorAll('.section');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.toggle('active', l.dataset.target === e.target.id));
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+sections.forEach(s => obs.observe(s));
+</script>
