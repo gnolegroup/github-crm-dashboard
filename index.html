@@ -1091,7 +1091,7 @@
 
   <!-- Settings -->
   <div class="nav-menu">
-    <button class="nav-menu-btn" onclick="navTo('settings')" style="cursor:pointer">⚙ Settings</button>
+    <button id="nav-settings" class="nav-menu-btn" onclick="navTo('settings')" style="cursor:pointer">⚙ Settings</button>
   </div>
 
   <!-- Hamburger (mobile only) -->
@@ -1132,7 +1132,7 @@
   <button class="mob-nav-item" id="mob-nav-manager" onclick="navTo('manager');toggleMobileNav()">🏆 Manager View</button>
   <button class="mob-nav-item" onclick="navTo('members');toggleMobileNav()">👤 Member</button>
   <button class="mob-nav-item" onclick="navTo('calendar');toggleMobileNav()">📅 Calendar</button>
-  <button class="mob-nav-item" onclick="navTo('settings');toggleMobileNav()">⚙ Settings</button>
+  <button id="mob-nav-settings" class="mob-nav-item" onclick="navTo('settings');toggleMobileNav()">⚙ Settings</button>
   <div style="padding:8px 20px 12px">
     <button class="signout-btn" style="width:100%;text-align:center;justify-content:center" onclick="signOut()">Sign out</button>
   </div>
@@ -1638,12 +1638,16 @@ function applyPermissions() {
   const rolesNav  = document.getElementById('nav-roles');
   const mobMgr    = document.getElementById('mob-nav-manager');
   const mobImp    = document.getElementById('mob-nav-import');
+  const setNav    = document.getElementById('nav-settings');
+  const mobSet    = document.getElementById('mob-nav-settings');
   if (mgNav)     mgNav.style.display     = isAdmin()      ? '' : 'none';
   if (importNav) importNav.style.display = canImport()    ? '' : 'none';
   if (addMemNav) addMemNav.style.display = canAddMember() ? '' : 'none';
   if (rolesNav)  rolesNav.style.display  = canAddMember() ? '' : 'none';
   if (mobMgr)    mobMgr.style.display    = isAdmin()      ? '' : 'none';
   if (mobImp)    mobImp.style.display    = canImport()    ? '' : 'none';
+  if (setNav)    setNav.style.display    = isAdmin()      ? '' : 'none';
+  if (mobSet)    mobSet.style.display    = isAdmin()      ? '' : 'none';
 }
 
 function toggleMobileNav() {
@@ -4854,13 +4858,13 @@ function renderSettingsPage() {
   <div style="padding:24px 28px">
     <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:20px">⚙️ Settings</div>
 
-    ${card('🏢','Company Info', `
+    ${canAddMember() ? card('🏢','Company Info', `
       ${field('Company Name','set-name', c.name, 'e.g. TEL Home Appliances')}
       ${field('WhatsApp Business Number','set-wa', c.whatsapp, 'e.g. 6738651109')}
       ${field('Message Sign-off','set-signoff', c.signoff, 'e.g. TEL Team')}
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Sign-off appears in birthday greetings, bulk messages and PDF reports.</div>
       <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveCompanyInfo()">Save Company Info</button>
-    `)}
+    `) : ''}
 
     ${card('📱','Message Templates', `
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
@@ -4939,7 +4943,7 @@ function renderSettingsPage() {
       <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveSpecialDays()">Save Special Days</button>
     `)}
 
-    ${card('📋','Follow-Up Sequence', `
+    ${canAddMember() ? card('📋','Follow-Up Sequence', `
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">These reminders are auto-created when a new lead is added.</div>
       <div id="fu-seq-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
         ${fu.map((s,i)=>`
@@ -4955,7 +4959,7 @@ function renderSettingsPage() {
         <button class="btn-save" style="font-size:13px;padding:7px 18px" onclick="saveFUSequence()">Save Sequence</button>
       </div>
       <div style="font-size:11px;color:var(--text-muted)">⚠️ Changes apply to new leads only. Existing leads keep their current reminders.</div>
-    `)}
+    `) : ''}
 
   </div>`;
 }
