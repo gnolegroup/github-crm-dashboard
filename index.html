@@ -1003,8 +1003,9 @@
         <input id="login-password" class="login-input" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')signInWithEmail()">
         <button id="login-submit" class="login-btn" onclick="signInWithEmail()">Sign In</button>
         <div id="login-error" class="login-error"></div>
-        <div style="text-align:center;margin-top:6px">
+        <div style="text-align:center;margin-top:6px;display:flex;justify-content:center;gap:16px">
           <a href="#" onclick="showForgotPassword();return false;" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-muted)'">Forgot password?</a>
+          <a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-muted)'">📖 Staff Guide</a>
         </div>
       </div>
       <p class="login-note">Protected by Supabase RLS · Only authenticated users can view data</p>
