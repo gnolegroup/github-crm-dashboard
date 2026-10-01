@@ -1577,7 +1577,7 @@ let CRM_SETTINGS = {
   ],
   templates: {
     birthday: 'Selamat Hari Jadi {name}! 🎂 Semoga panjang umur dan murah rezeki. — {signoff}',
-    followup: 'Hi {name}! 😊 This is {agent} from {company}. Just following up on your interest in {product}. Are you still interested? We\'d love to help! 🙏',
+    followup: 'Assalamualaikum {name}! 😊\n\nSaya {agent} dari {company}. Terima kasih kerana menghubungi kami.\n\nKami ingin berkongsi maklumat lanjut berkenaan {product} yang anda minati.\n\nBoleh kami bantu anda? — {signoff}',
   },
   specialDays: [
     { id:'aidiladha', name:'Hari Raya Aidiladha', date:'2027-05-17', type:'islamic',  icon:'🌙', template:'Selamat Hari Raya Aidiladha, {name}! Taqabbalallahu minna wa minkum. — {signoff}' },
@@ -3385,10 +3385,7 @@ async function updateLeadBrand(id, brand, checked) {
 /* ── WhatsApp Modal ── */
 let _activeWA = null;
 function buildWAMsg(l) {
-  const n = l.name, low = n.toLowerCase();
-  const sal = low.includes('haji')||low.includes('hj') ? ' Haji/Hjh' : low.startsWith('dayang')||low.startsWith('dk') ? ' Dayang' : low.startsWith('pg')||low.startsWith('pengiran') ? ' Pengiran' : '';
-  const first = n.split(' ')[sal ? 1 : 0];
-  return `Assalamualaikum${sal} ${first}! 😊\n\nSaya dari pasukan CUCKOO Brunei. Terima kasih kerana menghubungi kami.\n\nKami ingin berkongsi produk terbaik kami yang dapat meningkatkan kualiti hidup anda. 🌿\n\nBoleh kami bantu anda dengan maklumat lanjut?\n\nTerima kasih! 🙏`;
+  return resolveTemplate(CRM_SETTINGS.templates.followup, l);
 }
 function openWAModal(id) {
   const l = D.leads.find(x => x.id === id);
