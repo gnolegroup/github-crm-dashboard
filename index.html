@@ -3635,20 +3635,24 @@ async function submitImport(skipDups=false) {
   });
 
   btn.textContent = 'Importing…';
-  document.getElementById('import-status').textContent = `Saving ${rowsToInsert.length} leads to Supabase…`;
+  const statusEl = document.getElementById('import-status');
+  const total = rowsToInsert.length;
+  statusEl.textContent = `Saving ${total} leads to Supabase…`;
 
-  // Insert in batches of 50
-  const BATCH = 50;
+  // Insert in batches of 200 for faster large imports
+  const BATCH = 200;
   let inserted = 0;
   for (let i = 0; i < rowsToInsert.length; i += BATCH) {
     const batch = rowsToInsert.slice(i, i + BATCH);
     const { error } = await db.from('leads').insert(batch);
     if (error) {
-      document.getElementById('import-status').textContent = `⚠ Error at row ${i+1}: ${error.message}`;
+      statusEl.textContent = `⚠ Error at row ${i+1}: ${error.message}`;
       btn.disabled = false; btn.textContent = 'Import Leads';
       return;
     }
     inserted += batch.length;
+    const pct = Math.round((inserted / total) * 100);
+    statusEl.textContent = `Importing… ${inserted.toLocaleString()} / ${total.toLocaleString()} (${pct}%)`;
   }
 
   // Refresh local data
@@ -3656,9 +3660,9 @@ async function submitImport(skipDups=false) {
   D.leads = freshLeads || [];
   renderLeads(); renderStats(); refreshAna();
 
-  document.getElementById('import-status').textContent = `✓ Successfully imported ${inserted} leads!`;
+  statusEl.textContent = `✓ Successfully imported ${inserted.toLocaleString()} leads!`;
   btn.textContent = 'Done ✓';
-  setTimeout(closeImportModal, 1500);
+  setTimeout(closeImportModal, 2000);
 }
 
 /* ── Duplicate Detection ── */
