@@ -1565,6 +1565,22 @@ const SUPABASE_KEY = 'sb_publishable_zRea1WXqOBJ8HjYBFZ_fFg_BW8wpCLV';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let D = { currentRole:'Admin', currentAgentName:'', currentMemberId:null, currentEmail:'' };
 
+async function fetchAllLeads() {
+  const PAGE = 1000;
+  let all = [], from = 0, lastError = null;
+  while (true) {
+    const { data, error } = await db.from('leads').select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) { lastError = error; console.error('fetchAllLeads error:', error); break; }
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return { data: all, error: lastError };
+}
+
 // CRM Settings (localStorage)
 let CRM_SETTINGS = {
   company:    { name:'TEL Home Appliances', whatsapp:'', signoff:'TEL Team' },
@@ -2026,7 +2042,7 @@ async function navTo(name) {
 
   if (name === 'leads') {
     $('panel-leads').innerHTML = '<div class="loading"><div class="spinner"></div>Loading leads…</div>';
-    const { data, error } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    const { data, error } = await fetchAllLeads();
     if (error) {
       $('panel-leads').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ ${error.message} <button onclick="navTo('leads')" style="margin-left:8px;padding:4px 12px;border:1px solid var(--red);background:transparent;color:var(--red);border-radius:4px;cursor:pointer">Retry</button></div>`;
       return;
@@ -2053,27 +2069,27 @@ async function navTo(name) {
   } else if (name === 'survey') {
     if (!D.leads || D.leads.length === 0) {
       $('panel-survey').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-      const { data } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      const { data } = await fetchAllLeads();
       D.leads = filterLeadsByRole(data || []);
     }
     renderSurveyPage();
 
   } else if (name === 'home') {
     if (!D.leads || D.leads.length === 0) {
-      const { data: homeData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      const { data: homeData } = await fetchAllLeads();
       D.leads = filterLeadsByRole(homeData || []);
     }
     renderHomeDashboard();
 
   } else if (name === 'followups') {
     $('panel-followups').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-    const { data: fuData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    const { data: fuData } = await fetchAllLeads();
     D.leads = filterLeadsByRole(fuData || []);
     renderFollowUpPage();
 
   } else if (name === 'birthday' || name === 'whasend') {
     $('panel-'+name).innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-    const { data: bdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    const { data: bdData } = await fetchAllLeads();
     D.leads = filterLeadsByRole(bdData || []);
     if (name === 'birthday') renderBirthdayPage();
     else renderWhasendPage();
@@ -2081,7 +2097,7 @@ async function navTo(name) {
   } else if (name === 'specialdays') {
     if (!D.leads || D.leads.length === 0) {
       $('panel-specialdays').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-      const { data: sdData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      const { data: sdData } = await fetchAllLeads();
       D.leads = filterLeadsByRole(sdData || []);
     }
     renderSpecialDaysPage();
@@ -2092,7 +2108,7 @@ async function navTo(name) {
   } else if (name === 'calendar') {
     if (!D.leads || D.leads.length === 0) {
       $('panel-calendar').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-      const { data: calData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+      const { data: calData } = await fetchAllLeads();
       D.leads = filterLeadsByRole(calData || []);
     }
     renderCalendar();
@@ -2100,13 +2116,13 @@ async function navTo(name) {
   } else if (name === 'manager') {
     if (!isAdmin()) { showToast('⚠ Manager View is for Admin & Manager only'); navTo('home'); return; }
     $('panel-manager').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-    const { data: mgData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    const { data: mgData } = await fetchAllLeads();
     D.leads = mgData || []; // admin sees ALL leads — no role filter
     renderManagerView();
 
   } else if (name === 'pipeline') {
     // Always fetch fresh leads so metrics + analytics are populated
-    const { data: leadsData } = await db.from('leads').select('*').order('created_at', { ascending: false });
+    const { data: leadsData } = await fetchAllLeads();
     D.leads = isAdmin() ? (leadsData||[]) : filterLeadsByRole(leadsData||[]);
     renderStats();
     if (!$('panel-pipeline').innerHTML.trim()) {
@@ -2127,7 +2143,7 @@ async function loadAll() {
       { data: leads, error: e1 },
       { data: members, error: e2 },
     ] = await Promise.all([
-      db.from('leads').select('*').order('created_at', { ascending: false }),
+      fetchAllLeads(),
       db.from('members').select('*').order('created_at', { ascending: false }),
     ]);
 
@@ -3656,7 +3672,7 @@ async function submitImport(skipDups=false) {
   }
 
   // Refresh local data
-  const { data: freshLeads } = await db.from('leads').select('*').order('created_at', { ascending: false });
+  const { data: freshLeads } = await fetchAllLeads();
   D.leads = freshLeads || [];
   renderLeads(); renderStats(); refreshAna();
 
